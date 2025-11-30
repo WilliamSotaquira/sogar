@@ -6,6 +6,7 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -39,6 +40,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
     Route::post('budgets', [BudgetController::class, 'store'])->name('budgets.store');
     Route::delete('budgets/{budget}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
+    Route::get('recurrences', [RecurrenceController::class, 'index'])->name('recurrences.index');
+    Route::post('recurrences', [RecurrenceController::class, 'store'])->name('recurrences.store');
+    Route::delete('recurrences/{recurrence}', [RecurrenceController::class, 'destroy'])->name('recurrences.destroy');
     Route::get('transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
 });
