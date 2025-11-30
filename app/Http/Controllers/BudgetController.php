@@ -94,6 +94,14 @@ class BudgetController extends Controller
         if ($budget->user_id !== $request->user()->id) {
             abort(403);
         }
+
+        if ($budget->provider_event_id) {
+            $integration = Integration::where('user_id', $request->user()->id)->where('provider', 'google')->first();
+            if ($integration) {
+                app(\App\Services\GoogleCalendarService::class)->deleteEvent($integration, $budget->provider_event_id);
+            }
+        }
+
         $budget->delete();
 
         return redirect()->route('budgets.index')->with('status', 'Presupuesto eliminado.');

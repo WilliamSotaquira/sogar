@@ -101,6 +101,13 @@ class RecurrenceController extends Controller
             abort(403);
         }
 
+        if ($recurrence->provider_event_id) {
+            $integration = Integration::where('user_id', $request->user()->id)->where('provider', 'google')->first();
+            if ($integration) {
+                app(\App\Services\GoogleCalendarService::class)->deleteEvent($integration, $recurrence->provider_event_id);
+            }
+        }
+
         $recurrence->delete();
 
         return redirect()->route('recurrences.index')->with('status', 'Recurrencia eliminada.');

@@ -121,4 +121,30 @@ class GoogleCalendarService
 
         return null;
     }
+
+    public function deleteEvent(Integration $integration, string $eventId): bool
+    {
+        $accessToken = $this->ensureAccessToken($integration);
+        if (!$accessToken || !$eventId) {
+            return false;
+        }
+
+        $calendarId = $integration->calendar_id ?: 'primary';
+        $url = "https://www.googleapis.com/calendar/v3/calendars/{$calendarId}/events/{$eventId}";
+
+        try {
+            $response = $this->client->request('DELETE', $url, [
+                'headers' => [
+                    'Authorization' => "Bearer {$accessToken}",
+                ],
+                'http_errors' => false,
+            ]);
+
+            return $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
+        } catch (\Throwable $e) {
+            Log::error('Google delete event exception', ['message' => $e->getMessage()]);
+        }
+
+        return false;
+    }
 }
