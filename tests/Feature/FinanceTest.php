@@ -158,10 +158,18 @@ it('runs recurrences command and schedules next run', function () {
         'is_active' => true,
     ]);
 
+    $wallet = Wallet::create([
+        'user_id' => $user->id,
+        'name' => 'General',
+        'initial_balance' => 0,
+        'is_shared' => true,
+        'is_active' => true,
+    ]);
+
     $recurrence = Recurrence::create([
         'user_id' => $user->id,
         'category_id' => $category->id,
-        'wallet_id' => null,
+        'wallet_id' => $wallet->id,
         'name' => 'Internet',
         'amount' => 50,
         'frequency' => 'daily',
@@ -169,7 +177,6 @@ it('runs recurrences command and schedules next run', function () {
         'last_run_at' => null,
         'is_active' => true,
         'sync_to_calendar' => false,
-        'wallet_id' => $wallet->id,
     ]);
 
     artisan('recurrences:run')->assertExitCode(0);

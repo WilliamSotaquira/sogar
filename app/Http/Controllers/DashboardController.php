@@ -95,7 +95,7 @@ class DashboardController extends Controller
         $savingsRate = max(0, min(1, ($income - $expenses) / $income));
         $budgetPressure = $budgets->avg(fn ($b) => $b['percent']) ?? 0;
 
-        $score = (50 * $savingsRate) + (30 * (1 - min(1, $budgetPressure / 100))) + (20 * (alertCount === 0 ? 1 : max(0, 1 - ($alertCount * 0.2))));
+        $score = (50 * $savingsRate) + (30 * (1 - min(1, $budgetPressure / 100))) + (20 * ($alertCount === 0 ? 1 : max(0, 1 - ($alertCount * 0.2))));
 
         return (int) round(max(1, min(100, $score)));
     }
