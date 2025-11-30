@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Budget;
+use App\Models\Integration;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use Carbon\Carbon;
@@ -73,6 +74,7 @@ class DashboardController extends Controller
 
         $healthScore = $this->calculateHealthScore($income, $expenses, $budgets, $alerts->count());
         $projectedSavings = max(0, ($income - $expenses)) * 6;
+        $googleIntegration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
 
         return view('dashboard', [
             'income' => $income,
@@ -83,6 +85,7 @@ class DashboardController extends Controller
             'budgets' => $budgets,
             'wallets' => $wallets,
             'alerts' => $alerts,
+            'googleIntegration' => $googleIntegration,
         ]);
     }
 

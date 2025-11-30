@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Integration;
 use App\Models\Recurrence;
 use App\Models\Wallet;
+use App\Jobs\SyncGoogleCalendarEvent;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,6 +77,18 @@ class RecurrenceController extends Controller
             'sync_to_calendar' => $request->boolean('sync_to_calendar'),
             'note' => $data['note'] ?? null,
         ]);
+
+        if ($request->boolean('sync_to_calendar')) {
+            $integration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
+            if ($integration) {
+                SyncGoogleCalendarEvent::dispatch($integration, [
+                    'summary' => 'Recurrencia: ' . $data['name'],
+                    'description' => 'Monto: ' . $data['amount'],
+                    'start' => $data['next_run_on'],
+                    'provider_event_id' => null,
+                ]);
+            }
+        }
 
         return redirect()->route('recurrences.index')->with('status', 'Recurrencia guardada.');
     }

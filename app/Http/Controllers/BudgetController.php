@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Budget;
 use App\Models\Category;
+use App\Models\Integration;
+use App\Jobs\SyncGoogleCalendarEvent;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,6 +71,19 @@ class BudgetController extends Controller
             ]
         );
 
+        if ($request->boolean('sync_to_calendar')) {
+            $integration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
+            if ($integration) {
+                $startDate = Carbon::createFromDate($data['year'], $data['month'], 1);
+                SyncGoogleCalendarEvent::dispatch($integration, [
+                    'summary' => 'Presupuesto: ' . $this->categoryName($data['category_id']),
+                    'description' => 'Monto: ' . $data['amount'],
+                    'start' => $startDate->toDateString(),
+                    'provider_event_id' => null,
+                ]);
+            }
+        }
+
         return redirect()->route('budgets.index')->with('status', 'Presupuesto guardado.');
     }
 
@@ -80,5 +95,10 @@ class BudgetController extends Controller
         $budget->delete();
 
         return redirect()->route('budgets.index')->with('status', 'Presupuesto eliminado.');
+    }
+
+    private function categoryName(int $categoryId): string
+    {
+        return Category::find($categoryId)?->name ?? 'Categoría';
     }
 }

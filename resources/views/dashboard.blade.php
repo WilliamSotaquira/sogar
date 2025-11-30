@@ -10,6 +10,25 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400">Visión rápida de ingresos, gastos, bolsillos y alertas.</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
+                @if($googleIntegration)
+                    <form method="POST" action="{{ route('integrations.google.disconnect') }}" class="inline-flex">
+                        @csrf
+                        @method('DELETE')
+                        <button
+                            type="submit"
+                            class="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800 dark:focus:ring-offset-gray-900"
+                        >
+                            Desconectar Google
+                        </button>
+                    </form>
+                @else
+                    <a
+                        href="{{ route('integrations.google.redirect') }}"
+                        class="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800 dark:focus:ring-offset-gray-900"
+                    >
+                        Conectar Google
+                    </a>
+                @endif
                 <a
                     href="{{ route('transactions.create') }}"
                     class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"

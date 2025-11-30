@@ -6,6 +6,7 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\GoogleIntegrationController;
 use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -45,4 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('recurrences/{recurrence}', [RecurrenceController::class, 'destroy'])->name('recurrences.destroy');
     Route::get('transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::get('integrations/google', [GoogleIntegrationController::class, 'redirect'])->name('integrations.google.redirect');
+    Route::get('integrations/google/callback', [GoogleIntegrationController::class, 'callback'])->name('integrations.google.callback');
+    Route::delete('integrations/google', [GoogleIntegrationController::class, 'disconnect'])->name('integrations.google.disconnect');
 });
