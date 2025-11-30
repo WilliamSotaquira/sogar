@@ -57,7 +57,7 @@ class BudgetController extends Controller
             'sync_to_calendar' => ['sometimes', 'boolean'],
         ]);
 
-        Budget::updateOrCreate(
+        $budget = Budget::updateOrCreate(
             [
                 'user_id' => $user->id,
                 'category_id' => $data['category_id'],
@@ -80,6 +80,8 @@ class BudgetController extends Controller
                     'description' => 'Monto: ' . $data['amount'],
                     'start' => $startDate->toDateString(),
                     'provider_event_id' => null,
+                    'model' => 'budget',
+                    'model_id' => $budget->id,
                 ]);
             }
         }

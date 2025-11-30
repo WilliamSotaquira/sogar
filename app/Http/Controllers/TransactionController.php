@@ -36,6 +36,62 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $now = Carbon::now();
+
+        $month = (int) $request->input('month', $now->format('m'));
+        $year = (int) $request->input('year', $now->format('Y'));
+        $categoryId = $request->input('category_id');
+        $walletId = $request->input('wallet_id');
+
+        $baseQuery = Transaction::with(['category', 'wallet'])
+            ->where('user_id', $user->id)
+            ->whereYear('occurred_on', $year)
+            ->whereMonth('occurred_on', $month)
+            ->orderByDesc('occurred_on')
+            ->orderByDesc('id');
+
+        if ($categoryId) {
+            $baseQuery->where('category_id', $categoryId);
+        }
+
+        if ($walletId) {
+            $baseQuery->where('wallet_id', $walletId);
+        }
+
+        $transactions = (clone $baseQuery)->paginate(15)->appends($request->query());
+
+        $totals = [
+            'income' => (clone $baseQuery)->whereHas('category', fn($q) => $q->where('type', 'income'))->sum('amount'),
+            'expense' => (clone $baseQuery)->whereHas('category', fn($q) => $q->where('type', 'expense'))->sum('amount'),
+        ];
+
+        $categories = Category::where(function ($q) use ($user) {
+            $q->whereNull('user_id')->orWhere('user_id', $user->id);
+        })
+            ->where('is_active', true)
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
+        $wallets = Wallet::where('user_id', $user->id)->where('is_active', true)->orderBy('name')->get();
+
+        return view('transactions.index', [
+            'transactions' => $transactions,
+            'categories' => $categories,
+            'wallets' => $wallets,
+            'filters' => [
+                'month' => $month,
+                'year' => $year,
+                'category_id' => $categoryId,
+                'wallet_id' => $walletId,
+            ],
+            'totals' => $totals,
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();

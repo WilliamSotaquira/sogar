@@ -64,7 +64,7 @@ class RecurrenceController extends Controller
             'sync_to_calendar' => ['sometimes', 'boolean'],
         ]);
 
-        Recurrence::create([
+        $recurrence = Recurrence::create([
             'user_id' => $user->id,
             'category_id' => $data['category_id'],
             'wallet_id' => $data['wallet_id'] ?? null,
@@ -86,6 +86,8 @@ class RecurrenceController extends Controller
                     'description' => 'Monto: ' . $data['amount'],
                     'start' => $data['next_run_on'],
                     'provider_event_id' => null,
+                    'model' => 'recurrence',
+                    'model_id' => $recurrence->id,
                 ]);
             }
         }
