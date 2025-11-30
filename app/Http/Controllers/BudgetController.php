@@ -75,7 +75,7 @@ class BudgetController extends Controller
             $integration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
             if ($integration) {
                 $startDate = Carbon::createFromDate($data['year'], $data['month'], 1);
-                SyncGoogleCalendarEvent::dispatch($integration, [
+                SyncGoogleCalendarEvent::dispatchSync($integration, [
                     'summary' => 'Presupuesto: ' . $this->categoryName($data['category_id']),
                     'description' => 'Monto: ' . $data['amount'],
                     'start' => $startDate->toDateString(),

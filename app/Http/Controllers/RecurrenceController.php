@@ -81,7 +81,7 @@ class RecurrenceController extends Controller
         if ($request->boolean('sync_to_calendar')) {
             $integration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
             if ($integration) {
-                SyncGoogleCalendarEvent::dispatch($integration, [
+                SyncGoogleCalendarEvent::dispatchSync($integration, [
                     'summary' => 'Recurrencia: ' . $data['name'],
                     'description' => 'Monto: ' . $data['amount'],
                     'start' => $data['next_run_on'],
