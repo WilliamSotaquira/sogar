@@ -71,7 +71,21 @@ class BudgetController extends Controller
             ]
         );
 
-        if ($request->boolean('sync_to_calendar')) {
+        $shouldSync = $request->boolean('sync_to_calendar');
+
+        if (!$shouldSync && $budget->provider_event_id) {
+            $integration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
+            if ($integration) {
+                app(\App\Services\GoogleCalendarService::class)->deleteEvent($integration, $budget->provider_event_id);
+            }
+
+            $budget->update([
+                'provider_event_id' => null,
+                'last_synced_at' => null,
+            ]);
+        }
+
+        if ($shouldSync) {
             $integration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
             if ($integration) {
                 $startDate = Carbon::createFromDate($data['year'], $data['month'], 1);
@@ -79,7 +93,7 @@ class BudgetController extends Controller
                     'summary' => 'Presupuesto: ' . $this->categoryName($data['category_id']),
                     'description' => 'Monto: ' . $data['amount'],
                     'start' => $startDate->toDateString(),
-                    'provider_event_id' => null,
+                    'provider_event_id' => $budget->provider_event_id,
                     'model' => 'budget',
                     'model_id' => $budget->id,
                 ]);
