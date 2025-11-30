@@ -9,7 +9,13 @@
                 <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard financiero</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400">Visión rápida de ingresos, gastos, bolsillos y alertas.</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <a
+                    href="{{ route('transactions.create') }}"
+                    class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                >
+                    Registrar transacción
+                </a>
                 <div class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
                     <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
                     Salud: {{ $healthScore }}/100
