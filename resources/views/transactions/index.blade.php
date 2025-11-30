@@ -4,18 +4,24 @@
 
 <x-layouts.app :title="__('Transacciones')">
     <div class="space-y-6">
-        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-50">Transacciones</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Filtro por mes, categoría y bolsillo.</p>
-            </div>
-            <div class="flex flex-wrap gap-3">
+        <div class="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 p-6 shadow-lg text-white">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-sm uppercase tracking-wide font-semibold">Historial</p>
+                    <h1 class="text-3xl font-bold">Transacciones</h1>
+                    <p class="text-sm text-white/85">Filtra por periodo, categoría o bolsillo y controla tus movimientos.</p>
+                </div>
                 <a
                     href="{{ route('transactions.create') }}"
-                    class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                    class="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-blue-700 shadow hover:bg-white"
                 >
                     Registrar transacción
                 </a>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/85">
+                <span class="rounded-full bg-white/15 px-3 py-1">Ingreso/Gasto</span>
+                <span class="rounded-full bg-white/15 px-3 py-1">Bolsillos asignados</span>
+                <span class="rounded-full bg-white/15 px-3 py-1">Neto por período</span>
             </div>
         </div>
 

@@ -1,12 +1,19 @@
 <x-layouts.app :title="__('Presupuestos')">
     <div class="mx-auto w-full max-w-5xl space-y-6">
-        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-50">Presupuestos</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Define montos por categoría y mes con alertas.</p>
+        <div class="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 p-6 shadow-lg">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+                <div>
+                    <p class="text-sm uppercase tracking-wide font-semibold">Planea antes de gastar</p>
+                    <h1 class="text-3xl font-bold">Presupuestos</h1>
+                    <p class="text-sm text-white/80">Define montos por categoría y mes, activa alertas y sincroniza con calendario.</p>
+                </div>
+                <div class="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+                    {{ now()->translatedFormat('F Y') }}
+                </div>
             </div>
-            <div class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                {{ now()->translatedFormat('F Y') }}
+            <div class="flex flex-wrap gap-2">
+                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Alertas al 80/90%</span>
+                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Sync opcional a Google Calendar</span>
             </div>
         </div>
 
@@ -16,7 +23,7 @@
             </div>
         @endif
 
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-md dark:border-gray-800 dark:bg-gray-900">
             <form method="POST" action="{{ route('budgets.store') }}" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 @csrf
                 <div>
@@ -91,7 +98,7 @@
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <input type="checkbox" name="sync_to_calendar" value="1" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800">
-                        Enviar a calendario (futuro)
+                        Enviar a Google Calendar
                     </label>
                     <div class="flex justify-end">
                         <button
@@ -105,7 +112,7 @@
             </form>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-md dark:border-gray-800 dark:bg-gray-900">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-50">Listado</h2>
             <div class="mt-4 overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">

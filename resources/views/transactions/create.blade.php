@@ -1,8 +1,9 @@
 <x-layouts.app :title="__('Registrar transacción')">
     <div class="mx-auto w-full max-w-3xl space-y-6">
-        <div>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-50">Registrar transacción</h1>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Captura rápida con sugerencia por palabra clave.</p>
+        <div class="rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-lime-400 p-6 text-white shadow-lg">
+            <p class="text-sm uppercase tracking-wide font-semibold">Entrada rápida</p>
+            <h1 class="text-3xl font-bold">Registrar transacción</h1>
+            <p class="text-sm text-white/85">Sugerencias por palabra clave, categoría y bolsillo en un solo paso.</p>
         </div>
 
         @if (session('status'))
@@ -11,7 +12,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('transactions.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <form method="POST" action="{{ route('transactions.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-5 shadow-md dark:border-gray-800 dark:bg-gray-900">
             @csrf
 
             <div class="grid gap-4 md:grid-cols-2">

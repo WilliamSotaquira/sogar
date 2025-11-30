@@ -4,10 +4,13 @@
 
 <x-layouts.app :title="__('Bolsillos')">
     <div class="space-y-6">
-        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-50">Bolsillos</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Saldo, meta y movimientos recientes.</p>
+        <div class="rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 p-6 text-white shadow-lg">
+            <p class="text-sm uppercase tracking-wide font-semibold">Fondos separados</p>
+            <h1 class="text-3xl font-bold">Bolsillos</h1>
+            <p class="text-sm text-white/85">Monitorea saldos, metas y registra ajustes manuales.</p>
+            <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/85">
+                <span class="rounded-full bg-white/15 px-3 py-1">Compartidos/Personales</span>
+                <span class="rounded-full bg-white/15 px-3 py-1">Movimientos recientes</span>
             </div>
         </div>
 
