@@ -52,7 +52,7 @@
                                     type="number"
                                     step="0.01"
                                     name="amount"
-                                    class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                    class="mt-1 form-field"
                                     required
                                 >
                             </div>
@@ -62,7 +62,7 @@
                                     type="date"
                                     name="occurred_on"
                                     value="{{ now()->format('Y-m-d') }}"
-                                    class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                    class="mt-1 form-field"
                                     required
                                 >
                             </div>
@@ -71,7 +71,7 @@
                                 <input
                                     type="text"
                                     name="concept"
-                                    class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                    class="mt-1 form-field"
                                     placeholder="Ajuste manual"
                                 >
                             </div>

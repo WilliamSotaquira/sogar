@@ -35,7 +35,7 @@
                         min="1"
                         max="12"
                         value="{{ $filters['month'] }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 form-field"
                     >
                 </div>
                 <div>
@@ -46,14 +46,14 @@
                         min="2000"
                         max="2100"
                         value="{{ $filters['year'] }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 form-field"
                     >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoría</label>
                     <select
                         name="category_id"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 select-field"
                     >
                         <option value="">Todas</option>
                         @foreach ($categories as $category)
@@ -67,7 +67,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bolsillo</label>
                     <select
                         name="wallet_id"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 select-field"
                     >
                         <option value="">Todos</option>
                         @foreach ($wallets as $wallet)
