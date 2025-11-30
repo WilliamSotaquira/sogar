@@ -15,31 +15,37 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Crear usuario William (tú)
-        User::create([
-            'name' => 'William',
-            'email' => 'william@sogar.com',
-            'password' => Hash::make('S_07201*'),
-            'email_verified_at' => now(),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'william@sogar.com'],
+            [
+                'name' => 'William',
+                'password' => Hash::make('S_07201*'),
+                'email_verified_at' => now(),
+            ]
+        );
 
         // Crear usuario Esposa
-        User::create([
-            'name' => 'Jazmin',
-            'email' => 'Jazmin@sogar.com',
-            'password' => Hash::make('123456'),
-            'email_verified_at' => now(),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'Jazmin@sogar.com'],
+            [
+                'name' => 'Jazmin',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now(),
+            ]
+        );
 
         // Crear usuario Hijo
-        User::create([
-            'name' => 'Santiago',
-            'email' => 'Santiago@sogar.com',
-            'password' => Hash::make('123456'),
-            'email_verified_at' => now(),
-        ]);
+        User::updateOrCreate(
+            ['email' => 'Santiago@sogar.com'],
+            [
+                'name' => 'Santiago',
+                'password' => Hash::make('123456'),
+                'email_verified_at' => now(),
+            ]
+        );
 
         $this->command->info('✅ Usuarios de Sogar creados exitosamente!');
-        $this->command->info('👤 William: william@sogar.com / 123456');
+        $this->command->info('👤 William: william@sogar.com / S_07201*');
         $this->command->info('👩 Esposa: Jazmin@sogar.com / 123456');
         $this->command->info('👦 Hijo: Santiago@sogar.com / 123456');
     }
