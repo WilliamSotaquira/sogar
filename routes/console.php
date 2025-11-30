@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Recurrence;
 use App\Models\Transaction;
+use App\Models\WalletMovement;
 use Carbon\Carbon;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -20,7 +22,7 @@ Artisan::command('recurrences:run', function () {
 
     $count = 0;
     foreach ($recurrences as $recurrence) {
-        Transaction::create([
+        $transaction = Transaction::create([
             'user_id' => $recurrence->user_id,
             'category_id' => $recurrence->category_id,
             'wallet_id' => $recurrence->wallet_id,
@@ -30,6 +32,25 @@ Artisan::command('recurrences:run', function () {
             'note' => $recurrence->note,
             'origin' => 'recurrence',
         ]);
+
+        if ($recurrence->wallet_id) {
+            $category = Category::find($recurrence->category_id);
+            if ($category) {
+                $signedAmount = $category->type === 'expense'
+                    ? -1 * abs($recurrence->amount)
+                    : abs($recurrence->amount);
+
+                WalletMovement::create([
+                    'wallet_id' => $recurrence->wallet_id,
+                    'user_id' => $recurrence->user_id,
+                    'category_id' => $recurrence->category_id,
+                    'transaction_id' => $transaction->id,
+                    'amount' => $signedAmount,
+                    'occurred_on' => $today,
+                    'concept' => $recurrence->note,
+                ]);
+            }
+        }
 
         $recurrence->update([
             'last_run_at' => Carbon::now(),

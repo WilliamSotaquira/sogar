@@ -5,6 +5,8 @@ use App\Models\Category;
 use App\Models\CategoryKeyword;
 use App\Models\Recurrence;
 use App\Models\Transaction;
+use App\Models\Wallet;
+use App\Models\WalletMovement;
 use App\Models\User;
 use Carbon\Carbon;
 use function Pest\Laravel\actingAs;
@@ -26,11 +28,20 @@ it('suggests category from keyword when storing a transaction', function () {
         'keyword' => 'super',
     ]);
 
+    $wallet = Wallet::create([
+        'user_id' => $user->id,
+        'name' => 'General',
+        'initial_balance' => 0,
+        'is_shared' => true,
+        'is_active' => true,
+    ]);
+
     actingAs($user)
         ->post(route('transactions.store'), [
             'amount' => 12000,
             'occurred_on' => now()->toDateString(),
             'note' => 'Compra super mercado',
+            'wallet_id' => $wallet->id,
         ])
         ->assertRedirect(route('dashboard'));
 
@@ -38,6 +49,12 @@ it('suggests category from keyword when storing a transaction', function () {
         'user_id' => $user->id,
         'category_id' => $category->id,
         'note' => 'Compra super mercado',
+    ]);
+
+    $this->assertDatabaseHas('sogar_wallet_movements', [
+        'wallet_id' => $wallet->id,
+        'transaction_id' => Transaction::first()->id,
+        'amount' => -12000,
     ]);
 });
 
@@ -152,6 +169,7 @@ it('runs recurrences command and schedules next run', function () {
         'last_run_at' => null,
         'is_active' => true,
         'sync_to_calendar' => false,
+        'wallet_id' => $wallet->id,
     ]);
 
     artisan('recurrences:run')->assertExitCode(0);
@@ -160,6 +178,12 @@ it('runs recurrences command and schedules next run', function () {
         'user_id' => $user->id,
         'recurrence_id' => $recurrence->id,
         'amount' => 50,
+    ]);
+
+    $this->assertDatabaseHas('sogar_wallet_movements', [
+        'wallet_id' => $wallet->id,
+        'transaction_id' => Transaction::first()->id,
+        'amount' => -50,
     ]);
 
     $recurrence->refresh();

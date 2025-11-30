@@ -59,10 +59,7 @@ class DashboardController extends Controller
             ->with(['transactions.category', 'movements'])
             ->get()
             ->map(function (Wallet $wallet) {
-            $income = $wallet->transactions->where('category.type', 'income')->sum('amount');
-            $expense = $wallet->transactions->where('category.type', 'expense')->sum('amount');
-            $movements = $wallet->movements->sum('amount');
-            $balance = $wallet->initial_balance + $income - $expense + $movements;
+            $balance = $wallet->initial_balance + $wallet->movements->sum('amount');
 
             return [
                 'name' => $wallet->name,

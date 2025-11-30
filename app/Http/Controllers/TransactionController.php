@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\CategoryKeyword;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Models\WalletMovement;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,7 +64,9 @@ class TransactionController extends Controller
                 ->withInput();
         }
 
-        Transaction::create([
+        $category = Category::findOrFail($categoryId);
+
+        $transaction = Transaction::create([
             'user_id' => $user->id,
             'category_id' => $categoryId,
             'wallet_id' => $validated['wallet_id'] ?? null,
@@ -73,6 +76,10 @@ class TransactionController extends Controller
             'origin' => 'manual',
             'tags' => null,
         ]);
+
+        if ($transaction->wallet_id) {
+            $this->createWalletMovement($transaction, $category);
+        }
 
         return redirect()->route('dashboard')->with('status', 'Transacción registrada');
     }
@@ -92,5 +99,22 @@ class TransactionController extends Controller
             });
 
         return $keyword?->category_id;
+    }
+
+    private function createWalletMovement(Transaction $transaction, Category $category): void
+    {
+        $signedAmount = $category->type === 'expense'
+            ? -1 * abs($transaction->amount)
+            : abs($transaction->amount);
+
+        WalletMovement::create([
+            'wallet_id' => $transaction->wallet_id,
+            'user_id' => $transaction->user_id,
+            'category_id' => $transaction->category_id,
+            'transaction_id' => $transaction->id,
+            'amount' => $signedAmount,
+            'occurred_on' => $transaction->occurred_on,
+            'concept' => $transaction->note,
+        ]);
     }
 }
