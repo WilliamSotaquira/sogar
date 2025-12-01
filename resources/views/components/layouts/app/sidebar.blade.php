@@ -3,18 +3,31 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+<body class="min-h-screen bg-white dark:bg-zinc-800">
+        <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/80">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rounded-xl bg-white px-3 py-2 text-zinc-900 shadow-sm rtl:space-x-reverse dark:bg-zinc-800 dark:text-white" wire:navigate>
                 <x-app-logo />
+                <span class="text-sm font-semibold">Sogar Finanzas</span>
             </a>
 
-            <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                </flux:navlist.group>
+            <flux:navlist variant="flush" class="mt-4 space-y-1">
+                <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                    {{ __('Dashboard') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="wallet" :href="route('wallets.index')" :current="request()->routeIs('wallets.*')" wire:navigate>
+                    Bolsillos
+                </flux:navlist.item>
+                <flux:navlist.item icon="folder-git-2" :href="route('budgets.index')" :current="request()->routeIs('budgets.*')" wire:navigate>
+                    Presupuestos
+                </flux:navlist.item>
+                <flux:navlist.item icon="repeat-2" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
+                    Recurrencias
+                </flux:navlist.item>
+                <flux:navlist.item icon="layout-list" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
+                    Transacciones
+                </flux:navlist.item>
             </flux:navlist>
 
             <flux:spacer />
