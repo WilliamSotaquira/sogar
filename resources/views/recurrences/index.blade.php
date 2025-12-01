@@ -30,7 +30,7 @@
                         type="text"
                         name="name"
                         value="{{ old('name') }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         required
                     >
                     @error('name')
@@ -45,7 +45,7 @@
                         step="0.01"
                         name="amount"
                         value="{{ old('amount') }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         required
                     >
                     @error('amount')
@@ -57,7 +57,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoría</label>
                     <select
                         name="category_id"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
                         required
                     >
                         <option value="">Selecciona</option>
@@ -76,7 +76,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bolsillo</label>
                     <select
                         name="wallet_id"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
                     >
                         <option value="">Sin bolsillo</option>
                         @foreach ($wallets as $wallet)
@@ -92,7 +92,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Frecuencia</label>
                     <select
                         name="frequency"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
                         required
                     >
                         <option value="">Selecciona</option>
@@ -111,7 +111,7 @@
                         type="date"
                         name="next_run_on"
                         value="{{ old('next_run_on', now()->format('Y-m-d')) }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         required
                     >
                     @error('next_run_on')
@@ -125,7 +125,7 @@
                         type="text"
                         name="note"
                         value="{{ old('note') }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     >
                     @error('note')
                         <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>

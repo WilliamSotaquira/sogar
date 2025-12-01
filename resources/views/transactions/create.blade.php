@@ -24,7 +24,7 @@
                         name="amount"
                         id="amount"
                         value="{{ old('amount') }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         required
                     >
                     @error('amount')
@@ -39,7 +39,7 @@
                         name="occurred_on"
                         id="occurred_on"
                         value="{{ old('occurred_on', now()->format('Y-m-d')) }}"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                         required
                     >
                     @error('occurred_on')
@@ -59,7 +59,7 @@
                     <select
                         id="category_id"
                         name="category_id"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
                     >
                         <option value="">Selecciona</option>
                         @foreach ($categories as $category)
@@ -79,7 +79,7 @@
                     <select
                         id="wallet_id"
                         name="wallet_id"
-                        class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
                     >
                         <option value="">Sin bolsillo</option>
                         @foreach ($wallets as $wallet)
@@ -100,7 +100,7 @@
                     id="note"
                     value="{{ old('note') }}"
                     placeholder="Ej: super compras quincena"
-                    class="mt-1 w-full rounded-lg border-gray-300 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    class="mt-1 block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 >
                 @error('note')
                     <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
