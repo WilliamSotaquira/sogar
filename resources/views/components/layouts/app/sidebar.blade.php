@@ -16,16 +16,16 @@
                 <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="wallet" :href="route('wallets.index')" :current="request()->routeIs('wallets.*')" wire:navigate>
+                <flux:navlist.item icon="layout-grid" :href="route('wallets.index')" :current="request()->routeIs('wallets.*')" wire:navigate>
                     Bolsillos
                 </flux:navlist.item>
                 <flux:navlist.item icon="folder-git-2" :href="route('budgets.index')" :current="request()->routeIs('budgets.*')" wire:navigate>
                     Presupuestos
                 </flux:navlist.item>
-                <flux:navlist.item icon="history" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
+                <flux:navlist.item icon="layout-grid" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
                     Recurrencias
                 </flux:navlist.item>
-                <flux:navlist.item icon="layout-list" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
+                <flux:navlist.item icon="layout-grid" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
                     Transacciones
                 </flux:navlist.item>
             </flux:navlist>
