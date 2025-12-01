@@ -22,7 +22,7 @@
                 <flux:navlist.item icon="folder-git-2" :href="route('budgets.index')" :current="request()->routeIs('budgets.*')" wire:navigate>
                     Presupuestos
                 </flux:navlist.item>
-                <flux:navlist.item icon="repeat-2" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
+                <flux:navlist.item icon="history" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
                     Recurrencias
                 </flux:navlist.item>
                 <flux:navlist.item icon="layout-list" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
