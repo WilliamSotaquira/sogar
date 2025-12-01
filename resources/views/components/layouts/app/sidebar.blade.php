@@ -7,9 +7,8 @@
         <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/80">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rounded-xl bg-white px-3 py-2 text-zinc-900 shadow-sm rtl:space-x-reverse dark:bg-zinc-800 dark:text-white" wire:navigate>
+            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                 <x-app-logo />
-                <span class="text-sm font-semibold">Sogar Finanzas</span>
             </a>
 
             <flux:navlist variant="flush" class="mt-4 space-y-1">
