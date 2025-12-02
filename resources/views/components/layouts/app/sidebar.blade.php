@@ -3,7 +3,8 @@
     <head>
         @include('partials.head')
     </head>
-<body class="min-h-screen bg-white dark:bg-zinc-800" x-data="{ mobileOpen: false }">
+    <body class="min-h-screen bg-white dark:bg-zinc-800" x-data="{ mobileOpen: false }">
+        <!-- Mobile overlay -->
         <div
             x-show="mobileOpen"
             class="fixed inset-0 z-30 bg-black/50 lg:hidden"
@@ -15,7 +16,7 @@
             sticky
             stashable
             class="border-e border-zinc-200 bg-zinc-50/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/80 lg:static lg:translate-x-0 fixed inset-y-0 z-40 w-72 transition-transform duration-200"
-            :class="{ '-translate-x-full lg:translate-x-0': !mobileOpen, 'translate-x-0': mobileOpen }"
+            x-bind:class="mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex items-center justify-between lg:justify-start">
                 <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
@@ -32,23 +33,23 @@
             </div>
 
             <flux:navlist variant="flush" class="mt-4 space-y-1">
-            <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                {{ __('Dashboard') }}
-            </flux:navlist.item>
-            <flux:navlist.item icon="layout-grid" :href="route('wallets.index')" :current="request()->routeIs('wallets.*')" wire:navigate>
-                Bolsillos
-            </flux:navlist.item>
-            <flux:navlist.item icon="folder-git-2" :href="route('budgets.index')" :current="request()->routeIs('budgets.*')" wire:navigate>
-                Presupuestos
-            </flux:navlist.item>
-            <flux:navlist.item icon="tag" :href="route('categories.index')" :current="request()->routeIs('categories.*')" wire:navigate>
-                Categorías
-            </flux:navlist.item>
-            <flux:navlist.item icon="layout-grid" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
-                Recurrencias
-            </flux:navlist.item>
-            <flux:navlist.item icon="layout-grid" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
-                Transacciones
+                <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                    {{ __('Dashboard') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="layout-grid" :href="route('wallets.index')" :current="request()->routeIs('wallets.*')" wire:navigate>
+                    Bolsillos
+                </flux:navlist.item>
+                <flux:navlist.item icon="folder-git-2" :href="route('budgets.index')" :current="request()->routeIs('budgets.*')" wire:navigate>
+                    Presupuestos
+                </flux:navlist.item>
+                <flux:navlist.item icon="tag" :href="route('categories.index')" :current="request()->routeIs('categories.*')" wire:navigate>
+                    Categorías
+                </flux:navlist.item>
+                <flux:navlist.item icon="layout-grid" :href="route('recurrences.index')" :current="request()->routeIs('recurrences.*')" wire:navigate>
+                    Recurrencias
+                </flux:navlist.item>
+                <flux:navlist.item icon="layout-grid" :href="route('transactions.index')" :current="request()->routeIs('transactions.*')" wire:navigate>
+                    Transacciones
                 </flux:navlist.item>
             </flux:navlist>
 
@@ -56,11 +57,11 @@
 
             <flux:navlist variant="outline">
                 <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
+                    {{ __('Repository') }}
                 </flux:navlist.item>
 
                 <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
+                    {{ __('Documentation') }}
                 </flux:navlist.item>
             </flux:navlist>
 
@@ -110,7 +111,7 @@
             </flux:dropdown>
         </flux:sidebar>
 
-        <!-- Mobile User Menu -->
+        <!-- Mobile Header -->
         <flux:header class="lg:hidden">
             <button
                 type="button"
