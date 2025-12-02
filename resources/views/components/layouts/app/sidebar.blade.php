@@ -33,32 +33,23 @@
             </div>
 
             <nav class="mt-4 space-y-1 px-3">
-                <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ request()->routeIs('dashboard') ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
-                    <span class="shrink-0">
-                        <flux:icon name="layout-grid" class="h-4 w-4" />
-                    </span>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('wallets.index') }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ request()->routeIs('wallets.*') ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
-                    <flux:icon name="wallet" class="h-4 w-4" />
-                    <span>Bolsillos</span>
-                </a>
-                <a href="{{ route('budgets.index') }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ request()->routeIs('budgets.*') ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
-                    <flux:icon name="folder" class="h-4 w-4" />
-                    <span>Presupuestos</span>
-                </a>
-                <a href="{{ route('categories.index') }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ request()->routeIs('categories.*') ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
-                    <flux:icon name="tag" class="h-4 w-4" />
-                    <span>Categorías</span>
-                </a>
-                <a href="{{ route('recurrences.index') }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ request()->routeIs('recurrences.*') ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
-                    <flux:icon name="repeat-2" class="h-4 w-4" />
-                    <span>Recurrencias</span>
-                </a>
-                <a href="{{ route('transactions.index') }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ request()->routeIs('transactions.*') ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
-                    <flux:icon name="list" class="h-4 w-4" />
-                    <span>Transacciones</span>
-                </a>
+                @php
+                    $links = [
+                        ['label' => 'Dashboard', 'route' => 'dashboard'],
+                        ['label' => 'Bolsillos', 'route' => 'wallets.index'],
+                        ['label' => 'Presupuestos', 'route' => 'budgets.index'],
+                        ['label' => 'Categorías', 'route' => 'categories.index'],
+                        ['label' => 'Recurrencias', 'route' => 'recurrences.index'],
+                        ['label' => 'Transacciones', 'route' => 'transactions.index'],
+                    ];
+                @endphp
+                @foreach ($links as $link)
+                    @php $active = request()->routeIs(Str::before($link['route'], '.') . '*'); @endphp
+                    <a href="{{ route($link['route']) }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ $active ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
+                        <span class="h-2 w-2 rounded-full {{ $active ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-500' }}"></span>
+                        <span>{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
             </nav>
 
             <div class="mt-auto px-3 py-4 border-t border-white/10">
