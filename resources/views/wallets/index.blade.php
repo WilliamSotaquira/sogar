@@ -60,7 +60,7 @@
                             type="text"
                             name="name"
                             value="{{ old('name', $editingWallet->name ?? '') }}"
-                            class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                            class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                             placeholder="Ej. Ahorro casa, Viajes"
                             required
                         >
@@ -77,7 +77,7 @@
                                 step="0.01"
                                 name="initial_balance"
                                 value="{{ old('initial_balance', $editingWallet->initial_balance ?? 0) }}"
-                                class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                 required
                             >
                             @error('initial_balance')
@@ -91,7 +91,7 @@
                                 step="0.01"
                                 name="target_amount"
                                 value="{{ old('target_amount', $editingWallet->target_amount ?? '') }}"
-                                class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                 placeholder="Ej. 5000000"
                             >
                             @error('target_amount')
@@ -106,7 +106,7 @@
                             type="text"
                             name="description"
                             value="{{ old('description', $editingWallet->description ?? '') }}"
-                            class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                            class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                             placeholder="Ayuda a tu pareja o equipo"
                         >
                         @error('description')

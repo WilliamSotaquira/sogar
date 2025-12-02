@@ -66,7 +66,7 @@
                             type="text"
                             name="name"
                             value="{{ old('name', $editingCategory->name ?? '') }}"
-                            class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                            class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                             placeholder="Ej. Arriendo, Freelance, Mercado"
                             required
                         >
@@ -80,7 +80,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
                             <select
                                 name="type"
-                                class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
+                                class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 appearance-none"
                                 required
                             >
                                 <option value="income" @selected(old('type', $editingCategory->type ?? 'expense') === 'income')>Ingreso</option>
@@ -96,7 +96,7 @@
                                 type="text"
                                 name="color"
                                 value="{{ old('color', $editingCategory->color ?? '') }}"
-                                class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                 placeholder="#0ea5e9 (opcional)"
                             >
                             @error('color')
@@ -111,7 +111,7 @@
                             type="text"
                             name="description"
                             value="{{ old('description', $editingCategory->description ?? '') }}"
-                            class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                            class="block h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                             placeholder="Ayuda a recordar cómo usarla"
                         >
                         @error('description')
