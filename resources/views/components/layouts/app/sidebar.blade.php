@@ -12,24 +12,14 @@
             @click="mobileOpen = false"
         ></div>
 
+        <!-- Desktop sidebar -->
         <aside
-            class="fixed inset-y-0 z-40 w-72 border-r border-zinc-200 bg-zinc-50/90 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90 transition-transform duration-200 lg:fixed lg:translate-x-0"
-            :class="mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+            class="hidden lg:block fixed inset-y-0 z-40 w-72 border-r border-zinc-200 bg-zinc-50/90 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90"
         >
             <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                     <x-app-logo />
                 </a>
-                <button
-                    type="button"
-                    class="lg:hidden rounded-lg p-2 text-zinc-500 hover:bg-zinc-800/5 dark:text-zinc-300 dark:hover:bg-white/10"
-                    @click="mobileOpen = false"
-                    aria-label="Cerrar menú"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
             </div>
 
             <nav class="mt-4 space-y-1 px-3">
@@ -96,6 +86,38 @@
                         </flux:menu>
                     </flux:dropdown>
                 </div>
+            </div>
+        </aside>
+
+        <!-- Mobile drawer -->
+        <aside
+            class="fixed inset-y-0 z-40 w-72 border-r border-zinc-200 bg-zinc-50/90 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90 transition-transform duration-200 lg:hidden"
+            x-show="mobileOpen"
+            x-transition
+        >
+            <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+                    <x-app-logo />
+                </a>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                    @click="mobileOpen = false"
+                    aria-label="Cerrar menú"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-3 py-2 space-y-1">
+                @foreach ($links as $link)
+                    @php $active = request()->routeIs(Str::before($link['route'], '.') . '*'); @endphp
+                    <a href="{{ route($link['route']) }}" wire:navigate class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-800/5 dark:text-zinc-200 dark:hover:bg-white/10 {{ $active ? 'bg-zinc-800/5 dark:bg-white/10 text-emerald-600 dark:text-emerald-300' : '' }}">
+                        <span class="h-2 w-2 rounded-full {{ $active ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-500' }}"></span>
+                        <span>{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
             </div>
         </aside>
 
