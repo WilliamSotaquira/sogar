@@ -3,13 +3,33 @@
     <head>
         @include('partials.head')
     </head>
-<body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/80">
-            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+<body class="min-h-screen bg-white dark:bg-zinc-800" x-data="{ mobileOpen: false }">
+        <div
+            x-show="mobileOpen"
+            class="fixed inset-0 z-30 bg-black/50 lg:hidden"
+            x-transition.opacity
+            @click="mobileOpen = false"
+        ></div>
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
-                <x-app-logo />
-            </a>
+        <flux:sidebar
+            sticky
+            stashable
+            class="border-e border-zinc-200 bg-zinc-50/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/80 lg:static lg:translate-x-0 fixed inset-y-0 z-40 w-72 transition-transform duration-200"
+            :class="{ '-translate-x-full lg:translate-x-0': !mobileOpen, 'translate-x-0': mobileOpen }"
+        >
+            <div class="flex items-center justify-between lg:justify-start">
+                <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+                    <x-app-logo />
+                </a>
+                <button
+                    type="button"
+                    class="lg:hidden rounded-lg p-2 text-zinc-500 hover:bg-zinc-800/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                    @click="mobileOpen = false"
+                    aria-label="Cerrar menú"
+                >
+                    <flux:icon name="x-mark" class="size-5" />
+                </button>
+            </div>
 
             <flux:navlist variant="flush" class="mt-4 space-y-1">
             <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
@@ -92,7 +112,14 @@
 
         <!-- Mobile User Menu -->
         <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+            <button
+                type="button"
+                class="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                @click="mobileOpen = true"
+                aria-label="Abrir menú"
+            >
+                <flux:icon name="bars-2" class="size-5" />
+            </button>
 
             <flux:spacer />
 
