@@ -24,7 +24,7 @@
                         <a href="{{ route('transactions.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                             Transacciones
                         </a>
-                        <a href="{{ route('wallets.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+                        <a href="{{ route('wallets.index') }}" class="inline-flex itemws-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                             Bolsillos
                         </a>
                     </div>
