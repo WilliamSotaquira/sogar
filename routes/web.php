@@ -4,6 +4,7 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\GoogleIntegrationController;
@@ -42,6 +43,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('budgets', [BudgetController::class, 'index'])->name('budgets.index');
     Route::post('budgets', [BudgetController::class, 'store'])->name('budgets.store');
     Route::delete('budgets/{budget}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
+
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
     Route::get('recurrences', [RecurrenceController::class, 'index'])->name('recurrences.index');
     Route::post('recurrences', [RecurrenceController::class, 'store'])->name('recurrences.store');
     Route::delete('recurrences/{recurrence}', [RecurrenceController::class, 'destroy'])->name('recurrences.destroy');
@@ -49,6 +56,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::get('wallets', [WalletController::class, 'index'])->name('wallets.index');
+    Route::post('wallets', [WalletController::class, 'store'])->name('wallets.store');
+    Route::put('wallets/{wallet}', [WalletController::class, 'update'])->name('wallets.update');
+    Route::delete('wallets/{wallet}', [WalletController::class, 'destroy'])->name('wallets.destroy');
     Route::post('wallets/{wallet}/movements', [WalletController::class, 'storeMovement'])->name('wallets.movements.store');
     Route::get('integrations/google', [GoogleIntegrationController::class, 'redirect'])->name('integrations.google.redirect');
     Route::get('integrations/google/callback', [GoogleIntegrationController::class, 'callback'])->name('integrations.google.callback');

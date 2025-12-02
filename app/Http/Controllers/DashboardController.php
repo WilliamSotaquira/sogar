@@ -56,6 +56,7 @@ class DashboardController extends Controller
             ->values();
 
         $wallets = Wallet::where('user_id', $user->id)
+            ->where('is_active', true)
             ->with(['transactions.category', 'movements'])
             ->get()
             ->map(function (Wallet $wallet) {

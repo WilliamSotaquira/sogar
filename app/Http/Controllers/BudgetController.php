@@ -47,7 +47,9 @@ class BudgetController extends Controller
             'category_id' => [
                 'required',
                 Rule::exists('sogar_categories', 'id')->where(function ($q) use ($user) {
-                    $q->whereNull('user_id')->orWhere('user_id', $user->id);
+                    $q->where(function ($inner) use ($user) {
+                        $inner->whereNull('user_id')->orWhere('user_id', $user->id);
+                    })->where('is_active', true);
                 }),
             ],
             'amount' => ['required', 'numeric', 'min:0'],

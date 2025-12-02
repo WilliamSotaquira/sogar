@@ -102,12 +102,16 @@ class TransactionController extends Controller
             'category_id' => [
                 'nullable',
                 Rule::exists('sogar_categories', 'id')->where(function ($q) use ($user) {
-                    $q->whereNull('user_id')->orWhere('user_id', $user->id);
+                    $q->where(function ($inner) use ($user) {
+                        $inner->whereNull('user_id')->orWhere('user_id', $user->id);
+                    })->where('is_active', true);
                 }),
             ],
             'wallet_id' => [
                 'nullable',
-                Rule::exists('sogar_wallets', 'id')->where('user_id', $user->id),
+                Rule::exists('sogar_wallets', 'id')->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)->where('is_active', true);
+                }),
             ],
             'note' => ['nullable', 'string', 'max:255'],
         ]);
