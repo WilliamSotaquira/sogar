@@ -79,6 +79,7 @@
                     <div id="barcode-scanner" class="mt-2 hidden rounded-xl border border-gray-200 bg-white p-2 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
                         <div id="barcode-camera" class="overflow-hidden rounded-lg"></div>
                         <p class="mt-2">Apunta la cámara al código. Se cerrará automáticamente al detectar.</p>
+                        <p id="barcode-status" class="mt-1 text-[11px] text-amber-600"></p>
                         <button type="button" id="close-scanner" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
                     </div>
                 </div>
@@ -126,7 +127,7 @@
     </div>
 </x-layouts.app>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js" defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const trigger = document.getElementById('scan-barcode');
@@ -134,32 +135,57 @@
         const cameraEl = document.getElementById('barcode-camera');
         const barcodeInput = document.getElementById('barcode-input');
         const closeBtn = document.getElementById('close-scanner');
+        const statusEl = document.getElementById('barcode-status');
         let html5Qrcode = null;
 
+        const setStatus = (msg, tone = 'text-amber-600') => {
+            if (!statusEl) return;
+            statusEl.textContent = msg || '';
+            statusEl.className = 'mt-1 text-[11px] ' + tone;
+        };
+
         const stopScanner = async () => {
+            setStatus('');
             if (html5Qrcode) {
-                await html5Qrcode.stop().catch(() => {});
-                html5Qrcode.clear().catch(() => {});
+                try { await html5Qrcode.stop(); } catch (_) {}
+                try { await html5Qrcode.clear(); } catch (_) {}
                 html5Qrcode = null;
             }
             scannerWrapper?.classList.add('hidden');
         };
 
         const startScanner = async () => {
-            if (!window.Html5Qrcode) return;
-            scannerWrapper?.classList.remove('hidden');
-            if (!html5Qrcode) {
-                html5Qrcode = new Html5Qrcode(cameraEl.id, { formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.QR_CODE] });
+            if (!window.Html5Qrcode) {
+                setStatus('No se pudo cargar el lector. Ingresa el código manualmente.', 'text-rose-500');
+                return;
             }
-            await html5Qrcode.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: { width: 250, height: 150 } },
-                (decodedText) => {
-                    barcodeInput.value = decodedText;
-                    stopScanner();
-                },
-                () => {}
-            );
+            scannerWrapper?.classList.remove('hidden');
+            setStatus('Solicitando acceso a la cámara...');
+            if (!html5Qrcode) {
+                html5Qrcode = new Html5Qrcode(cameraEl.id, {
+                    formatsToSupport: [
+                        Html5QrcodeSupportedFormats.EAN_13,
+                        Html5QrcodeSupportedFormats.CODE_128,
+                        Html5QrcodeSupportedFormats.EAN_8,
+                        Html5QrcodeSupportedFormats.QR_CODE,
+                    ],
+                });
+            }
+            try {
+                await html5Qrcode.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 280, height: 180 } },
+                    (decodedText) => {
+                        barcodeInput.value = decodedText;
+                        setStatus('Código detectado: ' + decodedText, 'text-emerald-600');
+                        stopScanner();
+                    },
+                    () => {}
+                );
+                setStatus('Escaneando... apunta al código.');
+            } catch (err) {
+                setStatus('No se pudo acceder a la cámara. Revisa permisos o usa entrada manual.', 'text-rose-500');
+            }
         };
 
         trigger?.addEventListener('click', (e) => {
