@@ -71,8 +71,16 @@
                     <input name="shelf_life_days" class="{{ $input }}" />
                 </div>
                 <div>
-                    <label class="{{ $label }}">Barcode</label>
-                    <input name="barcode" class="{{ $input }}" />
+                    <div class="flex items-center justify-between">
+                        <label class="{{ $label }}">Barcode</label>
+                        <button type="button" id="scan-barcode" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Escanear con cámara</button>
+                    </div>
+                    <input id="barcode-input" name="barcode" class="{{ $input }}" placeholder="Escanea o escribe manualmente" />
+                    <div id="barcode-scanner" class="mt-2 hidden rounded-xl border border-gray-200 bg-white p-2 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                        <div id="barcode-camera" class="overflow-hidden rounded-lg"></div>
+                        <p class="mt-2">Apunta la cámara al código. Se cerrará automáticamente al detectar.</p>
+                        <button type="button" id="close-scanner" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
+                    </div>
                 </div>
                 <div class="md:col-span-2 lg:col-span-3">
                     <label class="{{ $label }}">Notas</label>
@@ -117,3 +125,51 @@
         </div>
     </div>
 </x-layouts.app>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const trigger = document.getElementById('scan-barcode');
+        const scannerWrapper = document.getElementById('barcode-scanner');
+        const cameraEl = document.getElementById('barcode-camera');
+        const barcodeInput = document.getElementById('barcode-input');
+        const closeBtn = document.getElementById('close-scanner');
+        let html5Qrcode = null;
+
+        const stopScanner = async () => {
+            if (html5Qrcode) {
+                await html5Qrcode.stop().catch(() => {});
+                html5Qrcode.clear().catch(() => {});
+                html5Qrcode = null;
+            }
+            scannerWrapper?.classList.add('hidden');
+        };
+
+        const startScanner = async () => {
+            if (!window.Html5Qrcode) return;
+            scannerWrapper?.classList.remove('hidden');
+            if (!html5Qrcode) {
+                html5Qrcode = new Html5Qrcode(cameraEl.id, { formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.QR_CODE] });
+            }
+            await html5Qrcode.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    barcodeInput.value = decodedText;
+                    stopScanner();
+                },
+                () => {}
+            );
+        };
+
+        trigger?.addEventListener('click', (e) => {
+            e.preventDefault();
+            startScanner();
+        });
+
+        closeBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            stopScanner();
+        });
+    });
+</script>
