@@ -83,6 +83,38 @@ class User extends Authenticatable
         return $this->hasMany(Wallet::class);
     }
 
+    // Food module relations
+    public function foodLocations()
+    {
+        return $this->hasMany(FoodLocation::class);
+    }
+
+    public function foodTypes()
+    {
+        return $this->hasMany(FoodType::class);
+    }
+
+    public function foodProducts()
+    {
+        return $this->hasMany(FoodProduct::class);
+    }
+
+    public function foodPurchases()
+    {
+        return $this->hasMany(FoodPurchase::class);
+    }
+
+    public function foodStockBatches()
+    {
+        return $this->hasMany(FoodStockBatch::class);
+    }
+
+    // Shopping lists
+    public function shoppingLists()
+    {
+        return $this->hasMany(ShoppingList::class);
+    }
+
     public function transactions()
     {
         return $this->hasMany(Transaction::class);

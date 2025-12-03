@@ -1,11 +1,25 @@
 @php
-    $links = [
-        ['label' => 'Dashboard', 'route' => 'dashboard'],
-        ['label' => 'Bolsillos', 'route' => 'wallets.index'],
-        ['label' => 'Presupuestos', 'route' => 'budgets.index'],
-        ['label' => 'Categorías', 'route' => 'categories.index'],
-        ['label' => 'Recurrencias', 'route' => 'recurrences.index'],
-        ['label' => 'Transacciones', 'route' => 'transactions.index'],
+    $menus = [
+        [
+            'group' => 'Finanzas',
+            'links' => [
+                ['label' => 'Dashboard', 'route' => 'dashboard'],
+                ['label' => 'Bolsillos', 'route' => 'wallets.index'],
+                ['label' => 'Presupuestos', 'route' => 'budgets.index'],
+                ['label' => 'Categorías', 'route' => 'categories.index'],
+                ['label' => 'Recurrencias', 'route' => 'recurrences.index'],
+                ['label' => 'Transacciones', 'route' => 'transactions.index'],
+            ],
+        ],
+        [
+            'group' => 'Alimentos',
+            'links' => [
+                ['label' => 'Inventario', 'route' => 'food.inventory.index'],
+                ['label' => 'Productos', 'route' => 'food.products.index'],
+                ['label' => 'Compras', 'route' => 'food.purchases.index'],
+                ['label' => 'Lista de compra', 'route' => 'food.shopping-list.index'],
+            ],
+        ],
     ];
 @endphp
 
@@ -91,22 +105,97 @@
             @endauth
         </div>
 
-        <div id="primary-menu" class="hidden w-full md:block md:w-auto md:order-2">
-            <ul class="mt-2 flex flex-col rounded-lg bg-neutral-primary-soft p-3 font-medium shadow-sm md:mt-0 md:flex-row md:items-center md:gap-6 md:bg-transparent md:p-0 md:shadow-none">
-                @foreach ($links as $link)
-                    @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp
-                    <li>
-                        <a
-                            href="{{ route($link['route']) }}"
-                            wire:navigate
-                            class="block rounded-md px-3 py-2 transition {{ $active ? 'text-fg-brand font-semibold' : 'text-heading' }} hover:text-fg-brand hover:bg-neutral-secondary-soft md:hover:bg-transparent"
-                            aria-current="{{ $active ? 'page' : 'false' }}"
+        <div id="primary-menu" class="hidden w-full md:order-2 md:block md:w-auto">
+            <div class="mt-2 flex flex-col gap-2 rounded-lg bg-neutral-primary-soft p-3 font-medium shadow-sm md:mt-0 md:flex-row md:items-center md:gap-2 md:bg-transparent md:p-0 md:shadow-none">
+                @foreach ($menus as $menu)
+                    @php $menuId = \Illuminate\Support\Str::slug($menu['group']); @endphp
+                    <div class="relative w-full md:w-auto" data-menu-wrapper="{{ $menuId }}">
+                        <button
+                            type="button"
+                            data-menu-toggle="{{ $menuId }}"
+                            class="flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-semibold text-heading transition hover:bg-neutral-secondary-soft hover:text-fg-brand md:justify-start md:bg-transparent md:px-3 md:py-2"
                         >
-                            {{ $link['label'] }}
-                        </a>
-                    </li>
+                            <span>{{ $menu['group'] }}</span>
+                            <svg class="h-4 w-4 text-heading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div
+                            data-menu-dropdown="{{ $menuId }}"
+                            class="hidden rounded-xl border border-default bg-white/95 p-3 shadow-xl backdrop-blur-md md:absolute md:left-0 md:mt-2 md:min-w-[240px] dark:bg-neutral-900/95"
+                        >
+                            <p class="px-2 pb-2 text-xs uppercase tracking-wide text-neutral-400">{{ $menu['group'] }}</p>
+                            <ul class="space-y-1">
+                                @foreach ($menu['links'] as $link)
+                                    @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp
+                                    <li>
+                                        <a
+                                            href="{{ route($link['route']) }}"
+                                            wire:navigate
+                                            class="flex items-center justify-between rounded-md px-3 py-2 text-sm transition {{ $active ? 'bg-neutral-secondary-soft text-fg-brand font-semibold' : 'text-heading' }} hover:bg-neutral-secondary-soft hover:text-fg-brand"
+                                            aria-current="{{ $active ? 'page' : 'false' }}"
+                                        >
+                                            <span>{{ $link['label'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <div class="mt-1 block md:hidden">
+                            <ul class="space-y-1 rounded-md border border-default bg-white/70 p-2 dark:bg-neutral-900/80">
+                                @foreach ($menu['links'] as $link)
+                                    @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp
+                                    <li>
+                                        <a
+                                            href="{{ route($link['route']) }}"
+                                            wire:navigate
+                                            class="block rounded-md px-3 py-2 text-sm transition {{ $active ? 'bg-neutral-secondary-soft text-fg-brand font-semibold' : 'text-heading' }} hover:bg-neutral-secondary-soft hover:text-fg-brand"
+                                            aria-current="{{ $active ? 'page' : 'false' }}"
+                                        >
+                                            {{ $link['label'] }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 @endforeach
-            </ul>
+            </div>
         </div>
     </div>
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggles = document.querySelectorAll('[data-menu-toggle]');
+        const closeAll = (exceptId = null) => {
+            document.querySelectorAll('[data-menu-dropdown]').forEach(el => {
+                if (exceptId && el.dataset.menuDropdown === exceptId) return;
+                el.classList.add('hidden');
+            });
+        };
+
+        toggles.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.dataset.menuToggle;
+                const dropdown = document.querySelector(`[data-menu-dropdown="${id}"]`);
+                const isOpen = dropdown && !dropdown.classList.contains('hidden');
+                closeAll(isOpen ? null : id);
+                dropdown?.classList.toggle('hidden', isOpen);
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('[data-menu-wrapper]')) {
+                closeAll();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAll();
+            }
+        });
+    });
+</script>

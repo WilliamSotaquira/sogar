@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Budget;
+use App\Models\FoodStockBatch;
 use App\Models\Integration;
 use App\Models\Transaction;
 use App\Models\Wallet;
@@ -54,6 +55,36 @@ class DashboardController extends Controller
                 'message' => "{$b['category']} va en {$b['percent']}% ({$b['spent']}/{$b['amount']})",
             ])
             ->values();
+
+        // Alertas de inventario: caducidad próxima y stock bajo
+        $soon = Carbon::today()->addDays(5);
+        $batches = FoodStockBatch::with('product')
+            ->where('user_id', $user->id)
+            ->get();
+
+        $expires = $batches
+            ->filter(fn ($b) => $b->expires_on && Carbon::parse($b->expires_on)->lte($soon) && $b->status === 'ok')
+            ->take(10)
+            ->map(fn ($b) => [
+                'title' => 'Caducidad próxima',
+                'message' => "{$b->product->name} caduca el {$b->expires_on->format('d/m')}",
+            ]);
+
+        $lowStock = $batches
+            ->groupBy('product_id')
+            ->map(function ($group) {
+                $product = $group->first()->product;
+                $remaining = $group->sum('qty_remaining_base');
+                return [$product, $remaining];
+            })
+            ->filter(fn ($pair) => $pair[0]->min_stock_qty && $pair[1] < $pair[0]->min_stock_qty)
+            ->take(10)
+            ->map(fn ($pair) => [
+                'title' => 'Stock bajo',
+                'message' => $pair[0]->name . ' bajo mínimo (' . $pair[1] . ' ' . $pair[0]->unit_base . ')',
+            ]);
+
+        $alerts = $alerts->merge($expires)->merge($lowStock)->values();
 
         $wallets = Wallet::where('user_id', $user->id)
             ->where('is_active', true)
