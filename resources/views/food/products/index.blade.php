@@ -159,8 +159,14 @@
                 setStatus('No se pudo cargar el lector. Ingresa el código manualmente.', 'text-rose-500');
                 return;
             }
+            if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                setStatus('La cámara requiere HTTPS o localhost. Usa entrada manual o abre en https.', 'text-rose-500');
+                return;
+            }
+
             scannerWrapper?.classList.remove('hidden');
-            setStatus('Solicitando acceso a la cámara...');
+            setStatus('Buscando cámaras...');
+
             if (!html5Qrcode) {
                 html5Qrcode = new Html5Qrcode(cameraEl.id, {
                     formatsToSupport: [
@@ -171,10 +177,18 @@
                     ],
                 });
             }
+
             try {
+                const cameras = await Html5Qrcode.getCameras();
+                const cameraId = cameras?.find(c => c.label.toLowerCase().includes('back'))?.id || cameras?.[0]?.id;
+                if (!cameraId) {
+                    setStatus('No se detectaron cámaras. Ingresa el código manualmente.', 'text-rose-500');
+                    return;
+                }
+
                 await html5Qrcode.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 280, height: 180 } },
+                    cameraId,
+                    { fps: 12, qrbox: { width: 280, height: 180 } },
                     (decodedText) => {
                         barcodeInput.value = decodedText;
                         setStatus('Código detectado: ' + decodedText, 'text-emerald-600');
@@ -184,6 +198,7 @@
                 );
                 setStatus('Escaneando... apunta al código.');
             } catch (err) {
+                console.warn('Scanner error', err);
                 setStatus('No se pudo acceder a la cámara. Revisa permisos o usa entrada manual.', 'text-rose-500');
             }
         };
