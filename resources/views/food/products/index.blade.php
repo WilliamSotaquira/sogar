@@ -135,6 +135,15 @@
         const barcodeInput = document.getElementById('barcode-input');
         const closeBtn = document.getElementById('close-scanner');
         const statusEl = document.getElementById('barcode-status');
+        const nameInput = document.querySelector('input[name="name"]');
+        const brandInput = document.querySelector('input[name="brand"]');
+        const typeSelect = document.querySelector('select[name="type_id"]');
+        const locationSelect = document.querySelector('select[name="default_location_id"]');
+        const unitBaseInput = document.querySelector('input[name="unit_base"]');
+        const unitSizeInput = document.querySelector('input[name="unit_size"]');
+        const minStockInput = document.querySelector('input[name="min_stock_qty"]');
+        const shelfLifeInput = document.querySelector('input[name="shelf_life_days"]');
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         let stream = null;
         let rafId = null;
         let detector = null;
@@ -143,6 +152,72 @@
             if (!statusEl) return;
             statusEl.textContent = msg || '';
             statusEl.className = 'mt-1 text-[11px] ' + tone;
+        };
+
+        const fillFromProduct = (product) => {
+            if (!product) return;
+            if (nameInput && !nameInput.value) nameInput.value = product.name || '';
+            if (brandInput && !brandInput.value && product.brand) brandInput.value = product.brand;
+            if (typeSelect && product.type_id) typeSelect.value = product.type_id;
+            if (locationSelect && product.default_location_id) locationSelect.value = product.default_location_id;
+            if (unitBaseInput && product.unit_base) unitBaseInput.value = product.unit_base;
+            if (unitSizeInput && product.unit_size) unitSizeInput.value = product.unit_size;
+            if (minStockInput && product.min_stock_qty) minStockInput.value = product.min_stock_qty;
+            if (shelfLifeInput && product.shelf_life_days) shelfLifeInput.value = product.shelf_life_days;
+        };
+
+        const fillFromOpenFoodFacts = async (code) => {
+            try {
+                const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(code)}.json`);
+                const data = await res.json();
+                if (data?.status === 1 && data.product) {
+                    const p = data.product;
+                    const name = p.product_name || p.generic_name || '';
+                    const brand = (p.brands_tags && p.brands_tags[0]) || p.brands || '';
+                    fillFromProduct({
+                        name,
+                        brand,
+                        unit_base: 'unit',
+                        unit_size: 1,
+                    });
+                    setStatus('Producto sugerido desde OpenFoodFacts. Revisa y guarda.', 'text-emerald-600');
+                    return true;
+                }
+            } catch (_) {
+                // ignore
+            }
+            return false;
+        };
+
+        const lookupBarcode = async (code) => {
+            if (!code) return;
+            setStatus('Buscando producto por código...');
+            try {
+                const res = await fetch('/food/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf || '',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ code }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    fillFromProduct(data.product);
+                    setStatus('Producto encontrado y campos completados.', 'text-emerald-600');
+                } else {
+                    setStatus('No se encontró en tu inventario. Buscando en OpenFoodFacts...', 'text-amber-600');
+                    const filled = await fillFromOpenFoodFacts(code);
+                    if (!filled) {
+                        setStatus('No se encontró producto. Completa los datos manualmente.', 'text-amber-600');
+                    }
+                }
+            } catch (err) {
+                console.warn(err);
+                setStatus('Error al buscar el código. Intenta de nuevo.', 'text-rose-500');
+            }
         };
 
         const stopScanner = async () => {
@@ -208,6 +283,7 @@
                                 barcodeInput.value = text;
                                 setStatus('Código detectado: ' + text, 'text-emerald-600');
                                 stopScanner();
+                                lookupBarcode(text);
                                 return;
                             }
                         }
@@ -232,5 +308,7 @@
             e.preventDefault();
             stopScanner();
         });
+
+        barcodeInput?.addEventListener('change', (e) => lookupBarcode(e.target.value));
     });
 </script>

@@ -80,4 +80,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('food/shopping-list/generate', [FoodShoppingListController::class, 'generate'])->name('food.shopping-list.generate');
     Route::post('food/shopping-list/sync', [FoodShoppingListController::class, 'sync'])->name('food.shopping-list.sync');
     Route::post('food/shopping-list/{list}/items/{itemId}', [FoodShoppingListController::class, 'markItem'])->name('food.shopping-list.items.mark');
+
+    // Lookup de código de barras desde sesión web
+    Route::post('food/scan', \App\Http\Controllers\Api\FoodScanController::class)->name('food.scan');
 });

@@ -17,7 +17,24 @@ class FoodScanController extends Controller
         ]);
 
         $userId = $request->user()->id;
-        $barcode = FoodBarcode::where('code', $data['code'])->first();
+        $code = $data['code'];
+        $barcode = FoodBarcode::with(['product.type', 'product.defaultLocation'])
+            ->where('code', $code)
+            ->first();
+
+        // Buscar también en el campo barcode del producto principal
+        if (!$barcode) {
+            $product = FoodProduct::with(['type', 'defaultLocation'])
+                ->where('user_id', $userId)
+                ->where('barcode', $code)
+                ->first();
+            if ($product) {
+                return response()->json([
+                    'found' => true,
+                    'product' => $product,
+                ]);
+            }
+        }
 
         if ($barcode && $barcode->product->user_id === $userId) {
             return response()->json([
