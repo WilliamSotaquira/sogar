@@ -69,7 +69,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('integrations/google', [GoogleIntegrationController::class, 'disconnect'])->name('integrations.google.disconnect');
 
     // Food module
-    Route::get('', [InventoryController::class, 'index'])->name('food.inventory.index');
+    Route::get('food/inventory', [InventoryController::class, 'index'])->name('food.inventory.index');
     Route::get('food/products', [FoodProductController::class, 'index'])->name('food.products.index');
     Route::post('food/products', [FoodProductController::class, 'store'])->name('food.products.store');
     Route::put('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');

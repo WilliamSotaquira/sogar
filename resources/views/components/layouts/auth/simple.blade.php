@@ -8,7 +8,7 @@
         <div class="absolute inset-0 bg-[radial-gradient(900px_circle_at_15%_20%,rgba(255,255,255,0.08),transparent_45%),radial-gradient(800px_circle_at_85%_0%,rgba(59,130,246,0.12),transparent_40%),linear-gradient(135deg,#0f172a_0%,#111827_55%,#0b1221_100%)]"></div>
 
         <div class="relative z-10 flex w-full max-w-md flex-col gap-6 rounded-2xl border border-slate-200/70 bg-white/98 p-6 shadow-2xl backdrop-blur dark:border-white/10 dark:bg-slate-950/90">
-            <a href="{{ route('home') }}" class="flex items-center gap-3 text-heading dark:text-white" wire:navigate>
+            <a href="{{ url('/') }}" class="flex items-center gap-3 text-heading dark:text-white" wire:navigate>
                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
                     <x-app-logo-icon class="size-8 fill-current text-heading dark:text-white" />
                 </span>
