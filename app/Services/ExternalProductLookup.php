@@ -28,6 +28,8 @@ class ExternalProductLookup
             'unit_size' => $product['unit_size'] ?? 1,
             'shelf_life_days' => $product['shelf_life_days'] ?? null,
             'min_stock_qty' => $product['min_stock_qty'] ?? null,
+            'image_url' => $product['image_url'] ?? null,
+            'description' => $product['description'] ?? null,
         ];
     }
 
@@ -58,6 +60,8 @@ class ExternalProductLookup
                     'brand' => $brand,
                     'unit_base' => $unitBase ?? 'unit',
                     'unit_size' => $unitSize ?? 1,
+                    'image_url' => $p['image_front_url'] ?? $p['image_url'] ?? null,
+                    'description' => $p['generic_name_es'] ?? $p['generic_name'] ?? $p['ingredients_text'] ?? null,
                 ];
             } catch (\Throwable $e) {
                 return null;

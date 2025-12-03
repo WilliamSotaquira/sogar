@@ -87,6 +87,14 @@
                     <label class="{{ $label }}">Notas</label>
                     <textarea name="notes" class="{{ $textarea }}"></textarea>
                 </div>
+                <div class="md:col-span-2 lg:col-span-3">
+                    <label class="{{ $label }}">Descripción (auto desde OFF si existe)</label>
+                    <textarea name="description" class="{{ $textarea }}" placeholder="Se autocompletará si OpenFoodFacts trae texto"></textarea>
+                </div>
+                <div>
+                    <label class="{{ $label }}">Imagen (URL)</label>
+                    <input name="image_url" class="{{ $input }}" placeholder="Se autocompletará si OpenFoodFacts trae imagen" />
+                </div>
                 <div class="md:col-span-2 lg:col-span-3 flex justify-end">
                     <button type="submit" class="{{ $btnPrimary }}">Guardar</button>
                 </div>
@@ -100,6 +108,7 @@
                     <thead class="bg-gray-50 dark:bg-gray-800/50">
                         <tr class="text-left text-xs uppercase text-gray-500">
                             <th class="px-3 py-2 font-semibold">Nombre</th>
+                            <th class="px-3 py-2 font-semibold">Imagen</th>
                             <th class="px-3 py-2 font-semibold">Tipo</th>
                             <th class="px-3 py-2 font-semibold">Ubicación</th>
                             <th class="px-3 py-2 font-semibold">Unidad base</th>
@@ -110,6 +119,13 @@
                         @forelse($products as $product)
                             <tr class="border-t border-gray-100 dark:border-gray-800">
                                 <td class="px-3 py-2 font-medium">{{ $product->name }}</td>
+                                <td class="px-3 py-2">
+                                    @if($product->image_path || $product->image_url)
+                                        <img src="{{ $product->image_path ?? $product->image_url }}" alt="{{ $product->name }}" class="h-10 w-10 rounded object-cover">
+                                    @else
+                                        —
+                                    @endif
+                                </td>
                                 <td class="px-3 py-2">{{ $product->type?->name ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ $product->defaultLocation?->name ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ $product->unit_base }} ({{ $product->unit_size }})</td>
@@ -143,6 +159,8 @@
         const unitSizeInput = document.querySelector('input[name="unit_size"]');
         const minStockInput = document.querySelector('input[name="min_stock_qty"]');
         const shelfLifeInput = document.querySelector('input[name="shelf_life_days"]');
+        const descInput = document.querySelector('textarea[name="description"]');
+        const imageInput = document.querySelector('input[name="image_url"]');
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         let stream = null;
         let rafId = null;
@@ -164,6 +182,8 @@
             if (unitSizeInput && product.unit_size) unitSizeInput.value = product.unit_size;
             if (minStockInput && product.min_stock_qty) minStockInput.value = product.min_stock_qty;
             if (shelfLifeInput && product.shelf_life_days) shelfLifeInput.value = product.shelf_life_days;
+            if (descInput && !descInput.value && product.description) descInput.value = product.description;
+            if (imageInput && !imageInput.value && product.image_url) imageInput.value = product.image_url;
         };
 
         const fillFromOpenFoodFacts = async (code) => {

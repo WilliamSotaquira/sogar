@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\FoodBarcode;
 use App\Models\FoodProduct;
 use App\Services\ExternalProductLookup;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 class FoodScanController extends Controller
@@ -47,6 +49,11 @@ class FoodScanController extends Controller
         // Buscar externo y autocrear si hay datos
         $external = $lookup->find($code);
         if ($external) {
+            $imagePath = null;
+            if (!empty($external['image_url'])) {
+                $imagePath = $this->downloadImage($external['image_url'], $userId);
+            }
+
             $product = FoodProduct::create([
                 'user_id' => $userId,
                 'name' => $external['name'] ?? ($data['name'] ?? 'Producto'),
@@ -56,6 +63,9 @@ class FoodScanController extends Controller
                 'unit_size' => $external['unit_size'] ?? 1,
                 'shelf_life_days' => $external['shelf_life_days'] ?? null,
                 'min_stock_qty' => $external['min_stock_qty'] ?? null,
+                'image_url' => $external['image_url'] ?? null,
+                'image_path' => $imagePath,
+                'description' => $external['description'] ?? null,
             ]);
 
             FoodBarcode::firstOrCreate([
@@ -93,5 +103,27 @@ class FoodScanController extends Controller
             'found' => false,
             'message' => 'No encontrado',
         ], 404);
+    }
+
+    private function downloadImage(string $url, int $userId): ?string
+    {
+        try {
+            $response = Http::timeout(6)->get($url);
+            if (!$response->ok()) {
+                return null;
+            }
+            $extension = 'jpg';
+            $contentType = $response->header('Content-Type');
+            if ($contentType && str_contains($contentType, 'png')) {
+                $extension = 'png';
+            }
+
+            $path = "public/food/products/{$userId}_" . uniqid() . ".{$extension}";
+            Storage::put($path, $response->body());
+
+            return Storage::url($path);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

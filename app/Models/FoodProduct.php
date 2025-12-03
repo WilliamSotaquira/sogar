@@ -24,6 +24,9 @@ class FoodProduct extends Model
         'min_stock_qty',
         'notes',
         'is_active',
+        'image_url',
+        'image_path',
+        'description',
     ];
 
     protected $casts = [
