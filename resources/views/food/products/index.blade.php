@@ -127,7 +127,6 @@
     </div>
 </x-layouts.app>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js" defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const trigger = document.getElementById('scan-barcode');
@@ -136,7 +135,9 @@
         const barcodeInput = document.getElementById('barcode-input');
         const closeBtn = document.getElementById('close-scanner');
         const statusEl = document.getElementById('barcode-status');
-        let html5Qrcode = null;
+        let stream = null;
+        let rafId = null;
+        let detector = null;
 
         const setStatus = (msg, tone = 'text-amber-600') => {
             if (!statusEl) return;
@@ -146,19 +147,18 @@
 
         const stopScanner = async () => {
             setStatus('');
-            if (html5Qrcode) {
-                try { await html5Qrcode.stop(); } catch (_) {}
-                try { await html5Qrcode.clear(); } catch (_) {}
-                html5Qrcode = null;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = null;
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
             }
+            detector = null;
+            cameraEl.innerHTML = '';
             scannerWrapper?.classList.add('hidden');
         };
 
         const startScanner = async () => {
-            if (!window.Html5Qrcode) {
-                setStatus('No se pudo cargar el lector. Ingresa el código manualmente.', 'text-rose-500');
-                return;
-            }
             if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
                 setStatus('La cámara requiere HTTPS o localhost. Usa entrada manual o abre en https.', 'text-rose-500');
                 return;
@@ -167,36 +167,56 @@
             scannerWrapper?.classList.remove('hidden');
             setStatus('Buscando cámaras...');
 
-            if (!html5Qrcode) {
-                html5Qrcode = new Html5Qrcode(cameraEl.id, {
-                    formatsToSupport: [
-                        Html5QrcodeSupportedFormats.EAN_13,
-                        Html5QrcodeSupportedFormats.CODE_128,
-                        Html5QrcodeSupportedFormats.EAN_8,
-                        Html5QrcodeSupportedFormats.QR_CODE,
-                    ],
-                });
-            }
-
             try {
-                const cameras = await Html5Qrcode.getCameras();
-                const cameraId = cameras?.find(c => c.label.toLowerCase().includes('back'))?.id || cameras?.[0]?.id;
-                if (!cameraId) {
-                    setStatus('No se detectaron cámaras. Ingresa el código manualmente.', 'text-rose-500');
+                if (!('BarcodeDetector' in window)) {
+                    setStatus('Tu navegador no soporta BarcodeDetector. Usa entrada manual.', 'text-rose-500');
                     return;
                 }
 
-                await html5Qrcode.start(
-                    cameraId,
-                    { fps: 12, qrbox: { width: 280, height: 180 } },
-                    (decodedText) => {
-                        barcodeInput.value = decodedText;
-                        setStatus('Código detectado: ' + decodedText, 'text-emerald-600');
-                        stopScanner();
-                    },
-                    () => {}
-                );
+                detector = new BarcodeDetector({ formats: ['ean_13', 'code_128', 'ean_8', 'qr_code'] });
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } },
+                    audio: false,
+                });
+
+                const video = document.createElement('video');
+                video.setAttribute('playsinline', true);
+                video.muted = true;
+                video.srcObject = stream;
+                await video.play();
+                cameraEl.innerHTML = '';
+                cameraEl.appendChild(video);
                 setStatus('Escaneando... apunta al código.');
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                const scan = async () => {
+                    if (!video.videoWidth) {
+                        rafId = requestAnimationFrame(scan);
+                        return;
+                    }
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    try {
+                        const codes = await detector.detect(imageData);
+                        if (codes.length) {
+                            const text = codes[0].rawValue || codes[0].cornerPoints || '';
+                            if (text) {
+                                barcodeInput.value = text;
+                                setStatus('Código detectado: ' + text, 'text-emerald-600');
+                                stopScanner();
+                                return;
+                            }
+                        }
+                    } catch (err) {
+                        // ignore decode errors
+                    }
+                    rafId = requestAnimationFrame(scan);
+                };
+                rafId = requestAnimationFrame(scan);
             } catch (err) {
                 console.warn('Scanner error', err);
                 setStatus('No se pudo acceder a la cámara. Revisa permisos o usa entrada manual.', 'text-rose-500');
