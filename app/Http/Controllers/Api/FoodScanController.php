@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\FoodBarcode;
 use App\Models\FoodProduct;
+use App\Services\ExternalProductLookup;
 use Illuminate\Http\Request;
 
 class FoodScanController extends Controller
 {
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, ExternalProductLookup $lookup)
     {
         $data = $request->validate([
             'code' => 'required|string|max:255',
@@ -40,6 +41,32 @@ class FoodScanController extends Controller
             return response()->json([
                 'found' => true,
                 'product' => $barcode->product,
+            ]);
+        }
+
+        // Buscar externo y autocrear si hay datos
+        $external = $lookup->find($code);
+        if ($external) {
+            $product = FoodProduct::create([
+                'user_id' => $userId,
+                'name' => $external['name'] ?? ($data['name'] ?? 'Producto'),
+                'brand' => $external['brand'] ?? null,
+                'barcode' => $code,
+                'unit_base' => $external['unit_base'] ?? 'unit',
+                'unit_size' => $external['unit_size'] ?? 1,
+                'shelf_life_days' => $external['shelf_life_days'] ?? null,
+                'min_stock_qty' => $external['min_stock_qty'] ?? null,
+            ]);
+
+            FoodBarcode::firstOrCreate([
+                'product_id' => $product->id,
+                'code' => $code,
+            ], ['kind' => 'scan']);
+
+            return response()->json([
+                'found' => false,
+                'created' => true,
+                'product' => $product->load(['type', 'defaultLocation']),
             ]);
         }
 

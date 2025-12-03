@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'product_lookup' => [
+        'endpoint' => null,
+        'key' => null,
+    ],
+
 ];
