@@ -1,19 +1,19 @@
 <x-layouts.app :title="__('Presupuestos')">
-    <div class="mx-auto w-full max-w-5xl space-y-6">
-        <div class="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 p-6 shadow-lg">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+    <div class="mx-auto w-full max-w-6xl space-y-6">
+        <div class="hero-panel p-6">
+            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Planea antes de gastar</p>
                     <h1 class="text-3xl font-bold">Presupuestos</h1>
                     <p class="text-sm text-white/80">Define montos por categoría y mes, activa alertas y sincroniza con calendario.</p>
                 </div>
-                <div class="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+                <div class="hero-chip text-sm font-semibold">
                     {{ now()->translatedFormat('F Y') }}
                 </div>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Alertas al 80/90%</span>
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Sync opcional a Google Calendar</span>
+            <div class="hero-panel-content flex flex-wrap gap-2">
+                <span class="hero-chip text-xs">Alertas al 80/90%</span>
+                <span class="hero-chip text-xs">Sync opcional a Google Calendar</span>
             </div>
         </div>
 

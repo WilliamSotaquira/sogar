@@ -3,48 +3,47 @@
 @endphp
 
 <x-layouts.app :title="__('Dashboard')">
-    <div class="space-y-6">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-cyan-500 p-6 shadow-lg">
-            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_30%_30%,white,transparent_35%)]"></div>
+    <div class="mx-auto w-full max-w-6xl space-y-6">
+        <div class="hero-panel p-6">
             <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="text-white">
-                    <p class="text-sm uppercase tracking-wide font-semibold">Finanzas familiares</p>
+                <div class="hero-panel-content text-white">
+                    <p class="text-sm uppercase tracking-wide font-semibold text-white/90">Finanzas familiares</p>
                     <h1 class="mt-1 text-3xl font-bold">Visión y control en un solo lugar</h1>
-                    <p class="mt-2 text-sm text-emerald-50">Captura, presupuestos, bolsillos y alertas conectadas a Google Calendar.</p>
+                    <p class="mt-2 text-sm text-white/85">Captura, presupuestos, bolsillos y alertas conectadas a Google Calendar.</p>
                     <div class="mt-4 flex flex-wrap gap-3">
-                        <a href="{{ route('transactions.create') }}" class="inline-flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-emerald-700 shadow hover:bg-white">
+                        <a href="{{ route('transactions.create') }}" class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-md ring-1 ring-white/60 transition hover:-translate-y-0.5 hover:shadow-lg">
                             Registrar transacción
                         </a>
-                        <a href="{{ route('budgets.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+                        <a href="{{ route('budgets.index') }}" class="inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                             Presupuestos
                         </a>
-                        <a href="{{ route('recurrences.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+                        <a href="{{ route('recurrences.index') }}" class="inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                             Recurrencias
                         </a>
-                        <a href="{{ route('transactions.index') }}" class="inline-flex items-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+                        <a href="{{ route('transactions.index') }}" class="inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                             Transacciones
                         </a>
-                        <a href="{{ route('wallets.index') }}" class="inline-flex itemws-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
+                        <a href="{{ route('wallets.index') }}" class="inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
                             Bolsillos
                         </a>
                     </div>
                 </div>
-                <div class="flex flex-col gap-3 text-sm text-white lg:items-end">
-                    <div class="flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 font-semibold">
-                        <span class="h-2 w-2 rounded-full bg-white"></span>
+                <div class="hero-panel-content flex flex-col gap-3 text-sm text-white lg:items-end">
+                    <div class="flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 font-semibold ring-1 ring-white/15">
+                        <span class="h-2 w-2 rounded-full bg-emerald-300"></span>
                         Salud: {{ $healthScore }}/100
                     </div>
-                    <div class="rounded-lg bg-white/10 px-4 py-3">
-                        <p class="text-xs text-emerald-50">Ahorro proyectado a 6 meses</p>
+                    <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
+                        <p class="text-xs text-white/80">Ahorro proyectado a 6 meses</p>
                         <p class="text-xl font-bold">{{ $fmtMoney($projectedSavings) }}</p>
                     </div>
                     @if($googleIntegration)
                         <form method="POST" action="{{ route('integrations.google.disconnect') }}" class="inline-flex">
                             @csrf @method('DELETE')
-                            <button class="rounded-lg border border-white/40 px-3 py-2 font-semibold hover:bg-white/10">Desconectar Google</button>
+                            <button class="rounded-full border border-white/30 px-3 py-2 font-semibold hover:bg-white/10">Desconectar Google</button>
                         </form>
                     @else
-                        <a href="{{ route('integrations.google.redirect') }}" class="inline-flex items-center gap-2 rounded-lg border border-white/40 px-3 py-2 font-semibold hover:bg-white/10">
+                        <a href="{{ route('integrations.google.redirect') }}" class="inline-flex items-center gap-2 rounded-full border border-white/30 px-3 py-2 font-semibold hover:bg-white/10">
                             Conectar Google
                         </a>
                     @endif
@@ -53,30 +52,30 @@
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-gray-900">
-                <p class="text-sm text-gray-500">Ingresos del mes</p>
-                <h3 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">{{ $fmtMoney($income) }}</h3>
+            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+                <p class="text-sm text-body">Ingresos del mes</p>
+                <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ $fmtMoney($income) }}</h3>
                 <p class="text-xs text-emerald-600 dark:text-emerald-300">Incluye salarios y extras.</p>
             </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-gray-900">
-                <p class="text-sm text-gray-500">Gastos del mes</p>
-                <h3 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">{{ $fmtMoney($expenses) }}</h3>
+            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+                <p class="text-sm text-body">Gastos del mes</p>
+                <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ $fmtMoney($expenses) }}</h3>
                 <p class="text-xs text-rose-500 dark:text-rose-300">Controla límites y fugas.</p>
             </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-gray-900">
-                <p class="text-sm text-gray-500">% Ahorro vs ingreso</p>
-                <h3 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">{{ round($savingsRate * 100, 1) }}%</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Meta ideal: 20% o más.</p>
+            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+                <p class="text-sm text-body">% Ahorro vs ingreso</p>
+                <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ round($savingsRate * 100, 1) }}%</h3>
+                <p class="text-xs text-body">Meta ideal: 20% o más.</p>
             </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-gray-900">
-                <p class="text-sm text-gray-500">Salud financiera</p>
+            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+                <p class="text-sm text-body">Salud financiera</p>
                 <div class="mt-2 flex items-center gap-3">
-                    <div class="h-2 flex-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                    <div class="h-2 flex-1 rounded-full bg-neutral-100 dark:bg-neutral-800">
                         <div class="h-2 rounded-full bg-emerald-500" style="width: {{ $healthScore }}%"></div>
                     </div>
-                    <span class="text-lg font-semibold text-gray-900 dark:text-gray-50">{{ $healthScore }}</span>
+                    <span class="text-lg font-semibold text-heading dark:text-white">{{ $healthScore }}</span>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Menos alertas, más score.</p>
+                <p class="text-xs text-body">Menos alertas, más score.</p>
             </div>
         </div>
 

@@ -1,17 +1,17 @@
 <x-layouts.app :title="__('Recurrencias')">
-    <div class="mx-auto w-full max-w-5xl space-y-6">
-        <div class="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-rose-500 to-orange-400 p-6 shadow-lg text-white">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div class="mx-auto w-full max-w-6xl space-y-6">
+        <div class="hero-panel p-6">
+            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Automatiza</p>
                     <h1 class="text-3xl font-bold">Recurrencias</h1>
                     <p class="text-sm text-white/85">Pagos e ingresos programados; conéctalos al calendario.</p>
                 </div>
-                <div class="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">daily · weekly · monthly · yearly</div>
+                <div class="hero-chip text-sm font-semibold">daily · weekly · monthly · yearly</div>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs">Sincroniza a Google Calendar</span>
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs">Controla estado activo</span>
+            <div class="hero-panel-content flex flex-wrap gap-2">
+                <span class="hero-chip text-xs">Sincroniza a Google Calendar</span>
+                <span class="hero-chip text-xs">Controla estado activo</span>
             </div>
         </div>
 

@@ -3,15 +3,15 @@
 @endphp
 
 <x-layouts.app :title="__('Bolsillos')">
-    <div class="space-y-6">
-        <div class="rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 p-6 text-white shadow-lg">
-            <p class="text-sm uppercase tracking-wide font-semibold">Fondos separados</p>
-            <h1 class="text-3xl font-bold">Bolsillos</h1>
+    <div class="mx-auto w-full max-w-6xl space-y-6">
+        <div class="hero-panel p-6">
+            <p class="text-sm uppercase tracking-wide font-semibold text-white/90">Fondos separados</p>
+            <h1 class="text-3xl font-bold text-white">Bolsillos</h1>
             <p class="text-sm text-white/85">Monitorea saldos, metas y registra ajustes manuales.</p>
             <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/85">
-                <span class="rounded-full bg-white/15 px-3 py-1">Compartidos/Personales</span>
-                <span class="rounded-full bg-white/15 px-3 py-1">Movimientos recientes</span>
-                <span class="rounded-full bg-white/15 px-3 py-1">Activa/Inactiva para bloquear movimientos</span>
+                <span class="hero-chip">Compartidos/Personales</span>
+                <span class="hero-chip">Movimientos recientes</span>
+                <span class="hero-chip">Activa/Inactiva para bloquear movimientos</span>
             </div>
         </div>
 

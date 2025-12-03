@@ -1,20 +1,20 @@
 <x-layouts.app :title="__('Categorías')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-6 shadow-lg">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="hero-panel p-6">
+            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Ordena tus ingresos y gastos</p>
                     <h1 class="text-3xl font-bold">Categorías</h1>
                     <p class="text-sm text-white/80">Crea etiquetas propias, desactiva lo que no uses y simplifica presupuestos y transacciones.</p>
                 </div>
-                <div class="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+                <div class="hero-chip text-sm font-semibold">
                     Curadas + personales
                 </div>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Colores y descripciones opcionales</span>
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Separación ingreso / gasto</span>
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs text-white">Solo tú puedes editar tus categorías</span>
+            <div class="hero-panel-content flex flex-wrap gap-2">
+                <span class="hero-chip text-xs">Colores y descripciones opcionales</span>
+                <span class="hero-chip text-xs">Separación ingreso / gasto</span>
+                <span class="hero-chip text-xs">Solo tú puedes editar tus categorías</span>
             </div>
         </div>
 
