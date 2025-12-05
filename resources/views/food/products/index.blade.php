@@ -73,12 +73,17 @@
                         Tipo
                         <span class="tooltip-trigger cursor-help text-gray-400 hover:text-gray-600" title="Categoría del producto (Lácteos, Granos, Frutas, etc.). Ayuda a organizar tu inventario.">ℹ️</span>
                     </label>
-                    <select name="type_id" class="{{ $input }}">
-                        <option value="">Selecciona</option>
-                        @foreach($types as $type)
-                            <option value="{{ $type->id }}">{{ $type->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="flex gap-2">
+                        <select name="type_id" class="{{ $input }} flex-1">
+                            <option value="">Selecciona</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openModal('types-modal')" class="flex items-center justify-center h-11 w-11 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" title="Administrar tipos">
+                            ⚙️
+                        </button>
+                    </div>
                 </div>
                 
                 {{-- Ubicación --}}
@@ -87,12 +92,17 @@
                         Ubicación por defecto
                         <span class="tooltip-trigger cursor-help text-gray-400 hover:text-gray-600" title="Dónde guardas este producto normalmente. Ej: 'Refrigerador', 'Despensa', 'Congelador'">ℹ️</span>
                     </label>
-                    <select name="default_location_id" class="{{ $input }}">
-                        <option value="">Selecciona</option>
-                        @foreach($locations as $loc)
-                            <option value="{{ $loc->id }}">{{ $loc->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="flex gap-2">
+                        <select name="default_location_id" class="{{ $input }} flex-1">
+                            <option value="">Selecciona</option>
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openModal('locations-modal')" class="flex items-center justify-center h-11 w-11 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" title="Administrar ubicaciones">
+                            ⚙️
+                        </button>
+                    </div>
                 </div>
                 
                 {{-- Vida útil --}}
@@ -314,6 +324,298 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    {{-- Modal: Administrar Tipos --}}
+    <div id="types-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300" style="opacity: 0;">
+        <div class="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900 m-4 transform transition-all duration-300 scale-95" style="transform: scale(0.95);">
+            {{-- Header --}}
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <span class="text-xl">🏷️</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Administrar Tipos</h3>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Organiza tus productos por categorías</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('types-modal')" class="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white/50 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                {{-- Formulario para agregar --}}
+                <div class="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Crear nuevo tipo
+                    </p>
+                    <form id="add-type-form" class="grid grid-cols-12 gap-3">
+                        <div class="col-span-6">
+                            <input type="text" name="name" placeholder="Ej: Lácteos, Granos, Frutas..." required maxlength="50" class="{{ $input }}" />
+                            <p id="add-type-error" class="text-xs text-rose-600 mt-1 hidden"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <input type="color" name="color" value="#10b981" class="h-11 w-full rounded-xl border border-gray-200 bg-white cursor-pointer dark:border-gray-700 dark:bg-gray-800" title="Color identificador" />
+                        </div>
+                        <div class="col-span-4">
+                            <button type="submit" class="{{ $btnPrimary }} w-full h-11">
+                                <span class="submit-text">✓ Agregar</span>
+                                <span class="loading-text hidden">Guardando...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                {{-- Lista de tipos --}}
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tipos existentes</p>
+                        <span class="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">{{ $types->count() }} tipos</span>
+                    </div>
+                    <div id="types-list" class="space-y-2 max-h-96 overflow-y-auto">
+                        @foreach($types as $type)
+                            <div class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750 transition-all duration-200 hover:shadow-md" data-type-id="{{ $type->id }}">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="h-10 w-10 rounded-lg flex items-center justify-center" style="background-color: {{ $type->color }}20;">
+                                        <span class="h-5 w-5 rounded-full" style="background-color: {{ $type->color }}"></span>
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $type->name }}</span>
+                                        <p class="text-xs text-gray-500">
+                                            <span class="inline-flex items-center gap-1">
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                                {{ $type->products_count }} {{ $type->products_count === 1 ? 'producto' : 'productos' }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="editType({{ $type->id }}, '{{ addslashes($type->name) }}', '{{ $type->color }}')" class="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Editar tipo">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    @if($type->products_count === 0)
+                                        <button type="button" onclick="deleteType({{ $type->id }})" class="px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition" title="Eliminar tipo">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    @else
+                                        <button type="button" disabled class="px-3 py-1.5 text-xs font-semibold text-gray-400 cursor-not-allowed" title="No se puede eliminar porque tiene productos asociados">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    @if($types->isEmpty())
+                        <div class="text-center py-8">
+                            <div class="inline-flex h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center mb-3">
+                                <span class="text-3xl">📦</span>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">No hay tipos creados aún</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Crea tu primer tipo arriba ↑</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Administrar Ubicaciones --}}
+    <div id="locations-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300" style="opacity: 0;">
+        <div class="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900 m-4 transform transition-all duration-300 scale-95" style="transform: scale(0.95);">
+            {{-- Header --}}
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <span class="text-xl">📍</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Administrar Ubicaciones</h3>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Define dónde guardas tus productos</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('locations-modal')" class="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white/50 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                {{-- Formulario para agregar --}}
+                <div class="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Crear nueva ubicación
+                    </p>
+                    <form id="add-location-form" class="grid grid-cols-12 gap-3">
+                        <div class="col-span-6">
+                            <input type="text" name="name" placeholder="Ej: Refrigerador, Despensa..." required maxlength="50" class="{{ $input }}" />
+                            <p id="add-location-error" class="text-xs text-rose-600 mt-1 hidden"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <input type="color" name="color" value="#6b7280" class="h-11 w-full rounded-xl border border-gray-200 bg-white cursor-pointer dark:border-gray-700 dark:bg-gray-800" title="Color identificador" />
+                        </div>
+                        <div class="col-span-4">
+                            <button type="submit" class="{{ $btnPrimary }} w-full h-11">
+                                <span class="submit-text">✓ Agregar</span>
+                                <span class="loading-text hidden">Guardando...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                {{-- Lista de ubicaciones --}}
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Ubicaciones existentes</p>
+                        <span class="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">{{ $locations->count() }} ubicaciones</span>
+                    </div>
+                    <div id="locations-list" class="space-y-2 max-h-96 overflow-y-auto">
+                        @foreach($locations as $loc)
+                            <div class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750 transition-all duration-200 hover:shadow-md" data-location-id="{{ $loc->id }}">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="h-10 w-10 rounded-lg flex items-center justify-center" style="background-color: {{ $loc->color }}20;">
+                                        <span class="h-5 w-5 rounded-full" style="background-color: {{ $loc->color }}"></span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $loc->name }}</span>
+                                            @if($loc->is_default)
+                                                <span class="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 px-2 py-0.5 rounded-full font-semibold">✓ Por defecto</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-gray-500">
+                                            <span class="inline-flex items-center gap-1">
+                                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                                {{ $loc->products_count }} {{ $loc->products_count === 1 ? 'producto' : 'productos' }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="editLocation({{ $loc->id }}, '{{ addslashes($loc->name) }}', '{{ $loc->color }}', {{ $loc->is_default ? 'true' : 'false' }})" class="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Editar ubicación">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    @if($loc->products_count === 0)
+                                        <button type="button" onclick="deleteLocation({{ $loc->id }})" class="px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition" title="Eliminar ubicación">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    @else
+                                        <button type="button" disabled class="px-3 py-1.5 text-xs font-semibold text-gray-400 cursor-not-allowed" title="No se puede eliminar porque tiene productos asociados">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    @if($locations->isEmpty())
+                        <div class="text-center py-8">
+                            <div class="inline-flex h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center mb-3">
+                                <span class="text-3xl">📦</span>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">No hay ubicaciones creadas aún</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Crea tu primera ubicación arriba ↑</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Editar Tipo --}}
+    <div id="edit-type-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300" style="opacity: 0;">
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-gray-900 m-4 transform transition-all duration-300 scale-95" style="transform: scale(0.95);">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Editar Tipo
+                </h3>
+                <button type="button" onclick="closeModal('edit-type-modal')" class="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white/50 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="edit-type-form" class="p-6 space-y-5">
+                <input type="hidden" name="id" id="edit-type-id" />
+                <div>
+                    <label class="{{ $label }}">Nombre del tipo</label>
+                    <input type="text" name="name" id="edit-type-name" required maxlength="50" class="{{ $input }}" />
+                    <p id="edit-type-error" class="text-xs text-rose-600 mt-1 hidden"></p>
+                </div>
+                <div>
+                    <label class="{{ $label }}">Color identificador</label>
+                    <div class="flex gap-3 items-center">
+                        <input type="color" name="color" id="edit-type-color" class="h-11 w-20 rounded-xl border border-gray-200 bg-white cursor-pointer dark:border-gray-700 dark:bg-gray-800" />
+                        <div class="flex-1">
+                            <div id="edit-type-preview" class="h-11 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center px-4 gap-2">
+                                <span class="h-4 w-4 rounded-full"></span>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Vista previa</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="closeModal('edit-type-modal')" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="{{ $btnPrimary }}">
+                        <span class="submit-text">✓ Guardar cambios</span>
+                        <span class="loading-text hidden">Guardando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal: Editar Ubicación --}}
+    <div id="edit-location-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300" style="opacity: 0;">
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-gray-900 m-4 transform transition-all duration-300 scale-95" style="transform: scale(0.95);">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Editar Ubicación
+                </h3>
+                <button type="button" onclick="closeModal('edit-location-modal')" class="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white/50 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="edit-location-form" class="p-6 space-y-5">
+                <input type="hidden" name="id" id="edit-location-id" />
+                <div>
+                    <label class="{{ $label }}">Nombre de la ubicación</label>
+                    <input type="text" name="name" id="edit-location-name" required maxlength="50" class="{{ $input }}" />
+                    <p id="edit-location-error" class="text-xs text-rose-600 mt-1 hidden"></p>
+                </div>
+                <div>
+                    <label class="{{ $label }}">Color identificador</label>
+                    <div class="flex gap-3 items-center">
+                        <input type="color" name="color" id="edit-location-color" class="h-11 w-20 rounded-xl border border-gray-200 bg-white cursor-pointer dark:border-gray-700 dark:bg-gray-800" />
+                        <div class="flex-1">
+                            <div id="edit-location-preview" class="h-11 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center px-4 gap-2">
+                                <span class="h-4 w-4 rounded-full"></span>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Vista previa</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800/50">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="is_default" id="edit-location-default" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                        <div>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Marcar como ubicación por defecto</span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Se usará automáticamente al crear productos nuevos</p>
+                        </div>
+                    </label>
+                </div>
+                <div class="flex justify-end gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="closeModal('edit-location-modal')" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="{{ $btnPrimary }}">
+                        <span class="submit-text">✓ Guardar cambios</span>
+                        <span class="loading-text hidden">Guardando...</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </x-layouts.app>
@@ -692,5 +994,337 @@
             }
         };
     });
+
+    // ========== MODALS & CRUD para Tipos y Ubicaciones ==========
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Animación de entrada
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                const content = modal.querySelector('[class*="transform"]');
+                if (content) content.style.transform = 'scale(1)';
+            }, 10);
+        }
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            // Animación de salida
+            modal.style.opacity = '0';
+            const content = modal.querySelector('[class*="transform"]');
+            if (content) content.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+    }
+
+    // Cerrar modales con Escape o click fuera
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[id$="-modal"]').forEach(m => {
+                if (m.classList.contains('flex')) {
+                    const modalId = m.getAttribute('id');
+                    closeModal(modalId);
+                }
+            });
+        }
+    });
+
+    document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                const modalId = modal.getAttribute('id');
+                closeModal(modalId);
+            }
+        });
+    });
+
+    // Helper para mostrar estado de carga en botones
+    function setButtonLoading(btn, loading) {
+        const submitText = btn.querySelector('.submit-text');
+        const loadingText = btn.querySelector('.loading-text');
+        if (loading) {
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            if (submitText) submitText.classList.add('hidden');
+            if (loadingText) loadingText.classList.remove('hidden');
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            if (submitText) submitText.classList.remove('hidden');
+            if (loadingText) loadingText.classList.add('hidden');
+        }
+    }
+
+    // Helper para mostrar errores
+    function showError(elementId, message) {
+        const el = document.getElementById(elementId);
+        if (el) {
+            el.textContent = message;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
+        }
+    }
+
+    // Vista previa de color en modales de edición
+    document.getElementById('edit-type-color')?.addEventListener('input', (e) => {
+        const preview = document.querySelector('#edit-type-preview .rounded-full');
+        if (preview) preview.style.backgroundColor = e.target.value;
+    });
+
+    document.getElementById('edit-location-color')?.addEventListener('input', (e) => {
+        const preview = document.querySelector('#edit-location-preview .rounded-full');
+        if (preview) preview.style.backgroundColor = e.target.value;
+    });
+
+    // ========== TIPOS ==========
+    document.getElementById('add-type-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const formData = new FormData(form);
+        
+        setButtonLoading(btn, true);
+        
+        try {
+            const res = await fetch('/food/types', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.get('name'),
+                    color: formData.get('color'),
+                }),
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                // Éxito - recargar con animación
+                form.reset();
+                setTimeout(() => location.reload(), 300);
+            } else {
+                showError('add-type-error', data.message || 'Error al crear el tipo');
+                setButtonLoading(btn, false);
+            }
+        } catch (err) {
+            console.error(err);
+            showError('add-type-error', 'Error de conexión. Verifica tu internet.');
+            setButtonLoading(btn, false);
+        }
+    });
+
+    function editType(id, name, color) {
+        document.getElementById('edit-type-id').value = id;
+        document.getElementById('edit-type-name').value = name;
+        document.getElementById('edit-type-color').value = color;
+        // Actualizar vista previa
+        const preview = document.querySelector('#edit-type-preview .rounded-full');
+        if (preview) preview.style.backgroundColor = color;
+        closeModal('types-modal');
+        openModal('edit-type-modal');
+    }
+
+    document.getElementById('edit-type-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const id = document.getElementById('edit-type-id').value;
+        const name = document.getElementById('edit-type-name').value;
+        const color = document.getElementById('edit-type-color').value;
+        
+        setButtonLoading(btn, true);
+        
+        try {
+            const res = await fetch(`/food/types/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, color }),
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                setTimeout(() => location.reload(), 300);
+            } else {
+                showError('edit-type-error', data.message || 'Error al actualizar');
+                setButtonLoading(btn, false);
+            }
+        } catch (err) {
+            console.error(err);
+            showError('edit-type-error', 'Error de conexión');
+            setButtonLoading(btn, false);
+        }
+    });
+
+    async function deleteType(id) {
+        if (!confirm('¿Eliminar este tipo? Esta acción no se puede deshacer.')) return;
+        
+        try {
+            const res = await fetch(`/food/types/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                // Animación de eliminación
+                const item = document.querySelector(`[data-type-id="${id}"]`);
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(20px)';
+                    setTimeout(() => location.reload(), 300);
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert(data.error || 'Error al eliminar. Puede que tenga productos asociados.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error de conexión');
+        }
+    }
+
+    // ========== UBICACIONES ==========
+    document.getElementById('add-location-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const formData = new FormData(form);
+        
+        setButtonLoading(btn, true);
+        
+        try {
+            const res = await fetch('/food/locations', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.get('name'),
+                    color: formData.get('color'),
+                }),
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                form.reset();
+                setTimeout(() => location.reload(), 300);
+            } else {
+                showError('add-location-error', data.message || 'Error al crear la ubicación');
+                setButtonLoading(btn, false);
+            }
+        } catch (err) {
+            console.error(err);
+            showError('add-location-error', 'Error de conexión. Verifica tu internet.');
+            setButtonLoading(btn, false);
+        }
+    });
+
+    function editLocation(id, name, color, isDefault) {
+        document.getElementById('edit-location-id').value = id;
+        document.getElementById('edit-location-name').value = name;
+        document.getElementById('edit-location-color').value = color;
+        document.getElementById('edit-location-default').checked = isDefault;
+        // Actualizar vista previa
+        const preview = document.querySelector('#edit-location-preview .rounded-full');
+        if (preview) preview.style.backgroundColor = color;
+        closeModal('locations-modal');
+        openModal('edit-location-modal');
+    }
+
+    document.getElementById('edit-location-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const id = document.getElementById('edit-location-id').value;
+        const name = document.getElementById('edit-location-name').value;
+        const color = document.getElementById('edit-location-color').value;
+        const isDefault = document.getElementById('edit-location-default').checked;
+        
+        setButtonLoading(btn, true);
+        
+        try {
+            const res = await fetch(`/food/locations/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, color, is_default: isDefault }),
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                setTimeout(() => location.reload(), 300);
+            } else {
+                showError('edit-location-error', data.message || 'Error al actualizar');
+                setButtonLoading(btn, false);
+            }
+        } catch (err) {
+            console.error(err);
+            showError('edit-location-error', 'Error de conexión');
+            setButtonLoading(btn, false);
+        }
+    });
+
+    async function deleteLocation(id) {
+        if (!confirm('¿Eliminar esta ubicación? Esta acción no se puede deshacer.')) return;
+        
+        try {
+            const res = await fetch(`/food/locations/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                // Animación de eliminación
+                const item = document.querySelector(`[data-location-id="${id}"]`);
+                if (item) {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(20px)';
+                    setTimeout(() => location.reload(), 300);
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert(data.error || 'Error al eliminar. Puede que tenga productos asociados.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error de conexión');
+        }
+    }
 </script>
 

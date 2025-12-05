@@ -74,6 +74,18 @@ Route::middleware(['auth'])->group(function () {
     Route::post('food/products', [FoodProductController::class, 'store'])->name('food.products.store');
     Route::get('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
     Route::delete('food/products/{product}', [FoodProductController::class, 'destroy'])->name('food.products.destroy');
+
+    // Tipos de alimentos
+    Route::get('food/types', [\App\Http\Controllers\Food\TypeController::class, 'index'])->name('food.types.index');
+    Route::post('food/types', [\App\Http\Controllers\Food\TypeController::class, 'store'])->name('food.types.store');
+    Route::put('food/types/{type}', [\App\Http\Controllers\Food\TypeController::class, 'update'])->name('food.types.update');
+    Route::delete('food/types/{type}', [\App\Http\Controllers\Food\TypeController::class, 'destroy'])->name('food.types.destroy');
+
+    // Ubicaciones de alimentos
+    Route::get('food/locations', [\App\Http\Controllers\Food\LocationController::class, 'index'])->name('food.locations.index');
+    Route::post('food/locations', [\App\Http\Controllers\Food\LocationController::class, 'store'])->name('food.locations.store');
+    Route::put('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'update'])->name('food.locations.update');
+    Route::delete('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'destroy'])->name('food.locations.destroy');
     
     // Gestión de precios
     Route::get('food/products/{product}/prices', [\App\Http\Controllers\Food\PriceController::class, 'show'])->name('food.prices.show');

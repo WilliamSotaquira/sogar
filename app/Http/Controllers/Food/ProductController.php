@@ -37,8 +37,8 @@ class ProductController extends Controller
 
         return view('food.products.index', [
             'products' => $products,
-            'types' => FoodType::where('user_id', $request->user()->id)->where('is_active', true)->orderBy('sort_order')->get(),
-            'locations' => FoodLocation::where('user_id', $request->user()->id)->orderBy('sort_order')->get(),
+            'types' => FoodType::withCount('products')->where('user_id', $request->user()->id)->where('is_active', true)->orderBy('sort_order')->get(),
+            'locations' => FoodLocation::withCount('products')->where('user_id', $request->user()->id)->orderBy('sort_order')->get(),
         ]);
     }
 
