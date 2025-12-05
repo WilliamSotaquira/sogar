@@ -22,10 +22,55 @@
             </div>
         @endif
 
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-md dark:border-gray-800 dark:bg-gray-900">
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-md dark:border-gray-800 dark:bg-gray-900 space-y-4">
+            <div class="flex flex-col gap-3 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/60">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">¿Cómo quieres agregar?</h2>
+                <div class="grid gap-3 md:grid-cols-2">
+                    <button
+                        type="button"
+                        class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50"
+                        onclick="document.getElementById('barcode-input').focus(); document.getElementById('scan-barcode').scrollIntoView({behavior:'smooth', block:'center'});"
+                    >
+                        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-100">
+                            📷
+                        </span>
+                        <div>
+                            <p class="text-sm font-semibold">Usar escáner</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Escanea el código y autocompleta con OpenFoodFacts.</p>
+                        </div>
+                    </button>
+                    <button
+                        type="button"
+                        class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50"
+                        onclick="document.getElementById('manual-anchor').scrollIntoView({behavior:'smooth', block:'start'});"
+                    >
+                        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-100">
+                            ✍️
+                        </span>
+                        <div>
+                            <p class="text-sm font-semibold">Ingreso manual</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Completa nombre, marca, unidades y ubicación.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Crear producto</h2>
-            <form method="POST" action="{{ route('food.products.store') }}" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <form id="manual-anchor" method="POST" action="{{ route('food.products.store') }}" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 @csrf
+                <div class="md:col-span-2 lg:col-span-3">
+                    <div class="flex items-center justify-between">
+                        <label class="{{ $label }}">Código de barras</label>
+                        <button type="button" id="scan-barcode" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Escanear con cámara</button>
+                    </div>
+                    <input id="barcode-input" name="barcode" class="{{ $input }}" placeholder="Escanea o escribe manualmente" />
+                    <div id="barcode-scanner" class="mt-2 hidden rounded-xl border border-gray-200 bg-white p-2 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                        <div id="barcode-camera" class="overflow-hidden rounded-lg"></div>
+                        <p class="mt-2">Apunta la cámara al código. Se cerrará automáticamente al detectar.</p>
+                        <p id="barcode-status" class="mt-1 text-[11px] text-amber-600"></p>
+                        <button type="button" id="close-scanner" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
+                    </div>
+                </div>
                 <div>
                     <label class="{{ $label }}">Nombre</label>
                     <input name="name" required class="{{ $input }}" />
@@ -55,7 +100,16 @@
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="{{ $label }}">Unidad base</label>
-                        <input name="unit_base" value="unit" class="{{ $input }}" />
+                        <select name="unit_base" class="{{ $input }}">
+                            <option value="g">Gramos</option>
+                            <option value="ml">Mililitros</option>
+                            <option value="unit" selected>Unidad</option>
+                            <option value="docena">Docena</option>
+                            <option value="manojo">Manojo</option>
+                            <option value="sixpack">Sixpack</option>
+                            <option value="bolsa">Bolsa</option>
+                            <option value="otro">Otro</option>
+                        </select>
                     </div>
                     <div>
                         <label class="{{ $label }}">Factor unidad</label>
@@ -69,19 +123,6 @@
                 <div>
                     <label class="{{ $label }}">Vida útil (días)</label>
                     <input name="shelf_life_days" class="{{ $input }}" />
-                </div>
-                <div>
-                    <div class="flex items-center justify-between">
-                        <label class="{{ $label }}">Barcode</label>
-                        <button type="button" id="scan-barcode" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Escanear con cámara</button>
-                    </div>
-                    <input id="barcode-input" name="barcode" class="{{ $input }}" placeholder="Escanea o escribe manualmente" />
-                    <div id="barcode-scanner" class="mt-2 hidden rounded-xl border border-gray-200 bg-white p-2 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                        <div id="barcode-camera" class="overflow-hidden rounded-lg"></div>
-                        <p class="mt-2">Apunta la cámara al código. Se cerrará automáticamente al detectar.</p>
-                        <p id="barcode-status" class="mt-1 text-[11px] text-amber-600"></p>
-                        <button type="button" id="close-scanner" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
-                    </div>
                 </div>
                 <div class="md:col-span-2 lg:col-span-3">
                     <label class="{{ $label }}">Notas</label>

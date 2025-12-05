@@ -78,8 +78,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('food/purchases', [FoodPurchaseController::class, 'store'])->name('food.purchases.store');
     Route::get('food/shopping-list', [FoodShoppingListController::class, 'index'])->name('food.shopping-list.index');
     Route::post('food/shopping-list/generate', [FoodShoppingListController::class, 'generate'])->name('food.shopping-list.generate');
+    Route::put('food/shopping-list/{list}', [FoodShoppingListController::class, 'update'])->name('food.shopping-list.update');
     Route::post('food/shopping-list/sync', [FoodShoppingListController::class, 'sync'])->name('food.shopping-list.sync');
     Route::post('food/shopping-list/{list}/items/{itemId}', [FoodShoppingListController::class, 'markItem'])->name('food.shopping-list.items.mark');
+    Route::post('food/shopping-list/items', [FoodShoppingListController::class, 'storeItem'])->name('food.shopping-list.items.store');
+    Route::delete('food/shopping-list/{list}/items/{item}', [FoodShoppingListController::class, 'destroyItem'])->name('food.shopping-list.items.destroy');
+    Route::post('food/shopping-list/{list}/items/bulk', [FoodShoppingListController::class, 'bulkAction'])->name('food.shopping-list.items.bulk');
+    Route::get('food/shopping-list/search-products', [FoodShoppingListController::class, 'searchProducts'])->name('food.shopping-list.items.search');
+    Route::delete('food/shopping-list/{list}', [FoodShoppingListController::class, 'destroy'])->name('food.shopping-list.destroy');
+    Route::get('food/shopping-list/{list}', [FoodShoppingListController::class, 'show'])->name('food.shopping-list.show');
 
     // Lookup de código de barras desde sesión web
     Route::post('food/scan', \App\Http\Controllers\Api\FoodScanController::class)->name('food.scan');
