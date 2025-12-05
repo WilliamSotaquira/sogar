@@ -273,7 +273,7 @@
                                 <td class="px-3 py-3">
                                     @if($product->current_price)
                                         <div>
-                                            <p class="font-semibold text-gray-900 dark:text-gray-100">${{ number_format($product->current_price, 2) }}</p>
+                                            <p class="font-semibold text-gray-900 dark:text-gray-100">${{ number_format($product->current_price, 0, ',', '.') }}</p>
                                             @if($product->current_vendor)
                                                 <p class="text-xs text-gray-500">{{ $product->current_vendor }}</p>
                                             @endif

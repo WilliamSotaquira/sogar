@@ -245,7 +245,7 @@
                                     <div class="flex items-center justify-between px-3 py-2 text-sm text-gray-800 dark:text-gray-100">
                                         <div>
                                             <p class="font-medium">{{ $movement->concept ?? 'Ajuste' }}</p>
-                                            <p class="text-xs text-gray-500">{{ $movement->occurred_on?->format('Y-m-d') }}</p>
+                                            <p class="text-xs text-gray-500">{{ $movement->occurred_on?->format('d/m/Y') }}</p>
                                         </div>
                                     <span class="{{ $movement->amount >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
                                         {{ $movement->amount >= 0 ? '+' : '' }}{{ $fmtMoney($movement->amount) }}

@@ -121,7 +121,7 @@
                     <tbody class="divide-y divide-default dark:divide-neutral-800">
                         @forelse ($transactions as $transaction)
                             <tr class="text-sm text-heading dark:text-white">
-                                <td class="px-4 py-2">{{ $transaction->occurred_on?->format('Y-m-d') }}</td>
+                                <td class="px-4 py-2">{{ $transaction->occurred_on?->format('d/m/Y') }}</td>
                                 <td class="px-4 py-2">
                                     @if($transaction->category)
                                         <span class="{{ $transaction->category->type === 'income' ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">

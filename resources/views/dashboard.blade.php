@@ -84,7 +84,7 @@
                 <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-gray-900">
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-50">Presupuestos del mes</h2>
-                        <span class="text-xs text-gray-500">{{ now()->format('F Y') }}</span>
+                        <span class="text-xs text-gray-500">{{ now()->translatedFormat('F Y') }}</span>
                     </div>
                     <div class="mt-4 space-y-3">
                         @forelse ($budgets as $budget)

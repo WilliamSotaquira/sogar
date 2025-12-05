@@ -20,7 +20,7 @@
                             class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Guardar</button>
                     </form>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        Generada {{ $list->generated_at?->format('Y-m-d H:i:s') }} · Estado: {{ $list->status }}
+                        Generada {{ $list->generated_at?->format('d/m/Y H:i:s') }} · Estado: {{ $list->status }}
                     </p>
                 </div>
                 <div class="text-sm text-gray-600 dark:text-gray-300">
