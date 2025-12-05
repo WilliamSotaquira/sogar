@@ -27,10 +27,10 @@
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">➕ Agregar Nuevo Producto</h2>
                 <p class="text-sm text-gray-500 mt-1">Escanea el código de barras o completa los datos manualmente</p>
             </div>
-            
+
             <form id="manual-anchor" method="POST" action="{{ route('food.products.store') }}" class="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 @csrf
-                
+
                 {{-- Código de barras --}}
                 <div class="md:col-span-2 lg:col-span-3">
                     <div class="flex items-center justify-between">
@@ -48,7 +48,7 @@
                         <button type="button" id="close-scanner" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
                     </div>
                 </div>
-                
+
                 {{-- Nombre --}}
                 <div class="md:col-span-1 lg:col-span-2">
                     <label class="{{ $label }} flex items-center gap-1">
@@ -57,7 +57,7 @@
                     </label>
                     <input name="name" required class="{{ $input }}" />
                 </div>
-                
+
                 {{-- Marca --}}
                 <div>
                     <label class="{{ $label }} flex items-center gap-1">
@@ -66,7 +66,7 @@
                     </label>
                     <input name="brand" class="{{ $input }}" />
                 </div>
-                
+
                 {{-- Tipo --}}
                 <div>
                     <label class="{{ $label }} flex items-center gap-1">
@@ -85,7 +85,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 {{-- Ubicación --}}
                 <div>
                     <label class="{{ $label }} flex items-center gap-1">
@@ -104,7 +104,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 {{-- Vida útil --}}
                 <div>
                     <label class="{{ $label }} flex items-center gap-1">
@@ -113,7 +113,7 @@
                     </label>
                     <input name="shelf_life_days" type="number" min="1" max="3650" class="{{ $input }}" placeholder="7, 30, 365..." />
                 </div>
-                
+
                 {{-- Tamaño del producto --}}
                 <div class="md:col-span-1 lg:col-span-2">
                     <label class="{{ $label }} flex items-center gap-1">
@@ -132,7 +132,7 @@
                     </div>
                     <p class="text-xs text-gray-500 mt-1">Ej: "500 g", "1 L", "12 unidades"</p>
                 </div>
-                
+
                 {{-- Stock mínimo --}}
                 <div>
                     <label class="{{ $label }} flex items-center gap-1">
@@ -142,7 +142,7 @@
                     <input name="min_stock_qty" type="number" step="0.1" min="0" value="1" class="{{ $input }}" placeholder="1" />
                     <p class="text-xs text-gray-500 mt-1">Alerta cuando baje de esta cantidad</p>
                 </div>
-                
+
                 {{-- Precio inicial --}}
                 <div>
                     <label class="{{ $label }} flex items-center gap-1">
@@ -152,7 +152,7 @@
                     <input name="initial_price" type="number" step="0.01" min="0" class="{{ $input }}" placeholder="0.00" />
                     <p class="text-xs text-gray-500 mt-1">Opcional</p>
                 </div>
-                
+
                 {{-- Vendor --}}
                 <div class="md:col-span-1 lg:col-span-2">
                     <label class="{{ $label }} flex items-center gap-1">
@@ -162,7 +162,7 @@
                     <input name="initial_vendor" type="text" class="{{ $input }}" placeholder="Ej: Walmart, Soriana" />
                     <p class="text-xs text-gray-500 mt-1">Opcional</p>
                 </div>
-                
+
                 {{-- Botones --}}
                 <div class="md:col-span-2 lg:col-span-3 flex items-center justify-between gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                     <div id="openfoodfacts-link" class="hidden">
@@ -222,8 +222,8 @@
                                 <td class="px-3 py-3">
                                     <div class="flex items-center gap-3">
                                         @if($product->image_url || $product->image_path)
-                                            <img src="{{ $product->image_url ?? $product->image_path }}" 
-                                                 alt="{{ $product->name }}" 
+                                            <img src="{{ $product->image_url ?? $product->image_path }}"
+                                                 alt="{{ $product->name }}"
                                                  class="h-12 w-12 rounded object-cover flex-shrink-0 ring-1 ring-gray-200 dark:ring-gray-700">
                                         @else
                                             <div class="h-12 w-12 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
@@ -236,8 +236,8 @@
                                                 <p class="text-xs text-gray-500">{{ $product->brand }}</p>
                                             @endif
                                             @if($product->barcode)
-                                                <a href="https://world.openfoodfacts.org/product/{{ $product->barcode }}" 
-                                                   target="_blank" 
+                                                <a href="https://world.openfoodfacts.org/product/{{ $product->barcode }}"
+                                                   target="_blank"
                                                    rel="noopener"
                                                    class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
                                                    title="Ver en OpenFoodFacts">
@@ -369,7 +369,7 @@
                         </div>
                     </form>
                 </div>
-                
+
                 {{-- Lista de tipos --}}
                 <div>
                     <div class="flex items-center justify-between mb-3">
@@ -466,7 +466,7 @@
                         </div>
                     </form>
                 </div>
-                
+
                 {{-- Lista de ubicaciones --}}
                 <div>
                     <div class="flex items-center justify-between mb-3">
@@ -814,7 +814,7 @@
             // Solo buscar si tiene al menos 8 caracteres
             if (code.length < 8) {
                 setStatus('');
-                
+
                 // Rehabilitar botón si se borró el barcode
                 const submitBtn = document.querySelector('button[type="submit"]');
                 if (submitBtn) {
@@ -822,13 +822,13 @@
                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     submitBtn.title = '';
                 }
-                
+
                 // Remover advertencia
                 const warningDiv = document.getElementById('duplicate-warning');
                 if (warningDiv) {
                     warningDiv.remove();
                 }
-                
+
                 return;
             }
 
@@ -846,7 +846,7 @@
 
                     if (res.ok) {
                         const data = await res.json();
-                        
+
                         if (data.found) {
                             const productData = data.data;
 
@@ -906,7 +906,7 @@
                             // Mensaje de éxito
                             if (data.source === 'local') {
                                 setStatus('⚠️ Este producto ya existe en tu catálogo (ID: ' + productData.id + ')', 'text-rose-600 font-bold');
-                                
+
                                 // Deshabilitar botón guardar
                                 const submitBtn = document.querySelector('button[type="submit"]');
                                 if (submitBtn) {
@@ -914,7 +914,7 @@
                                     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
                                     submitBtn.title = 'Este producto ya existe. Borra el código de barras para crear uno nuevo.';
                                 }
-                                
+
                                 // Agregar mensaje visual
                                 const barcodeContainer = barcodeInput.parentElement;
                                 let warningDiv = document.getElementById('duplicate-warning');
@@ -935,7 +935,7 @@
                                 }
                             } else {
                                 setStatus('✅ Datos cargados desde OpenFoodFacts. Revisa y guarda.', 'text-emerald-600');
-                                
+
                                 // Habilitar botón guardar
                                 const submitBtn = document.querySelector('button[type="submit"]');
                                 if (submitBtn) {
@@ -943,7 +943,7 @@
                                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                                     submitBtn.title = '';
                                 }
-                                
+
                                 // Remover mensaje de advertencia si existe
                                 const warningDiv = document.getElementById('duplicate-warning');
                                 if (warningDiv) {
@@ -1019,7 +1019,7 @@
             modal.style.opacity = '0';
             const content = modal.querySelector('[class*="transform"]');
             if (content) content.style.transform = 'scale(0.95)';
-            
+
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
@@ -1092,9 +1092,9 @@
         const form = e.target;
         const btn = form.querySelector('button[type="submit"]');
         const formData = new FormData(form);
-        
+
         setButtonLoading(btn, true);
-        
+
         try {
             const res = await fetch('/food/types', {
                 method: 'POST',
@@ -1108,9 +1108,9 @@
                     color: formData.get('color'),
                 }),
             });
-            
+
             const data = await res.json();
-            
+
             if (res.ok) {
                 // Éxito - recargar con animación
                 form.reset();
@@ -1144,9 +1144,9 @@
         const id = document.getElementById('edit-type-id').value;
         const name = document.getElementById('edit-type-name').value;
         const color = document.getElementById('edit-type-color').value;
-        
+
         setButtonLoading(btn, true);
-        
+
         try {
             const res = await fetch(`/food/types/${id}`, {
                 method: 'PUT',
@@ -1157,9 +1157,9 @@
                 },
                 body: JSON.stringify({ name, color }),
             });
-            
+
             const data = await res.json();
-            
+
             if (res.ok) {
                 setTimeout(() => location.reload(), 300);
             } else {
@@ -1175,7 +1175,7 @@
 
     async function deleteType(id) {
         if (!confirm('¿Eliminar este tipo? Esta acción no se puede deshacer.')) return;
-        
+
         try {
             const res = await fetch(`/food/types/${id}`, {
                 method: 'DELETE',
@@ -1184,9 +1184,9 @@
                     'Accept': 'application/json',
                 },
             });
-            
+
             const data = await res.json();
-            
+
             if (res.ok) {
                 // Animación de eliminación
                 const item = document.querySelector(`[data-type-id="${id}"]`);
@@ -1212,9 +1212,9 @@
         const form = e.target;
         const btn = form.querySelector('button[type="submit"]');
         const formData = new FormData(form);
-        
+
         setButtonLoading(btn, true);
-        
+
         try {
             const res = await fetch('/food/locations', {
                 method: 'POST',
@@ -1228,9 +1228,9 @@
                     color: formData.get('color'),
                 }),
             });
-            
+
             const data = await res.json();
-            
+
             if (res.ok) {
                 form.reset();
                 setTimeout(() => location.reload(), 300);
@@ -1265,9 +1265,9 @@
         const name = document.getElementById('edit-location-name').value;
         const color = document.getElementById('edit-location-color').value;
         const isDefault = document.getElementById('edit-location-default').checked;
-        
+
         setButtonLoading(btn, true);
-        
+
         try {
             const res = await fetch(`/food/locations/${id}`, {
                 method: 'PUT',
@@ -1278,9 +1278,9 @@
                 },
                 body: JSON.stringify({ name, color, is_default: isDefault }),
             });
-            
+
             const data = await res.json();
-            
+
             if (res.ok) {
                 setTimeout(() => location.reload(), 300);
             } else {
@@ -1296,7 +1296,7 @@
 
     async function deleteLocation(id) {
         if (!confirm('¿Eliminar esta ubicación? Esta acción no se puede deshacer.')) return;
-        
+
         try {
             const res = await fetch(`/food/locations/${id}`, {
                 method: 'DELETE',
@@ -1305,9 +1305,9 @@
                     'Accept': 'application/json',
                 },
             });
-            
+
             const data = await res.json();
-            
+
             if (res.ok) {
                 // Animación de eliminación
                 const item = document.querySelector(`[data-location-id="${id}"]`);

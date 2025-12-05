@@ -24,13 +24,13 @@ class ProductController extends Controller
         // Calcular stock actual y precio actual para cada producto
         $products->each(function ($product) {
             $product->current_stock = $product->batches->sum('qty_remaining_base');
-            
+
             // Obtener el precio más reciente
             $latestPrice = \App\Models\FoodPrice::where('product_id', $product->id)
                 ->orderBy('captured_on', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->first();
-            
+
             $product->current_price = $latestPrice ? $latestPrice->price_per_base : null;
             $product->current_vendor = $latestPrice ? $latestPrice->vendor : null;
         });

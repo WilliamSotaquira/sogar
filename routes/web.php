@@ -86,13 +86,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('food/locations', [\App\Http\Controllers\Food\LocationController::class, 'store'])->name('food.locations.store');
     Route::put('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'update'])->name('food.locations.update');
     Route::delete('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'destroy'])->name('food.locations.destroy');
-    
+
     // Gestión de precios
     Route::get('food/products/{product}/prices', [\App\Http\Controllers\Food\PriceController::class, 'show'])->name('food.prices.show');
     Route::post('food/products/{product}/prices', [\App\Http\Controllers\Food\PriceController::class, 'store'])->name('food.prices.store');
     Route::get('food/products/{product}/prices/chart', [\App\Http\Controllers\Food\PriceController::class, 'chartData'])->name('food.prices.chart');
     Route::get('food/products/{product}/prices/forecast', [\App\Http\Controllers\Food\PriceController::class, 'forecast'])->name('food.prices.forecast');
-    
+
     Route::get('food/purchases', [FoodPurchaseController::class, 'index'])->name('food.purchases.index');
     Route::post('food/purchases', [FoodPurchaseController::class, 'store'])->name('food.purchases.store');
     Route::get('food/shopping-list', [FoodShoppingListController::class, 'index'])->name('food.shopping-list.index');
