@@ -10,6 +10,7 @@ use App\Models\FoodProduct;
 use App\Models\FoodPurchase;
 use App\Models\FoodPurchaseItem;
 use App\Models\FoodType;
+use App\Models\ShoppingList;
 use App\Models\Wallet;
 use App\Services\FoodFinanceService;
 use App\Services\UnitConverter;
@@ -24,6 +25,12 @@ class PurchaseController extends Controller
     {
         $userId = $request->user()->id;
 
+        $activeList = ShoppingList::with('items.product')
+            ->where('user_id', $userId)
+            ->where('status', 'active')
+            ->latest('generated_at')
+            ->first();
+
         return view('food.purchases.index', [
             'purchases' => FoodPurchase::with('items.product')
                 ->where('user_id', $userId)
@@ -36,6 +43,8 @@ class PurchaseController extends Controller
             'products' => FoodProduct::where('user_id', $userId)->orderBy('name')->get(),
             'locations' => FoodLocation::where('user_id', $userId)->orderBy('sort_order')->get(),
             'types' => FoodType::where('user_id', $userId)->where('is_active', true)->orderBy('sort_order')->get(),
+            'activeList' => $activeList,
+            'listItems' => $activeList?->items ?? collect(),
         ]);
     }
 

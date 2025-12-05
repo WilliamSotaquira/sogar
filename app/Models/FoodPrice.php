@@ -18,12 +18,16 @@ class FoodPrice extends Model
         'vendor',
         'currency',
         'price_per_base',
+        'price_change_percent',
+        'is_price_alert',
         'captured_on',
         'note',
     ];
 
     protected $casts = [
         'price_per_base' => 'decimal:4',
+        'price_change_percent' => 'decimal:2',
+        'is_price_alert' => 'boolean',
         'captured_on' => 'date',
     ];
 

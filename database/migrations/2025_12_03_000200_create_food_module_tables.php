@@ -45,6 +45,7 @@ return new class extends Migration {
             $table->decimal('unit_size', 10, 3)->default(1); // factor relativo a la unidad base
             $table->unsignedSmallInteger('shelf_life_days')->nullable();
             $table->decimal('min_stock_qty', 12, 3)->nullable();
+            $table->decimal('presentation_qty', 12, 3)->nullable();
             $table->string('image_url')->nullable();
             $table->text('description')->nullable();
             $table->text('notes')->nullable();

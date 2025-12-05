@@ -17,18 +17,20 @@ class ShoppingListGenerator
         int $userId,
         int $horizonDays = 7,
         int $peopleCount = 3,
-        float $safetyFactor = 1.2
+        float $safetyFactor = 1.2,
+        ?string $name = null,
+        ?string $expectedPurchaseOn = null,
     ): ShoppingList {
-        return DB::transaction(function () use ($userId, $horizonDays, $peopleCount, $safetyFactor) {
+        return DB::transaction(function () use ($userId, $horizonDays, $peopleCount, $safetyFactor, $name, $expectedPurchaseOn) {
             // Cerrar lista activa previa
             ShoppingList::where('user_id', $userId)->where('status', 'active')->update(['status' => 'closed']);
 
             $list = ShoppingList::create([
                 'user_id' => $userId,
-                'name' => 'Lista de compra ' . Carbon::now()->format('d/m'),
+                'name' => $name ?: ('Lista de compra ' . Carbon::now()->format('d/m')),
                 'status' => 'active',
                 'generated_at' => Carbon::now(),
-                'expected_purchase_on' => Carbon::now()->addDays($horizonDays),
+                'expected_purchase_on' => $expectedPurchaseOn ?: Carbon::now()->addDays($horizonDays),
                 'people_count' => $peopleCount,
                 'purchase_frequency_days' => $horizonDays,
                 'safety_factor' => $safetyFactor,

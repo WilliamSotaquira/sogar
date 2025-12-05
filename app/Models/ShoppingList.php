@@ -13,11 +13,15 @@ class ShoppingList extends Model
 
     protected $fillable = [
         'user_id',
+        'budget_id',
+        'category_id',
         'name',
         'status',
         'generated_at',
         'expected_purchase_on',
         'estimated_budget',
+        'actual_total',
+        'is_collaborative',
         'people_count',
         'purchase_frequency_days',
         'safety_factor',
@@ -28,7 +32,9 @@ class ShoppingList extends Model
         'generated_at' => 'datetime',
         'expected_purchase_on' => 'date',
         'estimated_budget' => 'decimal:2',
+        'actual_total' => 'decimal:2',
         'safety_factor' => 'decimal:2',
+        'is_collaborative' => 'boolean',
         'meta' => 'array',
     ];
 

@@ -25,7 +25,11 @@ class ShoppingListItem extends Model
         'unit_base',
         'unit_size',
         'estimated_price',
+        'actual_price',
+        'vendor_name',
         'is_checked',
+        'checked_at',
+        'low_stock_alert',
         'barcode',
         'sort_order',
         'metadata',
@@ -37,7 +41,10 @@ class ShoppingListItem extends Model
         'qty_to_buy_base' => 'decimal:3',
         'unit_size' => 'decimal:3',
         'estimated_price' => 'decimal:2',
+        'actual_price' => 'decimal:2',
         'is_checked' => 'bool',
+        'low_stock_alert' => 'bool',
+        'checked_at' => 'datetime',
         'metadata' => 'array',
     ];
 

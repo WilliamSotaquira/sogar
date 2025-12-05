@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Budget;
-use App\Models\FoodStockBatch;
 use App\Models\Integration;
 use App\Models\Transaction;
 use App\Models\Wallet;
-use Carbon\Carbon;
+use App\Services\ProductPerformanceService;
+use App\Services\PriceChangeService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -15,107 +15,118 @@ class DashboardController extends Controller
     public function __invoke(Request $request)
     {
         $user = $request->user();
-        $now = Carbon::now();
-        $monthStart = $now->copy()->startOfMonth();
-        $monthEnd = $now->copy()->endOfMonth();
+        $now = now();
 
-        $transactions = Transaction::with('category')
-            ->where('user_id', $user->id)
-            ->whereBetween('occurred_on', [$monthStart, $monthEnd])
-            ->get();
+        // Consultas base
+        $income = Transaction::where('user_id', $user->id)
+            ->whereHas('category', fn($q) => $q->where('type', 'income'))
+            ->whereYear('occurred_on', $now->year)
+            ->whereMonth('occurred_on', $now->month)
+            ->sum('amount');
 
-        $income = $transactions->where('category.type', 'income')->sum('amount');
-        $expenses = $transactions->where('category.type', 'expense')->sum('amount');
-        $savingsRate = $income > 0 ? max(0, min(1, ($income - $expenses) / $income)) : 0;
+        $expenses = Transaction::where('user_id', $user->id)
+            ->whereHas('category', fn($q) => $q->where('type', 'expense'))
+            ->whereYear('occurred_on', $now->year)
+            ->whereMonth('occurred_on', $now->month)
+            ->sum('amount');
 
+        $savingsRate = $income > 0 ? ($income - $expenses) / $income : 0;
+        $projectedSavings = ($income - $expenses) * 6;
+
+        // Presupuestos
         $budgets = Budget::with('category')
             ->where('user_id', $user->id)
-            ->where('month', $now->format('m'))
-            ->where('year', $now->format('Y'))
+            ->where('month', $now->month)
+            ->where('year', $now->year)
             ->get()
-            ->map(function (Budget $budget) use ($transactions) {
-                $spent = $transactions
-                    ->where('category_id', $budget->category_id)
-                    ->where('category.type', 'expense')
+            ->map(function ($budget) use ($now) {
+                $spent = Transaction::where('category_id', $budget->category_id)
+                    ->whereYear('occurred_on', $now->year)
+                    ->whereMonth('occurred_on', $now->month)
                     ->sum('amount');
+
                 $percent = $budget->amount > 0 ? min(100, ($spent / $budget->amount) * 100) : 0;
 
                 return [
-                    'category' => $budget->category?->name ?? 'Sin categoría',
+                    'category' => $budget->category->name,
                     'amount' => $budget->amount,
                     'spent' => $spent,
                     'percent' => round($percent, 1),
                 ];
             });
 
-        $alerts = $budgets
-            ->filter(fn ($b) => $b['percent'] >= 80)
-            ->map(fn ($b) => [
-                'title' => $b['percent'] >= 100 ? 'Presupuesto excedido' : 'Presupuesto alto',
-                'message' => "{$b['category']} va en {$b['percent']}% ({$b['spent']}/{$b['amount']})",
-            ])
-            ->values();
-
-        // Alertas de inventario: caducidad próxima y stock bajo
-        $soon = Carbon::today()->addDays(5);
-        $batches = FoodStockBatch::with('product')
-            ->where('user_id', $user->id)
-            ->get();
-
-        $expires = $batches
-            ->filter(fn ($b) => $b->expires_on && Carbon::parse($b->expires_on)->lte($soon) && $b->status === 'ok')
-            ->take(10)
-            ->map(fn ($b) => [
-                'title' => 'Caducidad próxima',
-                'message' => "{$b->product->name} caduca el {$b->expires_on->format('d/m')}",
-            ]);
-
-        $lowStock = $batches
-            ->groupBy('product_id')
-            ->map(function ($group) {
-                $product = $group->first()->product;
-                $remaining = $group->sum('qty_remaining_base');
-                return [$product, $remaining];
-            })
-            ->filter(fn ($pair) => $pair[0]->min_stock_qty && $pair[1] < $pair[0]->min_stock_qty)
-            ->take(10)
-            ->map(fn ($pair) => [
-                'title' => 'Stock bajo',
-                'message' => $pair[0]->name . ' bajo mínimo (' . $pair[1] . ' ' . $pair[0]->unit_base . ')',
-            ]);
-
-        $alerts = $alerts->merge($expires)->merge($lowStock)->values();
-
+        // Wallets
         $wallets = Wallet::where('user_id', $user->id)
             ->where('is_active', true)
-            ->with(['transactions.category', 'movements'])
             ->get()
-            ->map(function (Wallet $wallet) {
-            $balance = $wallet->initial_balance + $wallet->movements->sum('amount');
+            ->map(function ($wallet) {
+                $balance = $wallet->initial_balance + $wallet->movements()->sum('amount');
+                return [
+                    'name' => $wallet->name,
+                    'balance' => $balance,
+                    'target' => $wallet->target_amount,
+                    'is_shared' => $wallet->is_shared,
+                ];
+            });
 
-            return [
-                'name' => $wallet->name,
-                'balance' => $balance,
-                'target' => $wallet->target_amount,
-                'is_shared' => $wallet->is_shared,
-            ];
-        });
+        // Alertas
+        $alerts = collect();
 
+        // Alertas de presupuestos
+        foreach ($budgets as $budget) {
+            if ($budget['percent'] > 90) {
+                $alerts->push([
+                    'title' => 'Presupuesto alto',
+                    'message' => "Has gastado {$budget['percent']}% del presupuesto de {$budget['category']}.",
+                ]);
+            }
+        }
+
+        // Alertas de alimentos (rendimiento y precios)
+        try {
+            $performanceService = app(ProductPerformanceService::class);
+            $performanceAlerts = $performanceService->generatePerformanceAlerts($user->id);
+
+            foreach ($performanceAlerts['low_performance'] as $alert) {
+                $alerts->push([
+                    'title' => '📉 Producto de bajo rendimiento',
+                    'message' => $alert['message'],
+                ]);
+            }
+
+            $priceService = app(PriceChangeService::class);
+            $priceAlerts = $priceService->getPriceAlerts($user->id, 7);
+
+            foreach (array_slice($priceAlerts, 0, 3) as $alert) {
+                $icon = $alert['severity'] === 'warning' ? '⚠️' : '✅';
+                $direction = $alert['change_percent'] > 0 ? 'subió' : 'bajó';
+                $alerts->push([
+                    'title' => "{$icon} Cambio de precio",
+                    'message' => "{$alert['product']} {$direction} " . abs(round($alert['change_percent'])) . "% en {$alert['vendor']}",
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Ignorar errores del módulo de alimentos si no está completamente configurado
+        }
+
+        // Calcular health score
         $healthScore = $this->calculateHealthScore($income, $expenses, $budgets, $alerts->count());
-        $projectedSavings = max(0, ($income - $expenses)) * 6;
-        $googleIntegration = Integration::where('user_id', $user->id)->where('provider', 'google')->first();
 
-        return view('dashboard', [
-            'income' => $income,
-            'expenses' => $expenses,
-            'savingsRate' => $savingsRate,
-            'healthScore' => $healthScore,
-            'projectedSavings' => $projectedSavings,
-            'budgets' => $budgets,
-            'wallets' => $wallets,
-            'alerts' => $alerts,
-            'googleIntegration' => $googleIntegration,
-        ]);
+        $googleIntegration = Integration::where('user_id', $user->id)
+            ->where('provider', 'google')
+            ->first();
+
+        return view('dashboard', compact(
+            'income',
+            'expenses',
+            'savingsRate',
+            'projectedSavings',
+            'healthScore',
+            'budgets',
+            'wallets',
+            'alerts',
+            'googleIntegration'
+        ));
     }
 
     private function calculateHealthScore(float $income, float $expenses, $budgets, int $alertCount): int
@@ -127,7 +138,9 @@ class DashboardController extends Controller
         $savingsRate = max(0, min(1, ($income - $expenses) / $income));
         $budgetPressure = $budgets->avg(fn ($b) => $b['percent']) ?? 0;
 
-        $score = (50 * $savingsRate) + (30 * (1 - min(1, $budgetPressure / 100))) + (20 * ($alertCount === 0 ? 1 : max(0, 1 - ($alertCount * 0.2))));
+        $score = (50 * $savingsRate) 
+            + (30 * (1 - min(1, $budgetPressure / 100))) 
+            + (20 * ($alertCount === 0 ? 1 : max(0, 1 - ($alertCount * 0.2))));
 
         return (int) round(max(1, min(100, $score)));
     }

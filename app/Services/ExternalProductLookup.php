@@ -30,6 +30,7 @@ class ExternalProductLookup
             'min_stock_qty' => $product['min_stock_qty'] ?? null,
             'image_url' => $product['image_url'] ?? null,
             'description' => $product['description'] ?? null,
+            'presentation_qty' => $product['presentation_qty'] ?? ($product['unit_size'] ?? 1),
         ];
     }
 
@@ -62,6 +63,7 @@ class ExternalProductLookup
                     'unit_size' => $unitSize ?? 1,
                     'image_url' => $p['image_front_url'] ?? $p['image_url'] ?? null,
                     'description' => $p['generic_name_es'] ?? $p['generic_name'] ?? $p['ingredients_text'] ?? null,
+                    'presentation_qty' => $unitSize ?? 1,
                 ];
             } catch (\Throwable $e) {
                 return null;

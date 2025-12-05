@@ -72,15 +72,24 @@ Route::middleware(['auth'])->group(function () {
     Route::get('food/inventory', [InventoryController::class, 'index'])->name('food.inventory.index');
     Route::get('food/products', [FoodProductController::class, 'index'])->name('food.products.index');
     Route::post('food/products', [FoodProductController::class, 'store'])->name('food.products.store');
-    Route::put('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
+    Route::get('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
     Route::delete('food/products/{product}', [FoodProductController::class, 'destroy'])->name('food.products.destroy');
+    
+    // Gestión de precios
+    Route::get('food/products/{product}/prices', [\App\Http\Controllers\Food\PriceController::class, 'show'])->name('food.prices.show');
+    Route::post('food/products/{product}/prices', [\App\Http\Controllers\Food\PriceController::class, 'store'])->name('food.prices.store');
+    Route::get('food/products/{product}/prices/chart', [\App\Http\Controllers\Food\PriceController::class, 'chartData'])->name('food.prices.chart');
+    Route::get('food/products/{product}/prices/forecast', [\App\Http\Controllers\Food\PriceController::class, 'forecast'])->name('food.prices.forecast');
+    
     Route::get('food/purchases', [FoodPurchaseController::class, 'index'])->name('food.purchases.index');
     Route::post('food/purchases', [FoodPurchaseController::class, 'store'])->name('food.purchases.store');
     Route::get('food/shopping-list', [FoodShoppingListController::class, 'index'])->name('food.shopping-list.index');
     Route::post('food/shopping-list/generate', [FoodShoppingListController::class, 'generate'])->name('food.shopping-list.generate');
     Route::put('food/shopping-list/{list}', [FoodShoppingListController::class, 'update'])->name('food.shopping-list.update');
     Route::post('food/shopping-list/sync', [FoodShoppingListController::class, 'sync'])->name('food.shopping-list.sync');
-    Route::post('food/shopping-list/{list}/items/{itemId}', [FoodShoppingListController::class, 'markItem'])->name('food.shopping-list.items.mark');
+    Route::post('food/shopping-list/{list}/items/{itemId}', [FoodShoppingListController::class, 'markItem'])
+        ->whereNumber('itemId')
+        ->name('food.shopping-list.items.mark');
     Route::post('food/shopping-list/items', [FoodShoppingListController::class, 'storeItem'])->name('food.shopping-list.items.store');
     Route::delete('food/shopping-list/{list}/items/{item}', [FoodShoppingListController::class, 'destroyItem'])->name('food.shopping-list.items.destroy');
     Route::post('food/shopping-list/{list}/items/bulk', [FoodShoppingListController::class, 'bulkAction'])->name('food.shopping-list.items.bulk');
@@ -90,4 +99,5 @@ Route::middleware(['auth'])->group(function () {
 
     // Lookup de código de barras desde sesión web
     Route::post('food/scan', \App\Http\Controllers\Api\FoodScanController::class)->name('food.scan');
+    Route::get('food/barcode/{code}', [\App\Http\Controllers\Api\BarcodeLookupController::class, 'lookup'])->name('food.barcode.lookup');
 });

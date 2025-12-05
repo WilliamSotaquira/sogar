@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Seeders\FinanceSeeder;
+use Database\Seeders\FoodDemoSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Database\Seeder;
 
@@ -16,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             FinanceSeeder::class,
+            FoodDemoSeeder::class,
         ]);
     }
 }

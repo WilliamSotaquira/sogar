@@ -124,7 +124,7 @@
                             data-menu-dropdown="{{ $menuId }}"
                             class="hidden rounded-xl border border-default bg-white/95 p-3 shadow-xl backdrop-blur-md md:absolute md:left-0 md:mt-2 md:min-w-[240px] dark:bg-neutral-900/95"
                         >
-                            <p class="px-2 pb-2 text-xs uppercase tracking-wide text-neutral-400">{{ $menu['group'] }}</p>
+                            <p class="px-2 pb-2 text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300 font-bold">{{ $menu['group'] }}</p>
                             <ul class="space-y-1">
                                 @foreach ($menu['links'] as $link)
                                     @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp
@@ -132,7 +132,7 @@
                                         <a
                                             href="{{ route($link['route']) }}"
                                             wire:navigate
-                                            class="flex items-center justify-between rounded-md px-3 py-2 text-sm transition {{ $active ? 'bg-neutral-secondary-soft text-fg-brand font-semibold' : 'text-heading' }} hover:bg-neutral-secondary-soft hover:text-fg-brand"
+                                            class="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition {{ $active ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-900/30 dark:text-emerald-300' : 'text-gray-800 dark:text-gray-100' }} hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             aria-current="{{ $active ? 'page' : 'false' }}"
                                         >
                                             <span>{{ $link['label'] }}</span>
@@ -149,7 +149,7 @@
                                         <a
                                             href="{{ route($link['route']) }}"
                                             wire:navigate
-                                            class="block rounded-md px-3 py-2 text-sm transition {{ $active ? 'bg-neutral-secondary-soft text-fg-brand font-semibold' : 'text-heading' }} hover:bg-neutral-secondary-soft hover:text-fg-brand"
+                                            class="block rounded-md px-3 py-2 text-sm font-medium transition {{ $active ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-900/30 dark:text-emerald-300' : 'text-gray-800 dark:text-gray-100' }} hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             aria-current="{{ $active ? 'page' : 'false' }}"
                                         >
                                             {{ $link['label'] }}

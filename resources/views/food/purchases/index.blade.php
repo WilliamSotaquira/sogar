@@ -54,18 +54,22 @@
 
                 <div class="border rounded-xl border-dashed p-4 space-y-3">
                     <div class="flex items-center justify-between">
-                        <div class="text-sm font-semibold">Items</div>
+                        <div class="text-sm font-semibold">
+                            Items @if($activeList)<span class="text-xs text-gray-500">(desde lista: {{ $activeList->name }})</span>@endif
+                        </div>
                         <button type="button" id="add-item" class="{{ $btnSecondary }} text-xs">Agregar</button>
                     </div>
                     <div id="items-container" class="space-y-3">
                         <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-4 border rounded-lg p-3 item-row">
                             <input type="hidden" name="items[0][unit_size]" value="1">
                             <div>
-                                <label class="block text-xs text-gray-600">Producto</label>
-                                <select name="items[0][product_id]" class="{{ $input }}">
+                                <label class="block text-xs text-gray-600">Producto (lista)</label>
+                                <select name="items[0][product_id]" class="{{ $input }} item-product-select">
                                     <option value="">Nuevo / libre</option>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                    @foreach($listItems as $li)
+                                        <option value="{{ $li->product_id }}" data-name="{{ $li->name }}" data-qty="{{ $li->qty_to_buy_base }}" data-unit="{{ $li->unit_base }}" data-unitsize="{{ $li->unit_size }}" data-location="{{ $li->location_id }}" data-type="{{ $li->product?->type_id }}">
+                                            {{ $li->name }} @if($li->product?->brand) ({{ $li->product->brand }}) @endif
+                                        </option>
                                     @endforeach
                                 </select>
                                 <input name="items[0][name]" placeholder="Nombre rápido" class="{{ $input }} mt-1">
@@ -91,11 +95,11 @@
                             <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label class="block text-xs text-gray-600">Qty</label>
-                                    <input name="items[0][qty]" value="1" class="{{ $input }}">
+                                    <input name="items[0][qty]" value="1" class="{{ $input }} item-qty">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-600">Unidad</label>
-                                    <input name="items[0][unit]" value="unit" class="{{ $input }}">
+                                    <input name="items[0][unit]" value="unit" class="{{ $input }} item-unit">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-600">Precio</label>
@@ -136,27 +140,38 @@
             </form>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-md dark:border-gray-800 dark:bg-gray-900">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Historial</h2>
-            <div class="space-y-3">
-                @forelse($purchases as $purchase)
-                    <div class="border rounded-lg p-4 dark:border-gray-800">
-                        <div class="flex flex-wrap justify-between text-sm">
-                            <div class="font-semibold">{{ \Carbon\Carbon::parse($purchase->occurred_on)->format('d M Y') }} — {{ $purchase->vendor ?? 'Sin proveedor' }}</div>
-                            <div class="font-semibold">${{ number_format($purchase->total, 2, ',', '.') }}</div>
-                        </div>
-                        <div class="text-xs text-gray-500">Items: {{ $purchase->items->count() }}</div>
-                    </div>
-                @empty
-                    <p class="text-gray-500 text-sm">Aún no hay compras.</p>
-                @endforelse
-            </div>
-        </div>
     </div>
 
     <script>
+        const container = document.getElementById('items-container');
+        const applyListPreset = (row) => {
+            const select = row.querySelector('.item-product-select');
+            const qty = row.querySelector('.item-qty');
+            const unit = row.querySelector('.item-unit');
+            if (!select || !qty || !unit) return;
+            select.addEventListener('change', () => {
+                const opt = select.selectedOptions[0];
+                if (!opt) return;
+                const presetQty = opt.dataset.qty;
+                const presetUnit = opt.dataset.unit;
+                const presetUnitSize = opt.dataset.unitsize;
+                const presetLocation = opt.dataset.location;
+                const presetType = opt.dataset.type;
+                const nameInput = row.querySelector('input[name*="[name]"]');
+                const locSelect = row.querySelector('select[name*="[location_id]"]');
+                const typeSelect = row.querySelector('select[name*="[type_id]"]');
+                const unitSizeInput = row.querySelector('input[name*="[unit_size]"]');
+                if (presetQty) qty.value = presetQty;
+                if (presetUnit) unit.value = presetUnit;
+                if (presetUnitSize && unitSizeInput) unitSizeInput.value = presetUnitSize;
+                if (presetLocation && locSelect) locSelect.value = presetLocation;
+                if (presetType && typeSelect) typeSelect.value = presetType;
+                if (nameInput && opt.dataset.name) nameInput.value = opt.dataset.name;
+            });
+        };
+        applyListPreset(container.firstElementChild);
+
         document.getElementById('add-item').addEventListener('click', function () {
-            const container = document.getElementById('items-container');
             const idx = container.querySelectorAll('.item-row').length;
             const tpl = container.firstElementChild.cloneNode(true);
             tpl.querySelectorAll('input, select').forEach(el => {
@@ -166,8 +181,12 @@
                     if (el.name.includes('[qty]')) el.value = '1';
                     if (el.name.includes('[unit_price]')) el.value = '0';
                 }
+                if (el.classList.contains('item-product-select')) {
+                    el.value = '';
+                }
             });
             container.appendChild(tpl);
+            applyListPreset(tpl);
         });
     </script>
 </x-layouts.app>

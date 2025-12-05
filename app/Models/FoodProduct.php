@@ -22,6 +22,10 @@ class FoodProduct extends Model
         'unit_size',
         'shelf_life_days',
         'min_stock_qty',
+        'performance_index',
+        'avg_consumption_rate',
+        'last_performance_calc',
+        'presentation_qty',
         'notes',
         'is_active',
         'image_url',
@@ -32,6 +36,10 @@ class FoodProduct extends Model
     protected $casts = [
         'unit_size' => 'decimal:3',
         'min_stock_qty' => 'decimal:3',
+        'presentation_qty' => 'decimal:3',
+        'performance_index' => 'decimal:2',
+        'avg_consumption_rate' => 'decimal:3',
+        'last_performance_calc' => 'date',
         'is_active' => 'bool',
     ];
 

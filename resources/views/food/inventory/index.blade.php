@@ -15,6 +15,23 @@
             </div>
         </div>
 
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50 mb-2">Buscar producto en stock</h3>
+            <div class="flex flex-wrap gap-3 items-center">
+                <div class="flex items-center gap-2">
+                    <input id="inventory-barcode-input" class="{{ $input }}" placeholder="Escanea o escribe código de barras" />
+                    <button type="button" id="inventory-scan" class="{{ $btnSecondary }}">Escanear</button>
+                </div>
+                <button type="button" id="inventory-search" class="{{ $btnSecondary }}">Buscar en stock</button>
+                <span id="inventory-status" class="text-xs text-gray-500 dark:text-gray-400"></span>
+            </div>
+            <div id="inventory-scanner" class="mt-2 hidden rounded-xl border border-gray-200 bg-white p-2 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                <div id="inventory-camera" class="overflow-hidden rounded-lg"></div>
+                <p class="mt-2">Apunta la cámara al código. Se cierra al detectar.</p>
+                <button type="button" id="inventory-close" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
+            </div>
+        </div>
+
         <div class="flex flex-wrap gap-3">
             <form class="flex flex-wrap gap-2 items-center">
                 <select name="location_id" class="{{ $input }}">
@@ -55,7 +72,7 @@
                                 $expires = $batch->expires_on ? \Carbon\Carbon::parse($batch->expires_on) : null;
                                 $days = $expires ? now()->diffInDays($expires, false) : null;
                             @endphp
-                            <tr class="border-t border-gray-100 dark:border-gray-800">
+                            <tr class="border-t border-gray-100 dark:border-gray-800 inventory-row" data-product-id="{{ $batch->product_id }}">
                                 <td class="px-3 py-2 font-medium">{{ $batch->product->name }}</td>
                                 <td class="px-3 py-2">{{ $batch->location?->name ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ $batch->product->type?->name ?? '—' }}</td>
@@ -89,3 +106,149 @@
         </div>
     </div>
 </x-layouts.app>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('inventory-barcode-input');
+        const scanBtn = document.getElementById('inventory-scan');
+        const searchBtn = document.getElementById('inventory-search');
+        const statusEl = document.getElementById('inventory-status');
+        const scannerWrapper = document.getElementById('inventory-scanner');
+        const cameraEl = document.getElementById('inventory-camera');
+        const closeBtn = document.getElementById('inventory-close');
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        let stream = null;
+        let rafId = null;
+        let detector = null;
+
+        const setStatus = (msg, tone = 'text-amber-600') => {
+            if (!statusEl) return;
+            statusEl.textContent = msg || '';
+            statusEl.className = 'text-xs ' + tone;
+        };
+
+        const stopScanner = async () => {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = null;
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+            }
+            detector = null;
+            cameraEl.innerHTML = '';
+            scannerWrapper?.classList.add('hidden');
+            setStatus('');
+        };
+
+        const highlightProduct = (productId) => {
+            document.querySelectorAll('.inventory-row').forEach(row => row.classList.remove('bg-emerald-50', 'dark:bg-emerald-900/20'));
+            const row = document.querySelector(`.inventory-row[data-product-id="${productId}"]`);
+            if (row) {
+                row.classList.add('bg-emerald-50', 'dark:bg-emerald-900/20');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                setStatus('No hay stock para este código en el listado.', 'text-amber-600');
+            }
+        };
+
+        const lookupAndHighlight = async (code) => {
+            if (!code) return;
+            setStatus('Buscando producto...');
+            try {
+                const res = await fetch('/food/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf || '',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ code }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    highlightProduct(data.product.id);
+                    setStatus('Producto encontrado en tu inventario.', 'text-emerald-600');
+                } else {
+                    setStatus('No se encontró el producto. ¿Lo quieres crear primero?', 'text-amber-600');
+                }
+            } catch (err) {
+                console.warn(err);
+                setStatus('Error al buscar el código.', 'text-rose-500');
+            }
+        };
+
+        const startScanner = async () => {
+            if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                setStatus('La cámara requiere HTTPS o localhost.', 'text-rose-500');
+                return;
+            }
+            scannerWrapper?.classList.remove('hidden');
+            setStatus('Buscando cámaras...');
+            try {
+                if (!('BarcodeDetector' in window)) {
+                    setStatus('Tu navegador no soporta BarcodeDetector.', 'text-rose-500');
+                    return;
+                }
+                detector = new BarcodeDetector({ formats: ['ean_13', 'code_128', 'ean_8', 'qr_code'] });
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                const video = document.createElement('video');
+                video.setAttribute('playsinline', true);
+                video.muted = true;
+                video.srcObject = stream;
+                await video.play();
+                cameraEl.innerHTML = '';
+                cameraEl.appendChild(video);
+                setStatus('Escaneando... apunta al código.');
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                const scan = async () => {
+                    if (!video.videoWidth) {
+                        rafId = requestAnimationFrame(scan);
+                        return;
+                    }
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    try {
+                        const codes = await detector.detect(canvas);
+                        if (codes.length) {
+                            const text = codes[0].rawValue || '';
+                            if (text) {
+                                input.value = text;
+                                setStatus('Código detectado: ' + text, 'text-emerald-600');
+                                await stopScanner();
+                                lookupAndHighlight(text);
+                                return;
+                            }
+                        }
+                    } catch (_) {}
+                    rafId = requestAnimationFrame(scan);
+                };
+                rafId = requestAnimationFrame(scan);
+            } catch (err) {
+                console.warn(err);
+                setStatus('No se pudo acceder a la cámara.', 'text-rose-500');
+            }
+        };
+
+        scanBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            startScanner();
+        });
+
+        closeBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            stopScanner();
+        });
+
+        searchBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            lookupAndHighlight(input?.value);
+        });
+
+        input?.addEventListener('change', (e) => lookupAndHighlight(e.target.value));
+    });
+</script>

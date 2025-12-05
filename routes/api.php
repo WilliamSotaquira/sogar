@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/food/scan', FoodScanController::class)->name('api.food.scan');
+    Route::post('/food/products/{product}/performance', [\App\Http\Controllers\Api\ProductPerformanceController::class, 'calculate'])->name('api.food.products.performance');
     Route::get('/shopping-lists/active', [ShoppingListController::class, 'active'])->name('api.shopping-lists.active');
     Route::post('/shopping-lists/generate', [ShoppingListController::class, 'generate'])->name('api.shopping-lists.generate');
     Route::put('/shopping-lists/{list}/items/{item}', [ShoppingListController::class, 'updateItem'])->name('api.shopping-lists.items.update');
