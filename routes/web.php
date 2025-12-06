@@ -95,6 +95,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('food/purchases', [FoodPurchaseController::class, 'index'])->name('food.purchases.index');
     Route::post('food/purchases', [FoodPurchaseController::class, 'store'])->name('food.purchases.store');
+    
+    // Shopping Lists - Vista de todas las listas
+    Route::get('food/shopping-list/all', [FoodShoppingListController::class, 'all'])->name('food.shopping-list.all');
+    Route::post('food/shopping-list/{list}/suggest', [FoodShoppingListController::class, 'generateSuggestions'])->name('food.shopping-list.suggest');
+    
+    // Shopping Lists - Rutas existentes
     Route::get('food/shopping-list', [FoodShoppingListController::class, 'index'])->name('food.shopping-list.index');
     Route::post('food/shopping-list/generate', [FoodShoppingListController::class, 'generate'])->name('food.shopping-list.generate');
     Route::put('food/shopping-list/{list}', [FoodShoppingListController::class, 'update'])->name('food.shopping-list.update');

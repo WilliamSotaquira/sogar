@@ -73,7 +73,7 @@
                         Tipo
                         <span class="tooltip-trigger cursor-help text-gray-400 hover:text-gray-600" title="Categoría del producto (Lácteos, Granos, Frutas, etc.). Ayuda a organizar tu inventario.">ℹ️</span>
                     </label>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-end">
                         <select name="type_id" class="{{ $input }} flex-1">
                             <option value="">Selecciona</option>
                             @foreach($types as $type)
@@ -92,7 +92,7 @@
                         Ubicación por defecto
                         <span class="tooltip-trigger cursor-help text-gray-400 hover:text-gray-600" title="Dónde guardas este producto normalmente. Ej: 'Refrigerador', 'Despensa', 'Congelador'">ℹ️</span>
                     </label>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-end">
                         <select name="default_location_id" class="{{ $input }} flex-1">
                             <option value="">Selecciona</option>
                             @foreach($locations as $loc)
@@ -271,16 +271,16 @@
                                     {{ $product->min_stock_qty ? number_format($product->min_stock_qty, 1) : '—' }}
                                 </td>
                                 <td class="px-3 py-3">
-                                    @if($product->current_price)
-                                        <div>
-                                            <p class="font-semibold text-gray-900 dark:text-gray-100">${{ number_format($product->current_price, 0, ',', '.') }}</p>
-                                            @if($product->current_vendor)
-                                                <p class="text-xs text-gray-500">{{ $product->current_vendor }}</p>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-gray-400">Sin precio</span>
-                                    @endif
+                                    <div>
+                                        <p class="font-semibold text-gray-900 dark:text-gray-100">${{ $product->current_price ? number_format($product->current_price, 0, ',', '.') : '0' }}</p>
+                                        @if($product->current_price && $product->current_vendor)
+                                            <p class="text-xs text-gray-500">{{ $product->current_vendor }}</p>
+                                        @elseif(!$product->current_price)
+                                            <a href="{{ route('food.prices.show', $product) }}" class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline">
+                                                + Agregar precio
+                                            </a>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-3 py-3">
                                     @if($product->performance_index)
@@ -299,10 +299,11 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-3">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 flex-wrap">
                                         <a href="{{ route('food.prices.show', $product) }}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Gestión de Precios">
                                             💰 Precios
                                         </a>
+                                        <x-add-to-shopping-list :productId="$product->id" :productName="$product->name" />
                                         <form method="POST" action="{{ route('food.products.destroy', $product) }}" onsubmit="return confirm('¿Eliminar {{ $product->name }}?');" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -348,27 +349,22 @@
 
             <div class="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 {{-- Formulario para agregar --}}
-                <div class="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
-                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Crear nuevo tipo
-                    </p>
-                    <form id="add-type-form" class="grid grid-cols-12 gap-3">
-                        <div class="col-span-6">
-                            <input type="text" name="name" placeholder="Ej: Lácteos, Granos, Frutas..." required maxlength="50" class="{{ $input }}" />
-                            <p id="add-type-error" class="text-xs text-rose-600 mt-1 hidden"></p>
-                        </div>
-                        <div class="col-span-2">
-                            <input type="color" name="color" value="#10b981" class="h-11 w-full rounded-xl border border-gray-200 bg-white cursor-pointer dark:border-gray-700 dark:bg-gray-800" title="Color identificador" />
-                        </div>
-                        <div class="col-span-4">
-                            <button type="submit" class="{{ $btnPrimary }} w-full h-11">
-                                <span class="submit-text">✓ Agregar</span>
-                                <span class="loading-text hidden">Guardando...</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <form id="add-type-form" class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <input type="text" name="name" placeholder="Ej: Lácteos, Granos, Frutas..." required maxlength="50" class="{{ $input }}" />
+                        <p id="add-type-error" class="text-xs text-rose-600 mt-1 hidden"></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <label class="relative cursor-pointer">
+                            <input type="color" name="color" value="#10b981" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                            <div class="h-11 w-11 rounded-xl border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center bg-white dark:bg-gray-800 hover:border-emerald-400 transition" id="type-color-preview" style="background-color: #10b981"></div>
+                        </label>
+                        <button type="submit" class="{{ $btnPrimary }} h-11 px-6">
+                            <span class="submit-text">+ Agregar</span>
+                            <span class="loading-text hidden">...</span>
+                        </button>
+                    </div>
+                </form>
 
                 {{-- Lista de tipos --}}
                 <div>
@@ -445,27 +441,22 @@
 
             <div class="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 {{-- Formulario para agregar --}}
-                <div class="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
-                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Crear nueva ubicación
-                    </p>
-                    <form id="add-location-form" class="grid grid-cols-12 gap-3">
-                        <div class="col-span-6">
-                            <input type="text" name="name" placeholder="Ej: Refrigerador, Despensa..." required maxlength="50" class="{{ $input }}" />
-                            <p id="add-location-error" class="text-xs text-rose-600 mt-1 hidden"></p>
-                        </div>
-                        <div class="col-span-2">
-                            <input type="color" name="color" value="#6b7280" class="h-11 w-full rounded-xl border border-gray-200 bg-white cursor-pointer dark:border-gray-700 dark:bg-gray-800" title="Color identificador" />
-                        </div>
-                        <div class="col-span-4">
-                            <button type="submit" class="{{ $btnPrimary }} w-full h-11">
-                                <span class="submit-text">✓ Agregar</span>
-                                <span class="loading-text hidden">Guardando...</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <form id="add-location-form" class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <input type="text" name="name" placeholder="Ej: Refrigerador, Despensa..." required maxlength="50" class="{{ $input }}" />
+                        <p id="add-location-error" class="text-xs text-rose-600 mt-1 hidden"></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <label class="relative cursor-pointer">
+                            <input type="color" name="color" value="#6b7280" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                            <div class="h-11 w-11 rounded-xl border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center bg-white dark:bg-gray-800 hover:border-blue-400 transition" id="location-color-preview" style="background-color: #6b7280"></div>
+                        </label>
+                        <button type="submit" class="{{ $btnPrimary }} h-11 px-6">
+                            <span class="submit-text">+ Agregar</span>
+                            <span class="loading-text hidden">...</span>
+                        </button>
+                    </div>
+                </form>
 
                 {{-- Lista de ubicaciones --}}
                 <div>
@@ -1074,6 +1065,17 @@
             setTimeout(() => el.classList.add('hidden'), 5000);
         }
     }
+
+    // Vista previa de color en formularios de agregar
+    document.querySelector('#add-type-form input[name="color"]')?.addEventListener('input', (e) => {
+        const preview = document.getElementById('type-color-preview');
+        if (preview) preview.style.backgroundColor = e.target.value;
+    });
+
+    document.querySelector('#add-location-form input[name="color"]')?.addEventListener('input', (e) => {
+        const preview = document.getElementById('location-color-preview');
+        if (preview) preview.style.backgroundColor = e.target.value;
+    });
 
     // Vista previa de color en modales de edición
     document.getElementById('edit-type-color')?.addEventListener('input', (e) => {

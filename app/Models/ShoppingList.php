@@ -16,6 +16,7 @@ class ShoppingList extends Model
         'budget_id',
         'category_id',
         'name',
+        'list_type',
         'status',
         'generated_at',
         'expected_purchase_on',
@@ -46,5 +47,10 @@ class ShoppingList extends Model
     public function events()
     {
         return $this->hasMany(ShoppingListEvent::class, 'shopping_list_id');
+    }
+
+    public function budget()
+    {
+        return $this->belongsTo(Budget::class);
     }
 }

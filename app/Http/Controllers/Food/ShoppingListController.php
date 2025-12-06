@@ -35,6 +35,28 @@ class ShoppingListController extends Controller
         ]);
     }
 
+    /**
+     * Mostrar todas las listas de compra del usuario
+     */
+    public function all(Request $request): View
+    {
+        $lists = ShoppingList::where('user_id', $request->user()->id)
+            ->with(['items', 'budget.category'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $budgets = \App\Models\Budget::where('user_id', $request->user()->id)
+            ->with('category')
+            ->where('month', now()->month)
+            ->where('year', now()->year)
+            ->get();
+
+        return view('food.shopping-list.all', [
+            'lists' => $lists,
+            'budgets' => $budgets,
+        ]);
+    }
+
     public function generate(
         Request $request,
         ShoppingListGenerator $generator
@@ -44,40 +66,60 @@ class ShoppingListController extends Controller
             'people_count' => 'nullable|integer|min:1|max:10',
             'safety_factor' => 'nullable|numeric|min:1|max:2',
             'name' => 'nullable|string|max:255',
+            'list_type' => 'nullable|string|in:general,food,cleaning,maintenance,other',
             'expected_purchase_on' => 'nullable|date',
-            'budget_id' => 'required|exists:sogar_budgets,id',
+            'budget_id' => 'nullable|exists:sogar_budgets,id',
             'category_id' => 'nullable|exists:sogar_categories,id',
+            'auto_suggest' => 'nullable|boolean',
         ]);
 
-        // Verificar que el presupuesto pertenece al usuario
-        $budget = \App\Models\Budget::where('id', $data['budget_id'])
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        // Verificar que el presupuesto pertenece al usuario si se proporciona
+        $budget = null;
+        if (!empty($data['budget_id'])) {
+            $budget = \App\Models\Budget::where('id', $data['budget_id'])
+                ->where('user_id', $request->user()->id)
+                ->firstOrFail();
+        }
 
-        // Cerrar lista activa anterior si existe
-        ShoppingList::where('user_id', $request->user()->id)
-            ->where('status', 'active')
-            ->update(['status' => 'closed']);
+        // No cerrar lista activa, permitir múltiples listas activas
+        // ShoppingList::where('user_id', $request->user()->id)
+        //     ->where('status', 'active')
+        //     ->update(['status' => 'closed']);
 
-        $base = Str::upper(Str::slug($data['name'] ?? 'LISTA', ''));
-        $timestampedName = $base . now()->format('YmdHis') . Str::upper(Str::random(4));
+        $listName = $data['name'] ?? 'Compra ' . now()->format('d/m/Y');
 
-        $list = $generator->generate(
-            $request->user()->id,
-            $data['horizon_days'] ?? 7,
-            $data['people_count'] ?? 3,
-            $data['safety_factor'] ?? 1.2,
-            $timestampedName,
-            $data['expected_purchase_on'] ?? null
-        );
+        // Si auto_suggest está activo y no hay budget, crear lista vacía
+        if ($request->boolean('auto_suggest')) {
+            $list = ShoppingList::create([
+                'user_id' => $request->user()->id,
+                'name' => $listName,
+                'list_type' => $data['list_type'] ?? 'general',
+                'status' => 'active',
+                'generated_at' => now(),
+                'expected_purchase_on' => $data['expected_purchase_on'] ?? now()->addDays(7),
+                'budget_id' => $budget?->id,
+                'category_id' => $data['category_id'] ?? $budget?->category_id,
+            ]);
+        } else {
+            $list = $generator->generate(
+                $request->user()->id,
+                $data['horizon_days'] ?? 7,
+                $data['people_count'] ?? 3,
+                $data['safety_factor'] ?? 1.2,
+                $listName,
+                $data['expected_purchase_on'] ?? null
+            );
 
-        // Asignar presupuesto y categoría a la lista
-        $list->update([
-            'budget_id' => $budget->id,
-            'category_id' => $data['category_id'] ?? $budget->category_id,
-        ]);
+            // Asignar presupuesto, categoría y tipo a la lista
+            $list->update([
+                'list_type' => $data['list_type'] ?? 'general',
+                'budget_id' => $budget?->id,
+                'category_id' => $data['category_id'] ?? $budget?->category_id,
+            ]);
+        }
 
-        return back()->with('status', 'Lista generada y vinculada al presupuesto: ' . $budget->amount);
+        return redirect()->route('food.shopping-list.show', $list)
+            ->with('status', 'Lista creada correctamente.');
     }
 
     public function update(Request $request, ShoppingList $list): RedirectResponse
@@ -329,6 +371,73 @@ class ShoppingListController extends Controller
         $item->delete();
 
         return back()->with('status', 'Producto eliminado de la lista.');
+    }
+
+    /**
+     * Generar sugeridos automáticos basados en stock bajo
+     */
+    public function generateSuggestions(Request $request, ShoppingList $list)
+    {
+        $this->authorizeList($request, $list);
+
+        // Obtener productos con stock bajo
+        $products = FoodProduct::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->get()
+            ->filter(function ($product) {
+                $currentStock = \App\Models\FoodStockBatch::where('product_id', $product->id)
+                    ->where('status', 'ok')
+                    ->sum('qty_remaining_base');
+                
+                return $product->min_stock_qty > 0 && $currentStock < $product->min_stock_qty;
+            });
+
+        $count = 0;
+        foreach ($products as $product) {
+            // Verificar si ya está en la lista
+            $exists = ShoppingListItem::where('shopping_list_id', $list->id)
+                ->where('product_id', $product->id)
+                ->exists();
+
+            if (!$exists) {
+                $currentStock = \App\Models\FoodStockBatch::where('product_id', $product->id)
+                    ->where('status', 'ok')
+                    ->sum('qty_remaining_base');
+
+                $qtyToBuy = max(1, $product->min_stock_qty - $currentStock);
+
+                // Obtener precio actual
+                $latestPrice = \App\Models\FoodPrice::where('product_id', $product->id)
+                    ->orderBy('captured_on', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                ShoppingListItem::create([
+                    'shopping_list_id' => $list->id,
+                    'product_id' => $product->id,
+                    'name' => $product->name,
+                    'qty_to_buy_base' => $qtyToBuy,
+                    'qty_current_base' => $currentStock,
+                    'unit_base' => $product->unit_base,
+                    'estimated_price' => $latestPrice ? $latestPrice->price_per_base * $qtyToBuy : 0,
+                    'low_stock_alert' => true,
+                    'is_checked' => false,
+                    'sort_order' => ShoppingListItem::where('shopping_list_id', $list->id)->max('sort_order') + 1,
+                ]);
+
+                $count++;
+            }
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+                'message' => "$count productos sugeridos agregados",
+            ]);
+        }
+
+        return back()->with('status', "$count productos sugeridos agregados a la lista.");
     }
 
     public function destroy(Request $request, ShoppingList $list): RedirectResponse

@@ -116,11 +116,21 @@
                 @if($list)
                     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50">
-                                Items ({{ $list->items->where('is_checked', true)->count() }}/{{ $list->items->count() }} ✓)
-                            </h3>
-                            <div class="text-sm text-gray-600 dark:text-gray-300">
-                                Total: ${{ number_format($list->actual_total ?: $list->estimated_budget, 0, ',', '.') }}
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50">
+                                    Items ({{ $list->items->where('is_checked', true)->count() }}/{{ $list->items->count() }})
+                                </h3>
+                                {{-- Barra de progreso --}}
+                                @php $progress = $list->items->count() > 0 ? ($list->items->where('is_checked', true)->count() / $list->items->count()) * 100 : 0; @endphp
+                                <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-emerald-500 transition-all" style="width: {{ $progress }}%"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-emerald-600">${{ number_format($list->actual_total ?: $list->estimated_budget, 0, ',', '.') }}</span>
+                                <button type="button" id="toggle-store-mode" class="px-3 py-1 text-xs font-semibold rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                                    🛒 Modo Tienda
+                                </button>
                             </div>
                         </div>
 
@@ -158,14 +168,27 @@
                                         {{-- Item Info --}}
                                         <div class="flex-1 space-y-1">
                                             <div class="flex items-center justify-between gap-3">
-                                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 {{ $item->is_checked ? 'line-through' : '' }}">
-                                                    {{ $item->name }}
-                                                    @if($item->product)
-                                                        <span class="ml-1 text-xs text-gray-500">(en catálogo)</span>
-                                                    @else
-                                                        <span class="ml-1 text-xs text-amber-600">⚠️ no catalogado</span>
+                                                <div>
+                                                    @php
+                                                        // Mostrar nombre del producto si existe, sino el nombre del item
+                                                        $displayName = $item->product?->name ?? $item->name;
+                                                        // Si el nombre parece un código de barras (solo números y largo), mostrar indicador
+                                                        $looksLikeBarcode = preg_match('/^\d{8,14}$/', $item->name);
+                                                    @endphp
+                                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 {{ $item->is_checked ? 'line-through opacity-60' : '' }}">
+                                                        {{ $displayName }}
+                                                        @if($item->product?->brand)
+                                                            <span class="font-normal text-gray-500">· {{ $item->product->brand }}</span>
+                                                        @endif
+                                                    </p>
+                                                    @if(!$item->product && $looksLikeBarcode)
+                                                        <p class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                                            <span>📦</span> Código: {{ $item->name }} - <button type="button" onclick="showCreateProductModal('', {{ $item->id }})" class="underline hover:text-amber-700">Catalogar</button>
+                                                        </p>
+                                                    @elseif(!$item->product)
+                                                        <p class="text-xs text-amber-600 dark:text-amber-400">⚠️ No catalogado</p>
                                                     @endif
-                                                </p>
+                                                </div>
                                                 @if($item->low_stock_alert)
                                                     <span class="text-xs rounded-full px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
                                                         ⚠️ Stock bajo
@@ -710,6 +733,61 @@
                 alert('Error al agregar');
             }
         }
+
+        // Modo Tienda - Vista simplificada para comprar
+        let storeMode = false;
+        document.getElementById('toggle-store-mode')?.addEventListener('click', () => {
+            storeMode = !storeMode;
+            const btn = document.getElementById('toggle-store-mode');
+            const sidebar = document.querySelector('.md\\:col-span-2').parentElement.querySelector('.space-y-4');
+            const addForm = document.querySelector('.p-3.rounded-lg.bg-gray-50');
+            
+            if (storeMode) {
+                btn.textContent = '📋 Vista Normal';
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-emerald-500', 'text-emerald-600', 'bg-emerald-50');
+                
+                // Ocultar sidebar y formulario de agregar
+                if (sidebar) sidebar.classList.add('hidden');
+                if (addForm) addForm.classList.add('hidden');
+                
+                // Hacer items más grandes y táctiles
+                document.querySelectorAll('#items-container > div').forEach(item => {
+                    item.classList.add('py-4');
+                    const checkbox = item.querySelector('button');
+                    if (checkbox) {
+                        checkbox.classList.remove('h-6', 'w-6');
+                        checkbox.classList.add('h-10', 'w-10');
+                    }
+                });
+                
+                // Expandir contenedor de items
+                const mainCol = document.querySelector('.md\\:col-span-2');
+                if (mainCol) mainCol.classList.replace('md:col-span-2', 'md:col-span-3');
+            } else {
+                btn.textContent = '🛒 Modo Tienda';
+                btn.classList.add('border-blue-500', 'text-blue-600');
+                btn.classList.remove('border-emerald-500', 'text-emerald-600', 'bg-emerald-50');
+                
+                // Mostrar sidebar y formulario
+                if (sidebar) sidebar.classList.remove('hidden');
+                if (addForm) addForm.classList.remove('hidden');
+                
+                // Restaurar tamaño de items
+                document.querySelectorAll('#items-container > div').forEach(item => {
+                    item.classList.remove('py-4');
+                    const checkbox = item.querySelector('button');
+                    if (checkbox) {
+                        checkbox.classList.add('h-6', 'w-6');
+                        checkbox.classList.remove('h-10', 'w-10');
+                    }
+                });
+                
+                // Restaurar columnas
+                const mainCol = document.querySelector('.md\\:col-span-3');
+                if (mainCol) mainCol.classList.replace('md:col-span-3', 'md:col-span-2');
+            }
+        });
     </script>
     @endpush
 </x-layouts.app>

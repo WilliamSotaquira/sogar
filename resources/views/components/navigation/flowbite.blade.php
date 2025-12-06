@@ -14,10 +14,10 @@
         [
             'group' => 'Alimentos',
             'links' => [
-                ['label' => 'Inventario', 'route' => 'food.inventory.index'],
-                ['label' => 'Productos', 'route' => 'food.products.index'],
-                ['label' => 'Compras', 'route' => 'food.purchases.index'],
-                ['label' => 'Lista de compra', 'route' => 'food.shopping-list.index'],
+                ['label' => 'Inventario', 'route' => 'food.inventory.index', 'icon' => '📦'],
+                ['label' => 'Productos', 'route' => 'food.products.index', 'icon' => '🏷️'],
+                ['label' => 'Mis Listas', 'route' => 'food.shopping-list.all', 'icon' => '📋'],
+                ['label' => 'Compras', 'route' => 'food.purchases.index', 'icon' => '🛒'],
             ],
         ],
     ];
@@ -135,7 +135,12 @@
                                             class="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition {{ $active ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-900/30 dark:text-emerald-300' : 'text-gray-800 dark:text-gray-100' }} hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             aria-current="{{ $active ? 'page' : 'false' }}"
                                         >
-                                            <span>{{ $link['label'] }}</span>
+                                            <span class="flex items-center gap-2">
+                                                @if(isset($link['icon']))
+                                                    <span>{{ $link['icon'] }}</span>
+                                                @endif
+                                                <span>{{ $link['label'] }}</span>
+                                            </span>
                                         </a>
                                     </li>
                                 @endforeach
@@ -152,7 +157,12 @@
                                             class="block rounded-md px-3 py-2 text-sm font-medium transition {{ $active ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-900/30 dark:text-emerald-300' : 'text-gray-800 dark:text-gray-100' }} hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             aria-current="{{ $active ? 'page' : 'false' }}"
                                         >
-                                            {{ $link['label'] }}
+                                            <span class="flex items-center gap-2">
+                                                @if(isset($link['icon']))
+                                                    <span>{{ $link['icon'] }}</span>
+                                                @endif
+                                                <span>{{ $link['label'] }}</span>
+                                            </span>
                                         </a>
                                     </li>
                                 @endforeach
