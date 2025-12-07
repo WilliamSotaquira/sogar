@@ -20,6 +20,12 @@
                 ['label' => 'Compras', 'route' => 'food.purchases.index', 'icon' => '🛒'],
             ],
         ],
+        [
+            'group' => 'Familia',
+            'links' => [
+                ['label' => 'Mi Núcleo Familiar', 'route' => 'family.index', 'icon' => '👨‍👩‍👧‍👦'],
+            ],
+        ],
     ];
 @endphp
 

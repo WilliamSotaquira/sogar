@@ -7,6 +7,7 @@ use App\Livewire\Settings\TwoFactor;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\FamilyGroupController;
 use App\Http\Controllers\GoogleIntegrationController;
 use App\Http\Controllers\Food\InventoryController;
 use App\Http\Controllers\Food\ProductController as FoodProductController;
@@ -67,6 +68,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('integrations/google', [GoogleIntegrationController::class, 'redirect'])->name('integrations.google.redirect');
     Route::get('integrations/google/callback', [GoogleIntegrationController::class, 'callback'])->name('integrations.google.callback');
     Route::delete('integrations/google', [GoogleIntegrationController::class, 'disconnect'])->name('integrations.google.disconnect');
+
+    // Family Groups (Núcleos Familiares)
+    Route::get('family', [FamilyGroupController::class, 'index'])->name('family.index');
+    Route::get('family/create', [FamilyGroupController::class, 'create'])->name('family.create');
+    Route::post('family', [FamilyGroupController::class, 'store'])->name('family.store');
+    Route::get('family/{familyGroup}', [FamilyGroupController::class, 'show'])->name('family.show');
+    Route::get('family/{familyGroup}/edit', [FamilyGroupController::class, 'edit'])->name('family.edit');
+    Route::put('family/{familyGroup}', [FamilyGroupController::class, 'update'])->name('family.update');
+    Route::post('family/{familyGroup}/set-active', [FamilyGroupController::class, 'setActive'])->name('family.set-active');
+    Route::post('family/{familyGroup}/members', [FamilyGroupController::class, 'addMember'])->name('family.members.add');
+    Route::put('family/{familyGroup}/members/{member}', [FamilyGroupController::class, 'updateMember'])->name('family.members.update');
+    Route::delete('family/{familyGroup}/members/{memberId}', [FamilyGroupController::class, 'removeMember'])->name('family.members.remove');
+
 
     // Food module
     Route::get('food/inventory', [InventoryController::class, 'index'])->name('food.inventory.index');

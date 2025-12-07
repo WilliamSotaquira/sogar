@@ -85,23 +85,46 @@
                         'active' => 'emerald',
                         'completed' => 'blue',
                         'cancelled' => 'gray',
+                        'closed' => 'gray',
                     ];
                     $color = $statusColors[$list->status] ?? 'gray';
+                    
+                    // Iconos según el tipo de lista
+                    $typeIcons = [
+                        'food' => '🍎',
+                        'cleaning' => '🧽',
+                        'maintenance' => '🔧',
+                        'general' => '📋',
+                        'other' => '📄',
+                    ];
+                    $listIcon = $typeIcons[$list->list_type ?? 'general'] ?? '📋';
+                    
+                    // Traducción de status
+                    $statusLabels = [
+                        'active' => 'Activa',
+                        'completed' => 'Completada',
+                        'cancelled' => 'Cancelada',
+                        'closed' => 'Cerrada',
+                    ];
+                    $statusLabel = $statusLabels[$list->status] ?? ucfirst($list->status);
                 @endphp
                 
                 <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-all group">
                     {{-- Header --}}
                     <div class="flex items-start justify-between mb-3">
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 transition">
-                                {{ $list->name }}
-                            </h3>
-                            <p class="text-xs text-gray-500 mt-1">
+                        <div class="flex-1 min-w-0 pr-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-lg">{{ $listIcon }}</span>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 transition truncate" title="{{ $list->name }}">
+                                    {{ Str::limit($list->name, 30) }}
+                                </h3>
+                            </div>
+                            <p class="text-xs text-gray-500">
                                 {{ $list->generated_at?->format('d M Y, H:i') }}
                             </p>
                         </div>
-                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-{{ $color }}-100 text-{{ $color }}-700 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-300">
-                            {{ ucfirst($list->status) }}
+                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap bg-{{ $color }}-100 text-{{ $color }}-700 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-300">
+                            {{ $statusLabel }}
                         </span>
                     </div>
 
@@ -177,7 +200,8 @@
                 
                 <div>
                     <label class="{{ $label }}">Nombre de la lista *</label>
-                    <input type="text" name="name" required class="{{ $input }}" placeholder="Ej: Mercado Semanal, Aseo, Ferretería">
+                    <input type="text" name="name" required class="{{ $input }}" placeholder="Ej: Mercado Semanal, Aseo, Ferretería" value="Compra {{ now()->format('d/m') }}">
+                    <p class="text-xs text-gray-500 mt-1">Puedes personalizarlo como desees</p>
                 </div>
 
                 <div>
