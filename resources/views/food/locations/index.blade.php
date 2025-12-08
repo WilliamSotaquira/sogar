@@ -54,7 +54,9 @@
                         @forelse($locations as $location)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                                 <td class="px-4 py-4">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $location->name }}</p>
+                                    <a href="{{ route('food.locations.show', $location) }}" class="font-semibold text-gray-900 transition hover:text-emerald-600 dark:text-gray-100 dark:hover:text-emerald-300">
+                                        {{ $location->name }}
+                                    </a>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Slug: {{ $location->slug }}</p>
                                 </td>
                                 <td class="px-4 py-4">
@@ -80,8 +82,7 @@
                                     {{ $location->batches_count }}
                                 </td>
                                 <td class="px-4 py-4">
-                                    <div class="flex justify-end gap-2">
-                                        <a href="{{ route('food.locations.show', $location) }}" class="{{ $btnSecondary }}">Ver</a>
+                                    <div class="flex justify-end">
                                         <a href="{{ route('food.locations.edit', $location) }}" class="{{ $btnSecondary }}">Editar</a>
                                     </div>
                                 </td>

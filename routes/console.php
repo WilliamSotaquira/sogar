@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ComputeShoppingMetrics;
 use App\Models\Category;
 use App\Models\Recurrence;
 use App\Models\Transaction;
@@ -11,6 +12,11 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('shopping:metrics {userId?}', function (?int $userId = null) {
+    ComputeShoppingMetrics::dispatch($userId);
+    $this->info('Job ComputeShoppingMetrics dispatchado' . ($userId ? " para el usuario {$userId}" : ' para todos los usuarios') . '.');
+})->purpose('Despacha el job que genera métricas y eventos de observabilidad para las listas de compras.');
 
 Artisan::command('recurrences:run', function () {
     $today = Carbon::today();

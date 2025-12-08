@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FoodLocation;
 use App\Models\FoodProduct;
 use App\Models\FoodStockBatch;
+use App\Models\ShoppingListItem;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -46,6 +47,41 @@ class InventoryController extends Controller
             session(['inventory_filters_history' => $history->values()->all()]);
         }
 
+        $user = $request->user();
+        $familyGroupIds = method_exists($user, 'familyGroupIds') ? $user->familyGroupIds() : [];
+
+        $pendingInventoryPool = ShoppingListItem::with(['list', 'product.defaultLocation', 'location'])
+            ->where('is_checked', true)
+            ->whereHas('list', function ($query) use ($user, $familyGroupIds) {
+                $query->where(function ($inner) use ($user, $familyGroupIds) {
+                    $inner->where('user_id', $user->id);
+
+                    if (!empty($familyGroupIds)) {
+                        $inner->orWhereIn('family_group_id', $familyGroupIds);
+                    }
+                });
+            })
+            ->latest('checked_at')
+            ->take(30)
+            ->get()
+            ->filter(fn ($item) => empty(data_get($item->metadata, 'inventory_batch_id')))
+            ->values();
+
+        $pendingListFilterId = (int) $request->input('pending_list_id');
+
+        $pendingInventoryItems = $pendingInventoryPool;
+        if ($pendingListFilterId) {
+            $pendingInventoryItems = $pendingInventoryPool
+                ->where('shopping_list_id', $pendingListFilterId)
+                ->values();
+        }
+
+        $pendingInventoryFilterOptions = $pendingInventoryPool
+            ->pluck('list')
+            ->filter()
+            ->unique('id')
+            ->values();
+
         return view('food.inventory.index', [
             'batches' => $batches,
             'products' => $products,
@@ -54,6 +90,10 @@ class InventoryController extends Controller
             'activeLocation' => $activeLocation,
             'activeType' => $activeType,
             'filterHistory' => $history,
+            'pendingInventoryItems' => $pendingInventoryItems,
+            'pendingInventoryCount' => $pendingInventoryPool->count(),
+            'pendingInventoryFilterOptions' => $pendingInventoryFilterOptions,
+            'activePendingListId' => $pendingListFilterId,
         ]);
     }
 }

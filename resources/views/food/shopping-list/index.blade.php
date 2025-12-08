@@ -15,7 +15,7 @@
 @endphp
 
 <x-layouts.app :title="__('Lista de compra')">
-    <div class="mx-auto w-full max-w-6xl space-y-6">
+    <div class="mx-auto w-full max-w-6xl space-y-6 pb-28 md:pb-0">
         {{-- Hero Panel --}}
         <div class="hero-panel p-6">
             <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
@@ -40,6 +40,30 @@
         @if (session('status'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-100">
                 {{ session('status') }}
+            </div>
+        @endif
+
+        @if($list)
+            <div class="md:hidden sticky top-3 z-20 -mx-4 px-4">
+                <div class="rounded-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur ring-1 ring-gray-100 shadow-md dark:ring-gray-800">
+                    <div class="flex text-sm font-semibold">
+                        <a href="{{ route('food.shopping-list.index', ['status' => 'active']) }}"
+                           class="flex-1 px-4 py-3 text-center {{ ($statusFilter ?? 'active') === 'active' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-500 dark:text-gray-400' }}">
+                            Activas ({{ $activeCount ?? 0 }})
+                        </a>
+                        <a href="{{ route('food.shopping-list.index', ['status' => 'completed']) }}"
+                           class="flex-1 px-4 py-3 text-center {{ ($statusFilter ?? 'active') === 'completed' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-500 dark:text-gray-400' }}">
+                            Completadas ({{ $completedCount ?? 0 }})
+                        </a>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-2 text-xs text-gray-600 dark:text-gray-300">
+                        <span>Pendientes: <span class="font-semibold">{{ $pendingItems ?? 0 }}</span></span>
+                        <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
+                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                            Sincronizado COP
+                        </span>
+                    </div>
+                </div>
             </div>
         @endif
 
@@ -152,6 +176,13 @@
                         {{-- Lista de Items --}}
                         <div id="items-container" class="space-y-2 max-h-[600px] overflow-y-auto">
                             @forelse($list->items as $item)
+                                @php
+                                    $metadata = $item->metadata ?? [];
+                                    $inventoryBatchId = $metadata['inventory_batch_id'] ?? null;
+                                    $addedAtLabel = isset($metadata['added_at'])
+                                        ? \Carbon\Carbon::parse($metadata['added_at'])->timezone('America/Bogota')->format('d/m H:i')
+                                        : null;
+                                @endphp
                                 <div class="rounded-lg border {{ $item->is_checked ? 'border-emerald-200 bg-emerald-50/30 dark:border-emerald-800 dark:bg-emerald-900/10' : 'border-gray-100 dark:border-gray-800' }} p-3">
                                     <div class="flex items-start gap-3">
                                         {{-- Checkbox --}}
@@ -189,11 +220,29 @@
                                                         <p class="text-xs text-amber-600 dark:text-amber-400">⚠️ No catalogado</p>
                                                     @endif
                                                 </div>
-                                                @if($item->low_stock_alert)
-                                                    <span class="text-xs rounded-full px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
-                                                        ⚠️ Stock bajo
-                                                    </span>
-                                                @endif
+                                                <div class="flex flex-col items-end gap-1 text-right text-xs">
+                                                    @if($item->low_stock_alert)
+                                                        <span class="rounded-full px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
+                                                            ⚠️ Stock bajo
+                                                        </span>
+                                                    @endif
+                                                    @if($item->is_checked)
+                                                        @if($inventoryBatchId)
+                                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
+                                                                ✅ En inventario
+                                                                @if($addedAtLabel)
+                                                                    <span class="font-normal text-emerald-600/80 dark:text-emerald-200/80">{{ $addedAtLabel }}</span>
+                                                                @endif
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+                                                                ⚠️ Pendiente inventario
+                                                            </span>
+                                                        @endif
+                                                    @else
+                                                        <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">En lista</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                                 Cantidad: {{ $item->qty_to_buy_base }} {{ $item->unit_base }}
@@ -209,6 +258,12 @@
                                                     </span>
                                                     @if($item->vendor_name)
                                                         <span class="text-gray-500">en {{ $item->vendor_name }}</span>
+                                                    @endif
+                                                    @if(!is_null($item->estimated_price))
+                                                        @php $delta = ($item->actual_price ?? 0) - ($item->estimated_price ?? 0); @endphp
+                                                        <span class="font-semibold {{ $delta <= 0 ? 'text-emerald-600' : 'text-rose-500' }}">
+                                                            {{ $delta <= 0 ? 'Ahorro' : 'Extra' }} ${{ number_format(abs($delta), 0, ',', '.') }}
+                                                        </span>
                                                     @endif
                                                 @endif
                                             </div>
@@ -299,6 +354,22 @@
             </div>
         </div>
     </div>
+
+    @if($list)
+        <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-6xl px-4 pb-4 md:hidden">
+            <div class="flex items-center justify-between rounded-2xl bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
+                <a href="{{ route('food.shopping-list.index', ['status' => $statusFilter ?? 'active']) }}" class="flex-1 text-center text-xs font-semibold {{ ($statusFilter ?? 'active') === 'active' ? 'text-emerald-600' : 'text-gray-500' }}">
+                    🗒️ Lista
+                </a>
+                <a href="{{ route('food.purchases.index', ['list_id' => $list->id]) }}" class="flex-1 text-center text-xs font-semibold text-gray-600 hover:text-emerald-600">
+                    🛒 Compras
+                </a>
+                <a href="{{ route('food.inventory.index') }}" class="flex-1 text-center text-xs font-semibold text-gray-600 hover:text-emerald-600">
+                    📦 Inventario
+                </a>
+            </div>
+        </div>
+    @endif
 
     {{-- Modal Precio --}}
     <div id="price-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick="if(event.target===this) closePriceModal()">

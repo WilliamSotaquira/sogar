@@ -15,6 +15,7 @@ use App\Models\ShoppingListItem;
 use App\Models\Wallet;
 use App\Services\FoodFinanceService;
 use App\Services\UnitConverter;
+use App\Services\ShoppingListEventLogger;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,14 +27,36 @@ class PurchaseController extends Controller
     {
         $userId = $request->user()->id;
 
-        $lists = ShoppingList::with(['items.product'])
-            ->where('user_id', $userId)
-            ->whereNotIn('status', ['archived', 'cancelled'])
+        $baseListsQuery = ShoppingList::with([
+                'items.product.defaultLocation',
+                'items.location',
+                'budget.category',
+            ])
+            ->where('user_id', $userId);
+
+        $lists = (clone $baseListsQuery)
+            ->where('status', 'active')
             ->orderByDesc('generated_at')
             ->limit(12)
             ->get();
 
+        if ($lists->isEmpty()) {
+            $lists = (clone $baseListsQuery)
+                ->whereNotIn('status', ['archived', 'cancelled'])
+                ->orderByDesc('generated_at')
+                ->limit(12)
+                ->get();
+        }
+
         $selectedList = $lists->firstWhere('id', (int) $request->input('list_id')) ?? $lists->first();
+
+        $pendingInventoryItems = collect();
+        if ($selectedList) {
+            $pendingInventoryItems = $selectedList->items
+                ->filter(fn ($item) => $item->is_checked && empty(data_get($item->metadata, 'inventory_batch_id')))
+                ->sortByDesc('checked_at')
+                ->values();
+        }
 
         return view('food.purchases.index', [
             'purchases' => FoodPurchase::with('items.product')
@@ -50,6 +73,8 @@ class PurchaseController extends Controller
             'lists' => $lists,
             'selectedList' => $selectedList,
             'listItems' => $selectedList?->items ?? collect(),
+            'pendingInventoryItems' => $pendingInventoryItems,
+            'pendingInventoryCount' => $pendingInventoryItems->count(),
         ]);
     }
 
@@ -81,6 +106,8 @@ class PurchaseController extends Controller
             ->where('user_id', $userId)
             ->findOrFail($data['shopping_list_id']);
 
+        $eventLogger = app(ShoppingListEventLogger::class);
+
         $items = collect($data['items'])
             ->filter(fn ($item) => !empty($item['include']))
             ->values();
@@ -106,12 +133,16 @@ class PurchaseController extends Controller
 
         $listItems = $list->items->keyBy('id');
 
+        $expectedTotal = 0;
+
         foreach ($items as $item) {
             $listItem = $listItems->get((int) $item['list_item_id']);
 
             if (!$listItem) {
                 continue;
             }
+
+            $expectedTotal += (float) ($listItem->estimated_price ?? 0);
 
             $unitSize = $item['unit_size'] ?? $listItem->unit_size ?? 1;
             $unitLabel = $item['unit'] ?? $listItem->unit_base ?? 'unit';
@@ -157,33 +188,75 @@ class PurchaseController extends Controller
             $purchaseItem->product?->prices()->create([
                 'source' => 'manual',
                 'vendor' => $purchase->vendor,
-                'currency' => 'USD',
+                'currency' => 'COP',
                 'price_per_base' => $pricePerBase,
-                'captured_on' => $purchase->occurred_on ?? Carbon::today(),
+                'captured_on' => ($purchase->occurred_on ?? Carbon::today())->timezone('America/Bogota'),
             ]);
 
+            $batch = null;
             if ($purchaseItem->product_id) {
-                $purchaseItem->product->batches()->create([
-                    'user_id' => $userId,
-                    'location_id' => $locationId,
-                    'purchase_item_id' => $purchaseItem->id,
-                    'qty_base' => $qtyBase,
-                    'qty_remaining_base' => $qtyBase,
-                    'unit_base' => $purchaseItem->product->unit_base,
-                    'expires_on' => $purchaseItem->expires_on,
-                    'entered_on' => $purchase->occurred_on ?? Carbon::today(),
-                    'cost_total' => $subtotal,
-                    'currency' => 'USD',
-                    'status' => 'ok',
-                ]);
+                $productForBatch = $purchaseItem->product ?? FoodProduct::find($purchaseItem->product_id);
+
+                if ($productForBatch) {
+                    $batch = $productForBatch->batches()->create([
+                        'user_id' => $userId,
+                        'location_id' => $locationId,
+                        'purchase_item_id' => $purchaseItem->id,
+                        'qty_base' => $qtyBase,
+                        'qty_remaining_base' => $qtyBase,
+                        'unit_base' => $productForBatch->unit_base ?? $unitLabel,
+                        'expires_on' => $purchaseItem->expires_on,
+                        'entered_on' => ($purchase->occurred_on ?? Carbon::today())->timezone('America/Bogota'),
+                        'cost_total' => $subtotal,
+                        'currency' => 'COP',
+                        'status' => 'ok',
+                    ]);
+                }
             }
 
-            $listItem->update([
+            $checkedAt = now('America/Bogota');
+            $metadata = $listItem->metadata ?? [];
+            $metadata['added_to_inventory'] = true;
+            $metadata['added_at'] = $checkedAt->toIso8601String();
+            if ($batch) {
+                $metadata['inventory_batch_id'] = $batch->id;
+            }
+
+            $listItem->fill([
                 'is_checked' => true,
-                'checked_at' => now(),
+                'checked_at' => $checkedAt,
                 'actual_price' => $subtotal,
                 'qty_current_base' => ($listItem->qty_current_base ?? 0) + $qtyBase,
             ]);
+            $listItem->metadata = $metadata;
+            $listItem->save();
+
+            $eventLogger->log($list, 'item_checked', [
+                'item_id' => $listItem->id,
+                'product_id' => $listItem->product_id,
+                'is_checked' => true,
+                'qty_to_buy_base' => (float) ($listItem->qty_to_buy_base ?? 0),
+                'actual_price' => (float) $subtotal,
+                'estimated_price' => (float) ($listItem->estimated_price ?? 0),
+                'cop_delta' => round($subtotal - ($listItem->estimated_price ?? 0), 2),
+                'source' => 'purchase',
+            ]);
+
+            if ($batch) {
+                $eventLogger->log($list, 'inventory_batch_created', [
+                    'item_id' => $listItem->id,
+                    'batch_id' => $batch->id,
+                    'product_id' => $batch->product_id,
+                    'qty_base' => (float) $batch->qty_base,
+                    'cost_total' => (float) $batch->cost_total,
+                    'source' => 'purchase',
+                ]);
+            } else {
+                $eventLogger->log($list, 'inventory_discrepancy', [
+                    'item_id' => $listItem->id,
+                    'reason' => $listItem->product_id ? 'batch_not_created' : 'missing_product',
+                ]);
+            }
         }
 
         $purchase->update(['total' => $total]);
@@ -193,11 +266,22 @@ class PurchaseController extends Controller
                 ->orWhere('is_checked', false);
         })->count();
 
-        $list->actual_total = ($list->actual_total ?? 0) + $total;
+        $list->actual_total = $list->items->sum(function ($item) {
+            return $item->is_checked ? ($item->actual_price ?? $item->estimated_price ?? 0) : 0;
+        });
         if ($remaining === 0) {
             $list->status = 'completed';
         }
         $list->save();
+
+        $eventLogger->log($list, 'purchase_recorded', [
+            'purchase_id' => $purchase->id,
+            'total_cop' => (float) $total,
+            'expected_total_cop' => round($expectedTotal, 2),
+            'difference_cop' => round($total - $expectedTotal, 2),
+            'remaining_items' => $remaining,
+            'occurred_on' => Carbon::parse($data['occurred_on'])->timezone('America/Bogota')->toDateString(),
+        ]);
 
         if ($request->boolean('impact_finanzas')) {
             $finance->registerExpenseFromPurchase($purchase);
@@ -205,4 +289,5 @@ class PurchaseController extends Controller
 
         return redirect()->route('food.purchases.index')->with('status', 'Compra registrada.');
     }
+
 }

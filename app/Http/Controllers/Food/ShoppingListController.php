@@ -9,29 +9,46 @@ use App\Models\ShoppingList;
 use App\Models\ShoppingListItem;
 use App\Services\ShoppingListGenerator;
 use App\Services\ShoppingListSyncService;
+use App\Services\ShoppingListEventLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Support\Str;
 
 class ShoppingListController extends Controller
 {
     public function index(Request $request): View
     {
-        $list = $this->accessibleListsQuery($request)
-            ->with('items')
-            ->where('status', 'active')
+        $statusFilter = $request->input('status', 'active');
+        $baseQuery = $this->accessibleListsQuery($request);
+
+        $listQuery = (clone $baseQuery)->with('items');
+        if ($statusFilter === 'completed') {
+            $listQuery->where('status', 'completed');
+        } else {
+            $statusFilter = 'active';
+            $listQuery->where('status', 'active');
+        }
+
+        $list = $listQuery
             ->latest('generated_at')
             ->first();
 
-        $recentLists = $this->accessibleListsQuery($request)
+        $recentLists = (clone $baseQuery)
             ->orderByDesc('generated_at')
             ->limit(10)
             ->get();
 
+        $activeCount = (clone $baseQuery)->where('status', 'active')->count();
+        $completedCount = (clone $baseQuery)->where('status', 'completed')->count();
+        $pendingItems = $list?->items?->where('is_checked', false)->count() ?? 0;
+
         return view('food.shopping-list.index', [
             'list' => $list,
             'recentLists' => $recentLists,
+            'statusFilter' => $statusFilter,
+            'activeCount' => $activeCount,
+            'completedCount' => $completedCount,
+            'pendingItems' => $pendingItems,
         ]);
     }
 
@@ -120,6 +137,13 @@ class ShoppingListController extends Controller
             ]);
         }
 
+        $this->logListEvent($list, 'list_created', [
+            'list_type' => $list->list_type,
+            'budget_id' => $list->budget_id,
+            'category_id' => $list->category_id,
+            'estimated_budget' => (float) ($list->estimated_budget ?? 0),
+        ]);
+
         return redirect()->route('food.shopping-list.show', $list)
             ->with('status', 'Lista creada correctamente.');
     }
@@ -157,6 +181,7 @@ class ShoppingListController extends Controller
         $this->authorizeList($request, $list);
 
         $item = $list->items()->where('id', $itemId)->firstOrFail();
+        $previousChecked = (bool) $item->is_checked;
         $isChecked = $request->boolean('is_checked');
         
         // Actualizar cantidad si se proporciona
@@ -204,35 +229,69 @@ class ShoppingListController extends Controller
         // Si se marca como comprado, ingresar al inventario (una sola vez)
         $meta = $item->metadata ?? [];
         $alreadyAdded = $meta['added_to_inventory'] ?? false;
+        $nowInBogota = now('America/Bogota');
         if ($isChecked && !$alreadyAdded && $item->product_id) {
             $product = $item->product ?: FoodProduct::find($item->product_id);
             $locationId = $item->location_id ?? $product?->default_location_id;
             $unitBase = $item->unit_base ?: $product?->unit_base ?: 'unit';
             $unitSize = $item->unit_size ?: $product?->unit_size ?: 1;
             $qtyBase = $item->qty_to_buy_base ?? 0;
+            $expiresAt = $product?->shelf_life_days
+                ? $nowInBogota->copy()->addDays($product->shelf_life_days)
+                : null;
 
-            FoodStockBatch::create([
+            $batch = FoodStockBatch::create([
                 'user_id' => $request->user()->id,
                 'product_id' => $item->product_id,
                 'location_id' => $locationId,
                 'qty_base' => $qtyBase,
                 'qty_remaining_base' => $qtyBase,
                 'unit_base' => $unitBase,
-                'entered_on' => now()->toDateString(),
-                'expires_on' => $product?->shelf_life_days ? now()->addDays($product->shelf_life_days)->toDateString() : null,
+                'entered_on' => $nowInBogota->toDateString(),
+                'expires_on' => $expiresAt?->toDateString(),
                 'status' => 'ok',
                 'cost_total' => $item->actual_price ?? $item->estimated_price ?? 0,
-                'currency' => 'USD',
+                'currency' => 'COP',
             ]);
 
             $meta['added_to_inventory'] = true;
-            $meta['added_at'] = now()->toIso8601String();
+            $meta['added_at'] = $nowInBogota->toIso8601String();
+            $meta['inventory_batch_id'] = $batch->id;
             $item->metadata = $meta;
             $item->save();
+
+            $this->logListEvent($list, 'inventory_batch_created', [
+                'item_id' => $item->id,
+                'batch_id' => $batch->id,
+                'product_id' => $item->product_id,
+                'qty_base' => (float) $qtyBase,
+                'cost_total' => (float) ($item->actual_price ?? $item->estimated_price ?? 0),
+                'source' => 'list_mark',
+            ]);
         }
 
         // Actualizar total de la lista
         $this->updateListTotal($list);
+
+        $this->logListEvent($list, 'item_checked', [
+            'item_id' => $item->id,
+            'product_id' => $item->product_id,
+            'is_checked' => $item->is_checked,
+            'qty_to_buy_base' => (float) ($item->qty_to_buy_base ?? 0),
+            'actual_price' => (float) ($item->actual_price ?? 0),
+            'estimated_price' => (float) ($item->estimated_price ?? 0),
+            'cop_delta' => round(($item->actual_price ?? 0) - ($item->estimated_price ?? 0), 2),
+        ]);
+
+        $metaAfter = $item->metadata ?? [];
+        if ($isChecked && empty($metaAfter['inventory_batch_id'])) {
+            $reason = $item->product_id ? 'pending_batch' : 'missing_product';
+
+            $this->logListEvent($list, 'inventory_discrepancy', [
+                'item_id' => $item->id,
+                'reason' => $reason,
+            ]);
+        }
 
         return back();
     }
@@ -555,5 +614,10 @@ class ShoppingListController extends Controller
         return view('food.shopping-list.show', [
             'list' => $list->load('items'),
         ]);
+    }
+
+    private function logListEvent(ShoppingList $list, string $event, array $payload = []): void
+    {
+        app(ShoppingListEventLogger::class)->log($list, $event, $payload);
     }
 }
