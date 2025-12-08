@@ -21,6 +21,7 @@ class UserSeeder extends Seeder
                 'name' => 'William',
                 'password' => Hash::make('S_07201*'),
                 'email_verified_at' => now(),
+                'is_system_admin' => true,
             ]
         );
 

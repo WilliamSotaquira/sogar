@@ -13,6 +13,7 @@ class ShoppingList extends Model
 
     protected $fillable = [
         'user_id',
+        'family_group_id',
         'budget_id',
         'category_id',
         'name',
@@ -52,5 +53,10 @@ class ShoppingList extends Model
     public function budget()
     {
         return $this->belongsTo(Budget::class);
+    }
+
+    public function familyGroup()
+    {
+        return $this->belongsTo(FamilyGroup::class);
     }
 }

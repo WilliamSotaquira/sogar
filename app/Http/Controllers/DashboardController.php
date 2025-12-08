@@ -74,7 +74,7 @@ class DashboardController extends Controller
 
         // Alertas de presupuestos
         foreach ($budgets as $budget) {
-            if ($budget['percent'] > 90) {
+            if ($budget['percent'] >= 90) {
                 $alerts->push([
                     'title' => 'Presupuesto alto',
                     'message' => "Has gastado {$budget['percent']}% del presupuesto de {$budget['category']}.",

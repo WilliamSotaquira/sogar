@@ -60,7 +60,7 @@ class FoodScanController extends Controller
                 'shelf_life_days' => $external['shelf_life_days'] ?? null,
                 'min_stock_qty' => $external['min_stock_qty'] ?? null,
                 'image_url' => $external['image_url'] ?? null,
-                'presentation_qty' => $external['presentation_qty'] ?? 1,
+                'presentation_qty' => $external['presentation_qty'] ?? ($external['unit_size'] ?? 1),
                 'image_path' => $imagePath,
                 'description' => $external['description'] ?? null,
             ]);

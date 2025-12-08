@@ -38,7 +38,7 @@
             </div>
         @endif
 
-        {{-- Grupo familiar activo --}}
+        {{-- Grupo familiar activo (solo banner, no duplicar abajo) --}}
         @if($activeFamilyGroup)
             <div class="rounded-2xl border border-emerald-100/70 bg-white/90 p-6 shadow-lg shadow-emerald-50 backdrop-blur-sm dark:border-white/10 dark:bg-gray-900/70">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -102,7 +102,11 @@
             @else
                 <div class="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     @foreach($familyGroups as $group)
-                        <div class="rounded-2xl p-5 shadow-lg ring-1 ring-inset transition {{ $activeFamilyGroup && $activeFamilyGroup->id === $group->id ? 'border border-emerald-200/70 bg-gradient-to-br from-white via-emerald-50/70 to-white dark:border-emerald-500/40 dark:bg-emerald-950/40 dark:ring-emerald-500/20' : 'border border-gray-200/70 bg-white/95 dark:border-white/5 dark:bg-slate-900/60 dark:ring-white/10' }}">
+                        @php
+                            $isActive = $activeFamilyGroup && $activeFamilyGroup->id === $group->id;
+                            $canManage = auth()->user()->isAdminOfFamilyGroup($group->id) || auth()->user()->isSystemAdmin();
+                        @endphp
+                        <div class="rounded-2xl p-5 shadow-lg ring-1 ring-inset transition {{ $isActive ? 'border border-emerald-200/70 bg-gradient-to-br from-white via-emerald-50/70 to-white dark:border-emerald-500/40 dark:bg-emerald-950/40 dark:ring-emerald-500/20' : 'border border-gray-200/70 bg-white/95 dark:border-white/5 dark:bg-slate-900/60 dark:ring-white/10' }}">
                             <div class="flex items-start justify-between gap-4">
                                 <div class="flex-1 min-w-0 space-y-2">
                                     <p class="text-[0.7rem] uppercase tracking-[0.4em] text-gray-400 dark:text-gray-500">Familia</p>
@@ -117,7 +121,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                @if($activeFamilyGroup && $activeFamilyGroup->id === $group->id)
+                                @if($isActive)
                                     <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-200">
                                         <span class="h-2 w-2 rounded-full bg-current"></span>
                                         Activo
@@ -142,17 +146,31 @@
                                 @endif
                             </div>
 
-                            <div class="mt-6 flex gap-3">
+                            <div class="mt-6 flex flex-wrap gap-3">
                                 <a href="{{ route('family.show', $group) }}" class="{{ $btnPrimary }} flex-1 justify-center text-sm">
                                     Ver detalles
                                 </a>
-                                @if(!$activeFamilyGroup || $activeFamilyGroup->id !== $group->id)
+                                @if(!$isActive)
                                     <form action="{{ route('family.set-active', $group) }}" method="POST" class="flex-1">
                                         @csrf
                                         <button type="submit" class="{{ $btnSecondary }} w-full justify-center text-sm">
                                             Activar
                                         </button>
                                     </form>
+                                @endif
+                                @if($canManage)
+                                    <a href="{{ route('family.edit', $group) }}" class="{{ $btnSecondary }} flex-1 justify-center text-sm">
+                                        Editar
+                                    </a>
+                                    @if(auth()->user()->isSystemAdmin())
+                                        <form action="{{ route('family.destroy', $group) }}" method="POST" class="flex-1" onsubmit="return confirm('¿Eliminar este núcleo familiar? Esta acción no se puede deshacer.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-400 dark:hover:bg-rose-900/20 w-full">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </div>

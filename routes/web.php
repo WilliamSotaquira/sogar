@@ -80,13 +80,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('family/{familyGroup}/members', [FamilyGroupController::class, 'addMember'])->name('family.members.add');
     Route::put('family/{familyGroup}/members/{member}', [FamilyGroupController::class, 'updateMember'])->name('family.members.update');
     Route::delete('family/{familyGroup}/members/{memberId}', [FamilyGroupController::class, 'removeMember'])->name('family.members.remove');
+    Route::delete('family/{familyGroup}', [FamilyGroupController::class, 'destroy'])->name('family.destroy');
 
 
     // Food module
     Route::get('food/inventory', [InventoryController::class, 'index'])->name('food.inventory.index');
     Route::get('food/products', [FoodProductController::class, 'index'])->name('food.products.index');
+    Route::get('food/products/create', [FoodProductController::class, 'create'])->name('food.products.create');
     Route::post('food/products', [FoodProductController::class, 'store'])->name('food.products.store');
-    Route::get('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
+    Route::get('food/products/{product}/edit', [FoodProductController::class, 'edit'])->name('food.products.edit');
+    Route::put('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
     Route::delete('food/products/{product}', [FoodProductController::class, 'destroy'])->name('food.products.destroy');
 
     // Tipos de alimentos
@@ -97,7 +100,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Ubicaciones de alimentos
     Route::get('food/locations', [\App\Http\Controllers\Food\LocationController::class, 'index'])->name('food.locations.index');
+    Route::get('food/locations/create', [\App\Http\Controllers\Food\LocationController::class, 'create'])->name('food.locations.create');
     Route::post('food/locations', [\App\Http\Controllers\Food\LocationController::class, 'store'])->name('food.locations.store');
+    Route::get('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'show'])->name('food.locations.show');
+    Route::get('food/locations/{location}/edit', [\App\Http\Controllers\Food\LocationController::class, 'edit'])->name('food.locations.edit');
     Route::put('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'update'])->name('food.locations.update');
     Route::delete('food/locations/{location}', [\App\Http\Controllers\Food\LocationController::class, 'destroy'])->name('food.locations.destroy');
 
@@ -106,6 +112,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('food/products/{product}/prices', [\App\Http\Controllers\Food\PriceController::class, 'store'])->name('food.prices.store');
     Route::get('food/products/{product}/prices/chart', [\App\Http\Controllers\Food\PriceController::class, 'chartData'])->name('food.prices.chart');
     Route::get('food/products/{product}/prices/forecast', [\App\Http\Controllers\Food\PriceController::class, 'forecast'])->name('food.prices.forecast');
+
+    Route::get('food/products/{product}', [FoodProductController::class, 'show'])->name('food.products.show');
 
     Route::get('food/purchases', [FoodPurchaseController::class, 'index'])->name('food.purchases.index');
     Route::post('food/purchases', [FoodPurchaseController::class, 'store'])->name('food.purchases.store');

@@ -7,6 +7,8 @@ use App\Models\FamilyMember;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use Illuminate\Http\RedirectResponse;
 
 class FamilyGroupController extends Controller
 {
@@ -15,6 +17,8 @@ class FamilyGroupController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', FamilyGroup::class);
+
         $user = Auth::user();
         
         // Obtener todos los grupos familiares del usuario
@@ -31,10 +35,7 @@ class FamilyGroupController extends Controller
      */
     public function create()
     {
-        // Solo administradores del sistema pueden crear núcleos familiares
-        if (!Auth::user()->isSystemAdmin()) {
-            abort(403, 'Solo los administradores del sistema pueden crear núcleos familiares');
-        }
+        $this->authorize('create', FamilyGroup::class);
 
         return view('family.create');
     }
@@ -44,10 +45,7 @@ class FamilyGroupController extends Controller
      */
     public function store(Request $request)
     {
-        // Solo administradores del sistema pueden crear núcleos familiares
-        if (!Auth::user()->isSystemAdmin()) {
-            abort(403, 'Solo los administradores del sistema pueden crear núcleos familiares');
-        }
+        $this->authorize('create', FamilyGroup::class);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -90,12 +88,8 @@ class FamilyGroupController extends Controller
      */
     public function show(FamilyGroup $familyGroup)
     {
+        $this->authorize('view', $familyGroup);
         $user = Auth::user();
-
-        // Verificar que el usuario pertenezca al grupo familiar
-        if (!$user->belongsToFamilyGroup($familyGroup->id)) {
-            abort(403, 'No tienes acceso a este núcleo familiar');
-        }
 
         // Cargar relaciones
         $familyGroup->load(['members', 'admin', 'familyMembers.user']);
@@ -108,12 +102,7 @@ class FamilyGroupController extends Controller
      */
     public function edit(FamilyGroup $familyGroup)
     {
-        $user = Auth::user();
-
-        // Solo los administradores pueden editar
-        if (!$user->isAdminOfFamilyGroup($familyGroup->id)) {
-            abort(403, 'No tienes permisos para editar este núcleo familiar');
-        }
+        $this->authorize('update', $familyGroup);
 
         return view('family.edit', compact('familyGroup'));
     }
@@ -123,12 +112,7 @@ class FamilyGroupController extends Controller
      */
     public function update(Request $request, FamilyGroup $familyGroup)
     {
-        $user = Auth::user();
-
-        // Solo los administradores pueden actualizar
-        if (!$user->isAdminOfFamilyGroup($familyGroup->id)) {
-            abort(403, 'No tienes permisos para actualizar este núcleo familiar');
-        }
+        $this->authorize('update', $familyGroup);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -147,12 +131,8 @@ class FamilyGroupController extends Controller
      */
     public function setActive(FamilyGroup $familyGroup)
     {
+        $this->authorize('setActive', $familyGroup);
         $user = Auth::user();
-
-        // Verificar que el usuario pertenezca al grupo familiar
-        if (!$user->belongsToFamilyGroup($familyGroup->id)) {
-            abort(403, 'No perteneces a este núcleo familiar');
-        }
 
         $user->update(['active_family_group_id' => $familyGroup->id]);
 
@@ -165,15 +145,14 @@ class FamilyGroupController extends Controller
      */
     public function addMember(Request $request, FamilyGroup $familyGroup)
     {
-        $user = Auth::user();
-
-        // Solo los administradores del sistema pueden agregar miembros
-        if (!$user->isSystemAdmin()) {
-            abort(403, 'Solo los administradores del sistema pueden agregar miembros');
-        }
+        $this->authorize('manageMembers', $familyGroup);
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => [
+                'required',
+                'exists:users,id',
+                Rule::notIn([$familyGroup->admin_user_id]),
+            ],
             'role' => 'required|in:padre,madre,hijo,hija,otro',
             'is_admin' => 'boolean',
             'can_manage_finances' => 'boolean',
@@ -207,12 +186,8 @@ class FamilyGroupController extends Controller
      */
     public function updateMember(Request $request, FamilyGroup $familyGroup, FamilyMember $member)
     {
-        $user = Auth::user();
-
-        // Solo los administradores pueden actualizar permisos
-        if (!$user->isAdminOfFamilyGroup($familyGroup->id)) {
-            abort(403, 'No tienes permisos para actualizar miembros');
-        }
+        $this->authorize('manageMembers', $familyGroup);
+        abort_unless($member->family_group_id === $familyGroup->id, 404);
 
         $validated = $request->validate([
             'role' => 'required|in:padre,madre,hijo,hija,otro',
@@ -229,16 +204,24 @@ class FamilyGroupController extends Controller
     }
 
     /**
+     * Delete a family group
+     */
+    public function destroy(FamilyGroup $familyGroup): RedirectResponse
+    {
+        $this->authorize('delete', $familyGroup);
+
+        $familyGroup->delete();
+
+        return redirect()->route('family.index')
+            ->with('success', 'Núcleo familiar eliminado correctamente');
+    }
+
+    /**
      * Remove a member from the family group
      */
     public function removeMember(FamilyGroup $familyGroup, $memberId)
     {
-        $user = Auth::user();
-
-        // Solo los administradores pueden remover miembros
-        if (!$user->isAdminOfFamilyGroup($familyGroup->id)) {
-            abort(403, 'No tienes permisos para remover miembros');
-        }
+        $this->authorize('manageMembers', $familyGroup);
 
         // Buscar el miembro dentro del family group
         $member = $familyGroup->familyMembers()->where('id', $memberId)->first();

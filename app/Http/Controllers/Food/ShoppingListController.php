@@ -18,13 +18,13 @@ class ShoppingListController extends Controller
 {
     public function index(Request $request): View
     {
-        $list = ShoppingList::with('items')
-            ->where('user_id', $request->user()->id)
+        $list = $this->accessibleListsQuery($request)
+            ->with('items')
             ->where('status', 'active')
             ->latest('generated_at')
             ->first();
 
-        $recentLists = ShoppingList::where('user_id', $request->user()->id)
+        $recentLists = $this->accessibleListsQuery($request)
             ->orderByDesc('generated_at')
             ->limit(10)
             ->get();
@@ -40,8 +40,8 @@ class ShoppingListController extends Controller
      */
     public function all(Request $request): View
     {
-        $lists = ShoppingList::where('user_id', $request->user()->id)
-            ->with(['items', 'budget.category'])
+        $lists = $this->accessibleListsQuery($request)
+            ->with(['items', 'budget.category', 'familyGroup'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -92,6 +92,7 @@ class ShoppingListController extends Controller
         if ($request->boolean('auto_suggest')) {
             $list = ShoppingList::create([
                 'user_id' => $request->user()->id,
+                'family_group_id' => $request->user()->active_family_group_id,
                 'name' => $listName,
                 'list_type' => $data['list_type'] ?? 'general',
                 'status' => 'active',
@@ -115,6 +116,7 @@ class ShoppingListController extends Controller
                 'list_type' => $data['list_type'] ?? 'general',
                 'budget_id' => $budget?->id,
                 'category_id' => $data['category_id'] ?? $budget?->category_id,
+                'family_group_id' => $request->user()->active_family_group_id,
             ]);
         }
 
@@ -124,7 +126,7 @@ class ShoppingListController extends Controller
 
     public function update(Request $request, ShoppingList $list): RedirectResponse
     {
-        $this->authorizeList($request, $list);
+        $this->authorizeList($request, $list, 'manage');
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -237,7 +239,11 @@ class ShoppingListController extends Controller
 
     public function sync(Request $request, ShoppingListSyncService $sync): RedirectResponse
     {
-        $list = ShoppingList::with('items')->where('user_id', $request->user()->id)->where('status', 'active')->firstOrFail();
+        $list = $this->accessibleListsQuery($request)
+            ->with('items')
+            ->where('status', 'active')
+            ->firstOrFail();
+        $this->authorizeList($request, $list);
         $sync->syncToInventory($list, $request->input('wallet_id'));
 
         return back()->with('status', 'Lista sincronizada a inventario.');
@@ -265,21 +271,29 @@ class ShoppingListController extends Controller
 
         $list = null;
         if (!empty($data['list_id'])) {
-            $list = ShoppingList::where('id', $data['list_id'])->where('user_id', $request->user()->id)->first();
+            $list = $this->accessibleListsQuery($request)
+                ->where('id', $data['list_id'])
+                ->first();
         }
         if (!$list) {
-            $list = ShoppingList::where('user_id', $request->user()->id)->where('status', 'active')->latest('generated_at')->first();
+            $list = $this->accessibleListsQuery($request)
+                ->where('status', 'active')
+                ->latest('generated_at')
+                ->first();
         }
 
         if (!$list) {
             $list = ShoppingList::create([
                 'user_id' => $request->user()->id,
+                'family_group_id' => $request->user()->active_family_group_id,
                 'name' => 'Lista de compra ' . now()->format('d/m'),
                 'status' => 'active',
                 'generated_at' => now(),
                 'expected_purchase_on' => now()->addDays(7),
             ]);
         }
+
+        $this->authorizeList($request, $list);
 
         $productId = $data['product_id'] ?? null;
         $productStock = 0;
@@ -308,6 +322,8 @@ class ShoppingListController extends Controller
                 ->sum('qty_remaining_base');
         }
 
+        $nextSortOrder = ($list->items()->max('sort_order') ?? -1) + 1;
+
         $item = ShoppingListItem::create([
             'shopping_list_id' => $list->id,
             'name' => $data['name'],
@@ -319,7 +335,7 @@ class ShoppingListController extends Controller
             'unit_size' => $data['unit_size'] ?? 1,
             'priority' => $data['priority'] ?? 'medium',
             'is_checked' => false,
-            'sort_order' => $list->items()->count(),
+            'sort_order' => $nextSortOrder,
             'qty_current_base' => $productStock,
         ]);
 
@@ -339,12 +355,13 @@ class ShoppingListController extends Controller
 
     public function bulkAction(Request $request, ShoppingList $list): RedirectResponse
     {
-        $this->authorizeList($request, $list);
         $data = $request->validate([
             'items' => 'required|array|min:1',
             'items.*' => 'integer|exists:sogar_shopping_list_items,id',
             'action' => 'required|string|in:delete,mark,unmark',
         ]);
+
+        $this->authorizeList($request, $list, $data['action'] === 'delete' ? 'manage' : 'view');
 
         $items = $list->items()->whereIn('id', $data['items'])->get();
 
@@ -366,7 +383,7 @@ class ShoppingListController extends Controller
 
     public function destroyItem(Request $request, ShoppingList $list, ShoppingListItem $item): RedirectResponse
     {
-        $this->authorizeList($request, $list);
+        $this->authorizeList($request, $list, 'manage');
         abort_unless($item->shopping_list_id === $list->id, 404);
         $item->delete();
 
@@ -442,7 +459,7 @@ class ShoppingListController extends Controller
 
     public function destroy(Request $request, ShoppingList $list): RedirectResponse
     {
-        $this->authorizeList($request, $list);
+        $this->authorizeList($request, $list, 'manage');
 
         if ($list->status === 'active') {
             return back()->with('status', 'No se puede eliminar la lista activa. Genera una nueva primero.');
@@ -492,9 +509,43 @@ class ShoppingListController extends Controller
         $list->save();
     }
 
-    private function authorizeList(Request $request, ShoppingList $list): void
+    /**
+     * Consulta base para listas accesibles por el usuario (propias o de su núcleo activo).
+     */
+    private function accessibleListsQuery(Request $request)
     {
-        abort_unless($list->user_id === $request->user()->id, 403);
+        $user = $request->user();
+        $familyGroupIds = $user->familyGroupIds();
+
+        if ($user->isSystemAdmin()) {
+            return ShoppingList::query();
+        }
+
+        return ShoppingList::where(function ($query) use ($user, $familyGroupIds) {
+            $query->where('user_id', $user->id);
+
+            if (!empty($familyGroupIds)) {
+                $query->orWhereIn('family_group_id', $familyGroupIds);
+            }
+        });
+    }
+
+    /**
+     * Autoriza acceso o gestión de una lista considerando familia compartida.
+     */
+    private function authorizeList(Request $request, ShoppingList $list, string $ability = 'view'): void
+    {
+        $user = $request->user();
+        $isOwner = $list->user_id === $user->id;
+        $inFamily = $list->family_group_id ? $user->canAccessFamilyGroup($list->family_group_id) : false;
+
+        if (!$isOwner && !$inFamily && !$user->isSystemAdmin()) {
+            abort(403);
+        }
+
+        if ($ability === 'manage' && !$isOwner && !$user->isSystemAdmin()) {
+            abort_unless($list->family_group_id && $user->isAdminOfFamilyGroup($list->family_group_id), 403);
+        }
     }
 
     public function show(Request $request, ShoppingList $list): View

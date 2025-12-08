@@ -184,6 +184,26 @@ class User extends Authenticatable
     }
 
     /**
+     * Get an array of family group ids the user belongs to
+     */
+    public function familyGroupIds(): array
+    {
+        return $this->familyGroups()->pluck('family_groups.id')->all();
+    }
+
+    /**
+     * Check if user can access a given family group (member or system admin)
+     */
+    public function canAccessFamilyGroup(?int $familyGroupId): bool
+    {
+        if (!$familyGroupId) {
+            return false;
+        }
+
+        return $this->isSystemAdmin() || in_array($familyGroupId, $this->familyGroupIds(), true);
+    }
+
+    /**
      * Check if user is admin of a specific family group
      */
     public function isAdminOfFamilyGroup($familyGroupId)

@@ -15,6 +15,7 @@
             'group' => 'Alimentos',
             'links' => [
                 ['label' => 'Inventario', 'route' => 'food.inventory.index', 'icon' => '📦'],
+                ['label' => 'Ubicaciones', 'route' => 'food.locations.index', 'icon' => '📍'],
                 ['label' => 'Productos', 'route' => 'food.products.index', 'icon' => '🏷️'],
                 ['label' => 'Mis Listas', 'route' => 'food.shopping-list.all', 'icon' => '📋'],
                 ['label' => 'Compras', 'route' => 'food.purchases.index', 'icon' => '🛒'],

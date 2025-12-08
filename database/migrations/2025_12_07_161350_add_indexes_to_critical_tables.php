@@ -11,9 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('critical_tables', function (Blueprint $table) {
-            //
-        });
+        // Placeholder migration: no-op to avoid failing when table doesn't exist.
     }
 
     /**
@@ -21,8 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('critical_tables', function (Blueprint $table) {
-            //
-        });
+        // No-op
     }
 };

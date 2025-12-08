@@ -31,6 +31,12 @@ class ExternalProductLookup
             'image_url' => $product['image_url'] ?? null,
             'description' => $product['description'] ?? null,
             'presentation_qty' => $product['presentation_qty'] ?? ($product['unit_size'] ?? 1),
+            'raw_quantity' => $product['raw_quantity'] ?? null,
+            'categories' => $product['categories'] ?? null,
+            'ingredients' => $product['ingredients'] ?? null,
+            'portion_text' => $product['portion_text'] ?? null,
+            'portion_qty' => $product['portion_qty'] ?? null,
+            'portion_unit' => $product['portion_unit'] ?? null,
         ];
     }
 
@@ -52,18 +58,25 @@ class ExternalProductLookup
                 }
 
                 $p = $data['product'];
-                $name = $p['product_name'] ?? $p['generic_name'] ?? null;
-                $brand = $p['brands_tags'][0] ?? ($p['brands'] ?? null);
-                [$unitBase, $unitSize] = $this->parseQuantity($p['quantity'] ?? null);
+                [$unitBase, $unitSize] = $this->parseQuantityFromProduct($p);
+                $categories = $this->extractCategories($p);
+                [$portionText, $portionUnit, $portionQty] = $this->parseServingQuantity($p);
 
                 return [
-                    'name' => $name,
-                    'brand' => $brand,
+                    'name' => $this->resolveProductName($p),
+                    'brand' => $this->resolveBrand($p),
                     'unit_base' => $unitBase ?? 'unit',
                     'unit_size' => $unitSize ?? 1,
                     'image_url' => $p['image_front_url'] ?? $p['image_url'] ?? null,
-                    'description' => $p['generic_name_es'] ?? $p['generic_name'] ?? $p['ingredients_text'] ?? null,
+                    'description' => $p['generic_name_es'] ?? $p['generic_name'] ?? $p['ingredients_text_es'] ?? $p['ingredients_text'] ?? null,
                     'presentation_qty' => $unitSize ?? 1,
+                    'raw_quantity' => $this->resolveQuantityText($p),
+                    'categories' => $categories,
+                    'ingredients' => $p['ingredients_text_es'] ?? $p['ingredients_text'] ?? null,
+                    'shelf_life_days' => $this->suggestShelfLife($categories),
+                    'portion_text' => $portionText,
+                    'portion_qty' => $portionQty,
+                    'portion_unit' => $portionUnit,
                 ];
             } catch (\Throwable $e) {
                 return null;
@@ -71,49 +84,200 @@ class ExternalProductLookup
         });
     }
 
-    private function inferUnitBase(?string $size): ?string
+    private function resolveProductName(array $product): ?string
     {
-        if (!$size) {
-            return null;
-        }
-        $s = Str::lower($size);
-        if (str_contains($s, 'kg')) return 'kg';
-        if (str_contains($s, 'g')) return 'g';
-        if (str_contains($s, 'ml')) return 'ml';
-        if (str_contains($s, 'l')) return 'l';
-        return 'unit';
-    }
+        $candidates = [
+            $product['product_name_es'] ?? null,
+            $product['product_name'] ?? null,
+            $product['product_name_en'] ?? null,
+            $product['generic_name_es'] ?? null,
+            $product['generic_name'] ?? null,
+        ];
 
-    private function inferUnitSize(?string $size): ?float
-    {
-        if (!$size) {
-            return null;
+        foreach ($candidates as $value) {
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed !== '') {
+                    return $trimmed;
+                }
+            }
         }
-        // Extrae numero
-        if (preg_match('/([\d\.,]+)/', $size, $m)) {
-            $num = (float) str_replace(',', '.', $m[1]);
-            return $num > 0 ? $num : null;
-        }
+
         return null;
     }
 
-    private function parseQuantity(?string $quantity): array
+    private function resolveBrand(array $product): ?string
     {
-        if (!$quantity) {
-            return [null, null];
+        if (!empty($product['brands_tags']) && is_array($product['brands_tags'])) {
+            $brand = trim((string) $product['brands_tags'][0]);
+            if ($brand !== '') {
+                return $brand;
+            }
         }
 
-        $unit = $this->inferUnitBase($quantity);
-        $size = $this->inferUnitSize($quantity);
-
-        // Si viene en kg/l convertir a base más granular para consistencia
-        if ($unit === 'kg' && $size) {
-            return ['g', $size * 1000];
-        }
-        if ($unit === 'l' && $size) {
-            return ['ml', $size * 1000];
+        if (!empty($product['brands'])) {
+            $parts = explode(',', $product['brands']);
+            $brand = trim($parts[0]);
+            if ($brand !== '') {
+                return $brand;
+            }
         }
 
-        return [$unit, $size];
+        if (!empty($product['brand_owner'])) {
+            return trim($product['brand_owner']);
+        }
+
+        return null;
+    }
+
+    private function parseQuantityFromProduct(array $product): array
+    {
+        $candidates = [];
+
+        if (!empty($product['quantity'])) {
+            $candidates[] = $product['quantity'];
+        }
+
+        if (!empty($product['product_quantity'])) {
+            $unit = $product['product_quantity_unit'] ?? '';
+            $candidates[] = trim($product['product_quantity'] . ' ' . $unit);
+        }
+
+        foreach ($candidates as $text) {
+            $parsed = $this->parseQuantityText($text);
+            if ($parsed) {
+                return $parsed;
+            }
+        }
+
+        return [null, null];
+    }
+
+    private function parseServingQuantity(array $product): array
+    {
+        $candidates = [];
+        if (!empty($product['serving_size'])) {
+            $candidates[] = $product['serving_size'];
+        }
+
+        if (!empty($product['serving_quantity'])) {
+            $unit = $product['serving_quantity_unit'] ?? '';
+            $candidates[] = trim($product['serving_quantity'] . ' ' . $unit);
+        }
+
+        foreach ($candidates as $text) {
+            $parsed = $this->parseQuantityText($text);
+            if ($parsed) {
+                return [$text, $parsed[0], $parsed[1]];
+            }
+        }
+
+        return [null, null, null];
+    }
+
+    private function resolveQuantityText(array $product): ?string
+    {
+        $candidates = [
+            $product['quantity'] ?? null,
+            isset($product['product_quantity'], $product['product_quantity_unit'])
+                ? "{$product['product_quantity']} {$product['product_quantity_unit']}"
+                : null,
+            $product['serving_size'] ?? null,
+        ];
+
+        foreach ($candidates as $value) {
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed !== '') {
+                    return $trimmed;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function parseQuantityText(?string $text): ?array
+    {
+        if (!$text) {
+            return null;
+        }
+
+        $normalized = Str::lower(Str::ascii($text));
+        if (!preg_match_all('/([\d\.,]+)\s*(kg|kilo|kilogramos?|g|gramos?|ml|mililitros?|l|lt|litros?)/i', $normalized, $matches, PREG_SET_ORDER)) {
+            return null;
+        }
+
+        $match = end($matches);
+        $value = (float) str_replace(',', '.', $match[1]);
+        if ($value <= 0) {
+            return null;
+        }
+
+        $unit = $this->mapUnit($match[2]);
+
+        if ($unit === 'kg') {
+            return ['g', $value * 1000];
+        }
+
+        if ($unit === 'l') {
+            return ['ml', $value * 1000];
+        }
+
+        return [$unit, $value];
+    }
+
+    private function mapUnit(string $unit): string
+    {
+        $unit = Str::lower(Str::ascii($unit));
+
+        return match (true) {
+            str_starts_with($unit, 'kg'), str_starts_with($unit, 'kilo') => 'kg',
+            str_starts_with($unit, 'g'), str_starts_with($unit, 'gram') => 'g',
+            str_starts_with($unit, 'ml'), str_starts_with($unit, 'mili') => 'ml',
+            str_starts_with($unit, 'l'), str_starts_with($unit, 'lt'), str_starts_with($unit, 'lit') => 'l',
+            default => 'unit',
+        };
+    }
+
+    private function extractCategories(array $product): ?string
+    {
+        if (!empty($product['categories'])) {
+            return Str::lower($product['categories']);
+        }
+
+        if (!empty($product['categories_tags']) && is_array($product['categories_tags'])) {
+            return Str::lower(implode(',', $product['categories_tags']));
+        }
+
+        return null;
+    }
+
+    private function suggestShelfLife(?string $categories): ?int
+    {
+        if (!$categories) {
+            return 30;
+        }
+
+        $categories = Str::lower($categories);
+
+        $rules = [
+            ['days' => 7, 'keywords' => ['fresh', 'dairy', 'lacteo', 'leche', 'yogur']],
+            ['days' => 3, 'keywords' => ['meat', 'carne', 'fish', 'pescado']],
+            ['days' => 5, 'keywords' => ['vegetable', 'verdura', 'fruta', 'fruit']],
+            ['days' => 3, 'keywords' => ['bread', 'pan', 'bakery']],
+            ['days' => 365, 'keywords' => ['canned', 'conserva', 'enlatado']],
+            ['days' => 180, 'keywords' => ['pasta', 'rice', 'arroz', 'cereal', 'grain']],
+        ];
+
+        foreach ($rules as $rule) {
+            foreach ($rule['keywords'] as $keyword) {
+                if (str_contains($categories, $keyword)) {
+                    return $rule['days'];
+                }
+            }
+        }
+
+        return 30;
     }
 }
