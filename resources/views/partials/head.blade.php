@@ -24,3 +24,35 @@
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+<script>
+    window.ensureBarcodeDetector = window.ensureBarcodeDetector || (() => {
+        const loadPolyfill = () => {
+            if ('BarcodeDetector' in window) {
+                return Promise.resolve(true);
+            }
+            if (window.__barcodeDetectorLoading) {
+                return window.__barcodeDetectorLoading;
+            }
+            window.__barcodeDetectorLoading = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@undecaf/barcode-detector-polyfill/dist/barcode-detector-polyfill.min.js';
+                script.async = true;
+                script.onload = () => {
+                    if ('BarcodeDetector' in window) {
+                        resolve(true);
+                    } else {
+                        reject(new Error('BarcodeDetector polyfill did not register.'));
+                    }
+                };
+                script.onerror = () => reject(new Error('Failed to load BarcodeDetector polyfill.'));
+                document.head.appendChild(script);
+            }).catch((error) => {
+                console.warn('[BarcodeDetector] Polyfill load error', error);
+                throw error;
+            });
+            return window.__barcodeDetectorLoading;
+        };
+        return loadPolyfill;
+    })();
+</script>

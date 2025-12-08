@@ -500,6 +500,14 @@
                 setStatus('Buscando cámaras...');
 
                 try {
+                    if (typeof window.ensureBarcodeDetector === 'function') {
+                        try {
+                            await window.ensureBarcodeDetector();
+                        } catch (polyfillErr) {
+                            console.warn(polyfillErr);
+                        }
+                    }
+
                     if (!('BarcodeDetector' in window)) {
                         setStatus('Tu navegador no soporta BarcodeDetector. Usa entrada manual.', 'text-rose-500');
                         return;
@@ -532,8 +540,7 @@
                         canvas.height = video.videoHeight;
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                         try {
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const codes = await detector.detect(imageData);
+                            const codes = await detector.detect(canvas);
                             if (codes.length) {
                                 const text = codes[0].rawValue;
                                 if (text) {
