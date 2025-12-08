@@ -183,7 +183,7 @@ class ShoppingListController extends Controller
         $item = $list->items()->where('id', $itemId)->firstOrFail();
         $previousChecked = (bool) $item->is_checked;
         $isChecked = $request->boolean('is_checked');
-        
+
         // Actualizar cantidad si se proporciona
         $qtyUpdate = $request->input('qty_to_buy_base');
         if ($qtyUpdate !== null && is_numeric($qtyUpdate)) {
@@ -194,12 +194,12 @@ class ShoppingListController extends Controller
         $actualPrice = $request->input('actual_price');
         if ($actualPrice !== null && is_numeric($actualPrice)) {
             $item->actual_price = (float) $actualPrice;
-            
+
             // Registrar cambio de precio en el historial
             if ($item->product_id) {
                 $priceService = app(\App\Services\PriceChangeService::class);
                 $vendor = $request->input('vendor_name', $item->vendor_name);
-                
+
                 $priceService->registerPriceChange(
                     $item->product,
                     $actualPrice / $item->qty_to_buy_base,
@@ -217,13 +217,13 @@ class ShoppingListController extends Controller
         }
 
         $item->is_checked = $isChecked;
-        
+
         if ($isChecked) {
             $item->checked_at = now();
         } else {
             $item->checked_at = null;
         }
-        
+
         $item->save();
 
         // Si se marca como comprado, ingresar al inventario (una sola vez)
@@ -464,7 +464,7 @@ class ShoppingListController extends Controller
                 $currentStock = \App\Models\FoodStockBatch::where('product_id', $product->id)
                     ->where('status', 'ok')
                     ->sum('qty_remaining_base');
-                
+
                 return $product->min_stock_qty > 0 && $currentStock < $product->min_stock_qty;
             });
 

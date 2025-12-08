@@ -3,13 +3,13 @@
     $input = 'mt-1 block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100';
     $btnPrimary = 'inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1';
     $btnSecondary = 'inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
-    
+
     $budgets = \App\Models\Budget::where('user_id', auth()->id())
         ->with('category')
         ->where('month', now()->month)
         ->where('year', now()->year)
         ->get();
-    
+
     $types = \App\Models\FoodType::where('user_id', auth()->id())->where('is_active', true)->orderBy('sort_order')->get();
     $locations = \App\Models\FoodLocation::where('user_id', auth()->id())->orderBy('sort_order')->get();
 @endphp
@@ -99,14 +99,14 @@
                                     <option value="">Selecciona un presupuesto...</option>
                                     @foreach($budgets as $budget)
                                         <option value="{{ $budget->id }}">
-                                            {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}  
+                                            {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}
                                             ({{ now()->monthName }} {{ now()->year }})
                                         </option>
                                     @endforeach
                                 </select>
                                 @if($budgets->isEmpty())
                                     <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                                        ⚠️ Debes crear un presupuesto primero en 
+                                        ⚠️ Debes crear un presupuesto primero en
                                         <a href="{{ route('budgets.index') }}" class="underline">Presupuestos</a>
                                     </p>
                                 @endif
@@ -186,7 +186,7 @@
                                 <div class="rounded-lg border {{ $item->is_checked ? 'border-emerald-200 bg-emerald-50/30 dark:border-emerald-800 dark:bg-emerald-900/10' : 'border-gray-100 dark:border-gray-800' }} p-3">
                                     <div class="flex items-start gap-3">
                                         {{-- Checkbox --}}
-                                        <button type="button" 
+                                        <button type="button"
                                                 onclick="toggleItem({{ $list->id }}, {{ $item->id }}, {{ $item->is_checked ? 0 : 1 }})"
                                                 class="mt-1 h-6 w-6 flex-shrink-0 rounded-md border transition {{ $item->is_checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-700 hover:border-emerald-400' }}">
                                             @if($item->is_checked)
@@ -273,14 +273,14 @@
                                         @if(!$item->is_checked)
                                             <div class="flex gap-2">
                                                 @if(!$item->product)
-                                                    <button type="button" 
+                                                    <button type="button"
                                                             onclick="showCreateProductModal('{{ $item->name }}', {{ $item->id }})"
                                                             class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                                             title="Crear en catálogo">
                                                         📝 Crear
                                                     </button>
                                                 @endif
-                                                <button type="button" 
+                                                <button type="button"
                                                         onclick="showPriceModal({{ $list->id }}, {{ $item->id }}, '{{ $item->name }}', {{ $item->qty_to_buy_base }})"
                                                         class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
                                                     💰 Precio
@@ -404,26 +404,26 @@
         <div class="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-2xl w-full mx-4 my-8 shadow-xl">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Crear Producto en Catálogo</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Este producto no existe en tu catálogo. Compléta los datos para crearlo:</p>
-            
+
             <form id="create-product-form" class="space-y-4">
                 <input type="hidden" id="create-item-id">
-                
+
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <label class="{{ $label }}">Nombre del Producto *</label>
                         <input type="text" id="create-name" required class="{{ $input }}">
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Marca</label>
                         <input type="text" id="create-brand" class="{{ $input }}">
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Código de Barras</label>
                         <input type="text" id="create-barcode" class="{{ $input }}">
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Tipo</label>
                         <select id="create-type" class="{{ $input }}">
@@ -433,7 +433,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Ubicación</label>
                         <select id="create-location" class="{{ $input }}">
@@ -443,7 +443,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Unidad Base</label>
                         <select id="create-unit-base" class="{{ $input }}">
@@ -454,23 +454,23 @@
                             <option value="l">Litros</option>
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Factor de Tamaño</label>
                         <input type="number" step="0.001" id="create-unit-size" value="1" class="{{ $input }}">
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Stock Mínimo</label>
                         <input type="number" step="0.1" id="create-min-stock" placeholder="Ej: 3" class="{{ $input }}">
                     </div>
-                    
+
                     <div>
                         <label class="{{ $label }}">Vida Útil (días)</label>
                         <input type="number" id="create-shelf-life" placeholder="Ej: 7" class="{{ $input }}">
                     </div>
                 </div>
-                
+
                 <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" onclick="closeCreateProductModal()" class="{{ $btnSecondary }} flex-1">
                         Cancelar
@@ -586,7 +586,7 @@
             statusSpan.id = 'barcode-status';
             statusSpan.className = 'text-xs text-blue-600 mt-1';
             statusSpan.textContent = '🔍 Buscando producto...';
-            
+
             const existingStatus = document.getElementById('barcode-status');
             if (existingStatus) {
                 existingStatus.remove();
@@ -643,7 +643,7 @@
                         }
 
                         // Actualizar status
-                        statusSpan.textContent = data.source === 'local' 
+                        statusSpan.textContent = data.source === 'local'
                             ? '✅ Datos cargados desde tu inventario'
                             : '✅ Datos cargados desde OpenFoodFacts';
                         statusSpan.className = 'text-xs text-emerald-600 mt-1';
@@ -812,16 +812,16 @@
             const btn = document.getElementById('toggle-store-mode');
             const sidebar = document.querySelector('.md\\:col-span-2').parentElement.querySelector('.space-y-4');
             const addForm = document.querySelector('.p-3.rounded-lg.bg-gray-50');
-            
+
             if (storeMode) {
                 btn.textContent = '📋 Vista Normal';
                 btn.classList.remove('border-blue-500', 'text-blue-600');
                 btn.classList.add('border-emerald-500', 'text-emerald-600', 'bg-emerald-50');
-                
+
                 // Ocultar sidebar y formulario de agregar
                 if (sidebar) sidebar.classList.add('hidden');
                 if (addForm) addForm.classList.add('hidden');
-                
+
                 // Hacer items más grandes y táctiles
                 document.querySelectorAll('#items-container > div').forEach(item => {
                     item.classList.add('py-4');
@@ -831,7 +831,7 @@
                         checkbox.classList.add('h-10', 'w-10');
                     }
                 });
-                
+
                 // Expandir contenedor de items
                 const mainCol = document.querySelector('.md\\:col-span-2');
                 if (mainCol) mainCol.classList.replace('md:col-span-2', 'md:col-span-3');
@@ -839,11 +839,11 @@
                 btn.textContent = '🛒 Modo Tienda';
                 btn.classList.add('border-blue-500', 'text-blue-600');
                 btn.classList.remove('border-emerald-500', 'text-emerald-600', 'bg-emerald-50');
-                
+
                 // Mostrar sidebar y formulario
                 if (sidebar) sidebar.classList.remove('hidden');
                 if (addForm) addForm.classList.remove('hidden');
-                
+
                 // Restaurar tamaño de items
                 document.querySelectorAll('#items-container > div').forEach(item => {
                     item.classList.remove('py-4');
@@ -853,7 +853,7 @@
                         checkbox.classList.remove('h-10', 'w-10');
                     }
                 });
-                
+
                 // Restaurar columnas
                 const mainCol = document.querySelector('.md\\:col-span-3');
                 if (mainCol) mainCol.classList.replace('md:col-span-3', 'md:col-span-2');

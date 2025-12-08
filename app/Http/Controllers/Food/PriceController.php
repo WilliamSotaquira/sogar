@@ -18,7 +18,7 @@ class PriceController extends Controller
      */
     public function show(Request $request, FoodProduct $product): View
     {
-        $this->authorize($request, $product);
+        $this->authorizeProductAccess($request, $product);
 
         // Obtener histórico de precios
         $priceHistory = FoodPrice::where('product_id', $product->id)
@@ -52,7 +52,7 @@ class PriceController extends Controller
      */
     public function store(Request $request, FoodProduct $product, PriceChangeService $service): JsonResponse
     {
-        $this->authorize($request, $product);
+        $this->authorizeProductAccess($request, $product);
 
         $data = $request->validate([
             'price' => 'required|numeric|min:0.01',
@@ -83,7 +83,7 @@ class PriceController extends Controller
      */
     public function chartData(Request $request, FoodProduct $product): JsonResponse
     {
-        $this->authorize($request, $product);
+        $this->authorizeProductAccess($request, $product);
 
         $days = $request->integer('days', 90);
 
@@ -111,7 +111,7 @@ class PriceController extends Controller
      */
     public function forecast(Request $request, FoodProduct $product): JsonResponse
     {
-        $this->authorize($request, $product);
+        $this->authorizeProductAccess($request, $product);
 
         $days = $request->integer('days', 30); // Días hacia adelante
 
@@ -252,7 +252,7 @@ class PriceController extends Controller
     /**
      * Autorizar acceso
      */
-    private function authorize(Request $request, FoodProduct $product): void
+    private function authorizeProductAccess(Request $request, FoodProduct $product): void
     {
         abort_unless($product->user_id === $request->user()->id, 403);
     }
