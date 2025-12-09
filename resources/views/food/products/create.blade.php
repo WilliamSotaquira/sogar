@@ -57,16 +57,16 @@
                                 <div>
                                     <div class="flex items-center justify-between">
                                         <label class="{{ $label }}">Código de barras</label>
-                                        <button type="button" id="scan-barcode" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Escanear con cámara</button>
+                                        <button type="button" id="scan-barcode" class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            Escanear código
+                                        </button>
                                     </div>
-                                    <input id="barcode-input" name="barcode" value="{{ old('barcode') }}" class="{{ $input }}" placeholder="Escanéalo o escríbelo" autocomplete="off" aria-describedby="barcode-helper" />
-                                    <p id="barcode-helper" class="sr-only">Un código de barras válido permite autocompletar la información.</p>
-                                    <div id="barcode-scanner" class="mt-2 hidden rounded-xl border border-gray-200 bg-white p-2 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                        <div id="barcode-camera" class="overflow-hidden rounded-lg"></div>
-                                        <p class="mt-2">Apunta la cámara al código. Se cerrará automáticamente al detectar.</p>
-                                        <p id="barcode-status" class="mt-1 text-[11px] text-amber-600"></p>
-                                        <button type="button" id="close-scanner" class="mt-2 text-rose-500 hover:text-rose-600">Cerrar</button>
-                                    </div>
+                                    <input id="barcode-input" name="barcode" value="{{ old('barcode') }}" class="{{ $input }}" placeholder="Escanea o escribe el código" autocomplete="off" aria-describedby="barcode-helper" />
+                                    <p id="barcode-helper" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Un código válido autocompleta la información del producto</p>
                                 </div>
                                 <div>
                                     <label class="{{ $label }}">Nombre del producto *</label>
@@ -197,11 +197,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const trigger = document.getElementById('scan-barcode');
-            const scannerWrapper = document.getElementById('barcode-scanner');
-            const cameraEl = document.getElementById('barcode-camera');
             const barcodeInput = document.getElementById('barcode-input');
-            const closeBtn = document.getElementById('close-scanner');
-            const statusEl = document.getElementById('barcode-status');
             const nameInput = document.querySelector('input[name="name"]');
             const brandInput = document.querySelector('input[name="brand"]');
             const typeSelect = document.querySelector('select[name="type_id"]');
@@ -220,16 +216,8 @@
             const imagePreviewPlaceholder = document.getElementById('image-preview-placeholder');
             let currentImageUrl = '';
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            let stream = null;
-            let rafId = null;
-            let detector = null;
             let debounceId = null;
-
-            const setStatus = (msg, tone = 'text-amber-600') => {
-                if (!statusEl) return;
-                statusEl.textContent = msg || '';
-                statusEl.className = 'mt-1 text-[11px] ' + tone;
-            };
+            let barcodeScanner = null;
 
             const updatePortionHint = (text, qty, unit) => {
                 if (!portionHint) return;
@@ -415,7 +403,7 @@
                             imageInput.value = imageUrl;
                         }
 
-                        setStatus('Producto sugerido desde OpenFoodFacts. Revisa y guarda.', 'text-emerald-600');
+                        console.log('Producto autocompletado desde OpenFoodFacts');
                         return true;
                     }
                 } catch (_) {
@@ -427,7 +415,7 @@
 
             const lookupBarcode = async (code) => {
                 if (!code) return;
-                setStatus('Buscando producto por código...');
+                console.log('Buscando producto por código:', code);
                 try {
                     const res = await fetch('/food/scan', {
                         method: 'POST',
@@ -446,12 +434,12 @@
                                 updateImagePreview(data.product.image_url);
                             }
                             updatePortionHint('');
-                        setStatus('Producto encontrado en tu inventario.', 'text-emerald-600');
+                        console.log('Producto encontrado en inventario');
                     } else {
-                        setStatus('No se encontró en tu inventario. Consultando OpenFoodFacts...', 'text-amber-600');
+                        console.log('Producto no encontrado, consultando OpenFoodFacts...');
                         const filled = await fillFromOpenFoodFacts(code);
                         if (!filled) {
-                            setStatus('Código no encontrado. Completa los datos manualmente.', 'text-amber-600');
+                            console.log('Código no encontrado en OpenFoodFacts');
                             if (portionInput) {
                                 portionInput.value = '';
                                 updatePortionHint('');
@@ -460,7 +448,7 @@
                     }
                 } catch (err) {
                     console.warn(err);
-                    setStatus('Error al buscar el código. Intenta de nuevo.', 'text-rose-500');
+                    console.error('Error al buscar el código:', err);
                 }
             };
 
@@ -468,110 +456,30 @@
                 if (debounceId) clearTimeout(debounceId);
                 const code = e.target.value.trim();
                 if (code.length < 8) {
-                    setStatus('');
                     updatePortionHint('');
                     if (portionInput) portionInput.value = '';
                     return;
                 }
-                setStatus('🔍 Buscando producto...', 'text-blue-600');
                 debounceId = setTimeout(() => lookupBarcode(code), 600);
             });
 
-            const stopScanner = () => {
-                setStatus('');
-                if (rafId) cancelAnimationFrame(rafId);
-                rafId = null;
-                if (stream) {
-                    stream.getTracks().forEach(t => t.stop());
-                    stream = null;
-                }
-                detector = null;
-                cameraEl.innerHTML = '';
-                scannerWrapper?.classList.add('hidden');
-            };
-
-            const startScanner = async () => {
-                if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                    setStatus('La cámara requiere HTTPS o localhost.', 'text-rose-500');
-                    return;
-                }
-
-                scannerWrapper?.classList.remove('hidden');
-                setStatus('Buscando cámaras...');
-
-                try {
-                    if (typeof window.ensureBarcodeDetector === 'function') {
-                        try {
-                            await window.ensureBarcodeDetector();
-                        } catch (polyfillErr) {
-                            console.warn(polyfillErr);
-                        }
-                    }
-
-                    if (!('BarcodeDetector' in window)) {
-                        setStatus('Tu navegador no soporta BarcodeDetector. Usa entrada manual.', 'text-rose-500');
-                        return;
-                    }
-
-                    detector = new BarcodeDetector({ formats: ['ean_13', 'code_128', 'ean_8'] });
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { ideal: 'environment' } },
-                        audio: false,
-                    });
-
-                    const video = document.createElement('video');
-                    video.setAttribute('playsinline', true);
-                    video.muted = true;
-                    video.srcObject = stream;
-                    await video.play();
-                    cameraEl.innerHTML = '';
-                    cameraEl.appendChild(video);
-                    setStatus('Escaneando... apunta al código.');
-
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    const scan = async () => {
-                        if (!video.videoWidth) {
-                            rafId = requestAnimationFrame(scan);
-                            return;
-                        }
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        try {
-                            const codes = await detector.detect(canvas);
-                            if (codes.length) {
-                                const text = codes[0].rawValue;
-                                if (text) {
-                                    barcodeInput.value = text;
-                                    setStatus('Código detectado: ' + text, 'text-emerald-600');
-                                    stopScanner();
-                                    lookupBarcode(text);
-                                    return;
-                                }
-                            }
-                        } catch (_) {
-                            // ignore
-                        }
-                        rafId = requestAnimationFrame(scan);
-                    };
-                    rafId = requestAnimationFrame(scan);
-                } catch (err) {
-                    console.warn(err);
-                    setStatus('No se pudo acceder a la cámara. Revisa permisos.', 'text-rose-500');
-                }
-            };
-
-            trigger?.addEventListener('click', (e) => {
-                e.preventDefault();
-                startScanner();
-            });
-
-            closeBtn?.addEventListener('click', (e) => {
-                e.preventDefault();
-                stopScanner();
-            });
+            // Inicializar el nuevo BarcodeScanner optimizado
+            if (window.BarcodeScanner && trigger) {
+                barcodeScanner = new window.BarcodeScanner(barcodeInput);
+                
+                trigger.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    barcodeScanner.open();
+                });
+                
+                console.log('BarcodeScanner inicializado correctamente');
+            } else if (trigger) {
+                console.warn('BarcodeScanner no está disponible');
+                trigger.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert('El escáner de códigos de barras no está disponible. Por favor, ingresa el código manualmente.');
+                });
+            }
         });
     </script>
 </x-layouts.app>
