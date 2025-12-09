@@ -506,20 +506,67 @@
         </div>
     </div>
 
-    <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-7xl px-4 pb-4 md:hidden">
-        <div class="flex items-center justify-between rounded-lg bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
-            <a href="{{ route('food.shopping-list.index') }}" class="flex-1 text-center text-xs font-semibold text-gray-600 hover:text-emerald-600">
-                🗒️ Lista
+    <div id="floating-nav" class="fixed right-3 top-1/2 z-30 -translate-y-1/2 transition-transform duration-300 md:hidden">
+        <div class="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-2 shadow-lg ring-1 ring-gray-200/50 backdrop-blur-sm dark:bg-gray-900/80 dark:ring-gray-700/50">
+            <button onclick="toggleFloatingNav()"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition-all hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    title="Ocultar menú">
+                ✕
+            </button>
+            <button onclick="openQuickProductModal()"
+                    class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-emerald-50 hover:scale-105 dark:hover:bg-emerald-900/20"
+                    title="Producto rápido">
+                ➕
+            </button>
+            <a href="{{ route('food.shopping-list.index') }}"
+               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
+               title="Lista de compras">
+                🗒️
             </a>
-            <a href="{{ route('food.purchases.index') }}" class="flex-1 text-center text-xs font-semibold text-gray-600 hover:text-emerald-600">
-                🛒 Compras
+            <a href="{{ route('food.inventory.index') }}"
+               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
+               title="Inventario">
+                📦
             </a>
-            <a href="{{ route('food.inventory.index') }}" class="flex-1 text-center text-xs font-semibold text-emerald-600">
-                📦 Inventario
+            <a href="{{ route('food.products.index') }}"
+               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
+               title="Catálogo de productos">
+                🥫
+            </a>
+            <a href="{{ route('food.locations.index') }}"
+               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
+               title="Ubicaciones">
+                📍
             </a>
         </div>
     </div>
+
+    <button id="floating-nav-trigger"
+            onclick="toggleFloatingNav()"
+            class="fixed right-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg bg-emerald-600/90 text-xl text-white shadow-lg backdrop-blur-sm transition-all hover:bg-emerald-700 hover:scale-105 md:hidden"
+            title="Mostrar menú">
+        ☰
+    </button>
 </x-layouts.app>
+
+<x-quick-product-modal :locations="$locations ?? []" :types="$types ?? []" />
+
+<script>
+    function toggleFloatingNav() {
+        const nav = document.getElementById('floating-nav');
+        const trigger = document.getElementById('floating-nav-trigger');
+
+        if (nav.classList.contains('translate-x-full')) {
+            nav.classList.remove('translate-x-full');
+            trigger.classList.add('hidden');
+            trigger.classList.remove('flex');
+        } else {
+            nav.classList.add('translate-x-full');
+            trigger.classList.remove('hidden');
+            trigger.classList.add('flex');
+        }
+    }
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {

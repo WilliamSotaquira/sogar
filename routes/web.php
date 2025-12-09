@@ -85,6 +85,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('food/products', [FoodProductController::class, 'index'])->name('food.products.index');
     Route::get('food/products/create', [FoodProductController::class, 'create'])->name('food.products.create');
     Route::post('food/products', [FoodProductController::class, 'store'])->name('food.products.store');
+    Route::post('food/products/quick', [FoodProductController::class, 'quickStore'])->name('food.products.quick-store');
     Route::get('food/products/{product}/edit', [FoodProductController::class, 'edit'])->name('food.products.edit');
     Route::put('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
     Route::delete('food/products/{product}', [FoodProductController::class, 'destroy'])->name('food.products.destroy');

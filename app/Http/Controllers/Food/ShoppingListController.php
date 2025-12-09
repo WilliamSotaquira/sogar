@@ -49,6 +49,8 @@ class ShoppingListController extends Controller
             'activeCount' => $activeCount,
             'completedCount' => $completedCount,
             'pendingItems' => $pendingItems,
+            'locations' => \App\Models\FoodLocation::where('user_id', $request->user()->id)->orderBy('sort_order')->get(),
+            'types' => \App\Models\FoodType::where('user_id', $request->user()->id)->where('is_active', true)->orderBy('sort_order')->get(),
         ]);
     }
 
