@@ -286,19 +286,53 @@
             }
 
             const fillFromProduct = (product) => {
-                if (!product) return;
-                if (product.name && nameInput && !nameInput.value) nameInput.value = product.name;
-                if (product.brand && brandInput && !brandInput.value) brandInput.value = product.brand;
-                if (product.type_id && typeSelect) typeSelect.value = product.type_id;
-                if (product.default_location_id && locationSelect) locationSelect.value = product.default_location_id;
-                if (product.unit_base && unitBaseInput) unitBaseInput.value = product.unit_base;
-                if (product.unit_size && unitSizeInput) unitSizeInput.value = product.unit_size;
-                if (product.min_stock_qty && minStockInput) minStockInput.value = product.min_stock_qty;
-                if (product.shelf_life_days && shelfLifeInput) shelfLifeInput.value = product.shelf_life_days;
-                if (product.description && descriptionInput && !descriptionInput.value) descriptionInput.value = product.description;
+                if (!product) {
+                    console.log('fillFromProduct: No hay producto para llenar');
+                    return;
+                }
+
+                console.log('fillFromProduct: Llenando formulario con:', product);
+
+                if (product.name && nameInput && !nameInput.value) {
+                    nameInput.value = product.name;
+                    console.log('Nombre llenado:', product.name);
+                }
+                if (product.brand && brandInput && !brandInput.value) {
+                    brandInput.value = product.brand;
+                    console.log('Marca llenada:', product.brand);
+                }
+                if (product.type_id && typeSelect) {
+                    typeSelect.value = product.type_id;
+                    console.log('Tipo llenado:', product.type_id);
+                }
+                if (product.default_location_id && locationSelect) {
+                    locationSelect.value = product.default_location_id;
+                    console.log('Ubicación llenada:', product.default_location_id);
+                }
+                if (product.unit_base && unitBaseInput) {
+                    unitBaseInput.value = product.unit_base;
+                    console.log('Unidad base llenada:', product.unit_base);
+                }
+                if (product.unit_size && unitSizeInput) {
+                    unitSizeInput.value = product.unit_size;
+                    console.log('Tamaño llenado:', product.unit_size);
+                }
+                if (product.min_stock_qty && minStockInput) {
+                    minStockInput.value = product.min_stock_qty;
+                    console.log('Stock mínimo llenado:', product.min_stock_qty);
+                }
+                if (product.shelf_life_days && shelfLifeInput) {
+                    shelfLifeInput.value = product.shelf_life_days;
+                    console.log('Vida útil llenada:', product.shelf_life_days);
+                }
+                if (product.description && descriptionInput && !descriptionInput.value) {
+                    descriptionInput.value = product.description;
+                    console.log('Descripción llenada:', product.description);
+                }
                 if (imageInput && product.image_url) {
                     imageInput.value = product.image_url;
                     updateImagePreview(product.image_url);
+                    console.log('Imagen llenada:', product.image_url);
                 }
                 if (portionInput && product.presentation_qty) {
                     portionInput.value = product.presentation_qty;
@@ -307,6 +341,8 @@
                     portionInput.value = product.portion_qty;
                     updatePortionHint(product.portion_text || '', product.portion_qty, product.portion_unit || product.unit_base);
                 }
+
+                console.log('fillFromProduct: Formulario completado');
             };
 
             const parseQuantityText = (text) => {
@@ -415,8 +451,10 @@
 
             const lookupBarcode = async (code) => {
                 if (!code) return;
-                console.log('Buscando producto por código:', code);
+                console.log('lookupBarcode: Buscando código:', code);
+
                 try {
+                    console.log('lookupBarcode: Enviando petición a /food/scan');
                     const res = await fetch('/food/scan', {
                         method: 'POST',
                         headers: {
@@ -427,16 +465,21 @@
                         credentials: 'same-origin',
                         body: JSON.stringify({ code }),
                     });
-                        if (res.ok) {
-                            const data = await res.json();
-                            fillFromProduct(data.product);
-                            if (data.product?.image_url) {
-                                updateImagePreview(data.product.image_url);
-                            }
-                            updatePortionHint('');
+
+                    console.log('lookupBarcode: Respuesta recibida, status:', res.status);
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        console.log('lookupBarcode: Datos recibidos:', data);
+
+                        fillFromProduct(data.product);
+                        if (data.product?.image_url) {
+                            updateImagePreview(data.product.image_url);
+                        }
+                        updatePortionHint('');
                         console.log('Producto encontrado en inventario');
                     } else {
-                        console.log('Producto no encontrado, consultando OpenFoodFacts...');
+                        console.log('Producto no encontrado en inventario (status:', res.status, '), consultando OpenFoodFacts...');
                         const filled = await fillFromOpenFoodFacts(code);
                         if (!filled) {
                             console.log('Código no encontrado en OpenFoodFacts');
@@ -453,14 +496,22 @@
             };
 
             barcodeInput?.addEventListener('input', (e) => {
-                if (debounceId) clearTimeout(debounceId);
                 const code = e.target.value.trim();
+                console.log('Input event detectado, código:', code);
+
+                if (debounceId) clearTimeout(debounceId);
+
                 if (code.length < 8) {
                     updatePortionHint('');
                     if (portionInput) portionInput.value = '';
                     return;
                 }
-                debounceId = setTimeout(() => lookupBarcode(code), 600);
+
+                console.log('Código válido, programando búsqueda en 600ms...');
+                debounceId = setTimeout(() => {
+                    console.log('Ejecutando lookupBarcode para:', code);
+                    lookupBarcode(code);
+                }, 600);
             });
 
             // Inicializar el nuevo BarcodeScanner optimizado
