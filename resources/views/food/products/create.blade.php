@@ -454,8 +454,8 @@
                 console.log('lookupBarcode: Buscando código:', code);
 
                 try {
-                    console.log('lookupBarcode: Enviando petición a /food/scan');
-                    const res = await fetch('/food/scan', {
+                    console.log('lookupBarcode: Enviando petición a /api/food/scan');
+                    const res = await fetch('/api/food/scan', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -493,9 +493,7 @@
                     console.warn(err);
                     console.error('Error al buscar el código:', err);
                 }
-            };
-
-            barcodeInput?.addEventListener('input', (e) => {
+            };            barcodeInput?.addEventListener('input', (e) => {
                 const code = e.target.value.trim();
                 console.log('Input event detectado, código:', code);
 
