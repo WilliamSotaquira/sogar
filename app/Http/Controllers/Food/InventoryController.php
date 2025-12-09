@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FoodLocation;
 use App\Models\FoodProduct;
 use App\Models\FoodStockBatch;
+use App\Models\FoodType;
 use App\Models\ShoppingListItem;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
