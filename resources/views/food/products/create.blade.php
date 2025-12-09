@@ -64,9 +64,6 @@
                                             </svg>
                                             Escanear código
                                         </button>
-                                        <button type="button" id="test-barcode" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition">
-                                            🧪 Test
-                                        </button>
                                     </div>
                                     <input id="barcode-input" name="barcode" value="{{ old('barcode') }}" class="{{ $input }}" placeholder="Escanea o escribe el código" autocomplete="off" aria-describedby="barcode-helper" />
                                     <p id="barcode-helper" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Un código válido autocompleta la información del producto</p>
@@ -605,26 +602,6 @@
                 trigger.addEventListener('click', (e) => {
                     e.preventDefault();
                     alert('El escáner de códigos de barras no está disponible. Por favor, ingresa el código manualmente.');
-                });
-            }
-
-            // Botón de test para debugging
-            const testBtn = document.getElementById('test-barcode');
-            if (testBtn) {
-                testBtn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    console.log('🧪 === INICIANDO TEST COMPLETO ===');
-
-                    // Usar código diferente para evitar duplicados
-                    const testCode = '3017620422003'; // Nutella - código de prueba
-                    console.log('🧪 Paso 1: Insertando código en input:', testCode);
-                    barcodeInput.value = testCode;
-
-                    console.log('🧪 Paso 2: Llamando directamente a lookupBarcode');
-                    await lookupBarcode(testCode);
-
-                    console.log('🧪 === TEST COMPLETO FINALIZADO ===');
-                    console.log('🧪 Revisa los logs arriba para ver qué pasó en cada paso');
                 });
             }
 
