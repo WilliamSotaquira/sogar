@@ -23,7 +23,7 @@
                         <p class="text-sm text-white/80">{{ $product->brand }}</p>
                     @endif
                 </div>
-                
+
                 {{-- Precio Actual vs Anterior --}}
                 <div class="flex gap-4">
                     <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
@@ -37,7 +37,7 @@
                             <p class="text-2xl font-bold text-white/50">—</p>
                         @endif
                     </div>
-                    
+
                     @if($previousPrice)
                         <div class="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
                             <p class="text-xs text-white/60">Anterior</p>

@@ -29,7 +29,7 @@
                 $totalItems = $lists->sum(function($list) { return $list->items->count(); });
                 $checkedItems = $lists->sum(function($list) { return $list->items->where('is_checked', true)->count(); });
             @endphp
-            
+
             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="flex items-center gap-3">
                     <div class="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -88,7 +88,7 @@
                         'closed' => 'gray',
                     ];
                     $color = $statusColors[$list->status] ?? 'gray';
-                    
+
                     // Iconos según el tipo de lista
                     $typeIcons = [
                         'food' => '🍎',
@@ -98,7 +98,7 @@
                         'other' => '📄',
                     ];
                     $listIcon = $typeIcons[$list->list_type ?? 'general'] ?? '📋';
-                    
+
                     // Traducción de status
                     $statusLabels = [
                         'active' => 'Activa',
@@ -112,7 +112,7 @@
                     $actualTotal = $list->actual_total ?? 0;
                     $budgetUsage = $budgetAmount > 0 ? min(100, ($actualTotal / $budgetAmount) * 100) : null;
                 @endphp
-                
+
                 <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-all group">
                     {{-- Header --}}
                     <div class="flex items-start justify-between mb-3">
@@ -224,10 +224,10 @@
     <div id="create-list-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onclick="if(event.target===this) closeCreateListModal()" role="dialog" aria-modal="true" aria-labelledby="create-list-title">
         <div class="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full shadow-xl" tabindex="-1">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">➕ Nueva Lista de Compra</h3>
-            
+
             <form action="{{ route('food.shopping-list.generate') }}" method="POST" class="space-y-4">
                 @csrf
-                
+
                 <div>
                     <label for="list_name" class="{{ $label }}" id="create-list-title">Nombre de la lista *</label>
                     <input id="list_name" type="text" name="name" required class="{{ $input }}" placeholder="Ej: Mercado Semanal, Aseo, Ferretería" value="Compra {{ now()->format('d/m') }}">
@@ -315,7 +315,7 @@
 
         async function deleteList(listId) {
             if (!confirm('¿Eliminar esta lista de compra?')) return;
-            
+
             try {
                 const res = await fetch(`/food/shopping-list/${listId}`, {
                     method: 'DELETE',
@@ -324,7 +324,7 @@
                         'Accept': 'application/json',
                     },
                 });
-                
+
                 if (res.ok) {
                     location.reload();
                 } else {
@@ -338,7 +338,7 @@
 
         async function generateSuggestions(listId) {
             if (!confirm('¿Generar sugeridos automáticos para esta lista basados en productos con stock bajo?')) return;
-            
+
             try {
                 const res = await fetch(`/food/shopping-list/${listId}/suggest`, {
                     method: 'POST',
@@ -347,7 +347,7 @@
                         'Accept': 'application/json',
                     },
                 });
-                
+
                 if (res.ok) {
                     const data = await res.json();
                     alert(`✅ ${data.count || 0} productos sugeridos agregados`);
