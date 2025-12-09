@@ -67,7 +67,8 @@
             <!-- Add to Inventory Option -->
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
                 <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" id="quick-add-inventory" name="add_to_inventory" class="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 dark:border-gray-600" />
+                    <input type="checkbox" id="quick-add-inventory" name="add_to_inventory" value="1" class="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 dark:border-gray-600" />
+                    <input type="hidden" name="add_to_inventory" value="0" />
                     <div class="flex-1">
                         <span class="block text-sm font-semibold text-gray-900 dark:text-gray-100">Agregar a inventario ahora</span>
                         <span class="text-xs text-gray-500 dark:text-gray-400">Registra la cantidad y ubicación</span>
@@ -123,20 +124,26 @@
 </div>
 
 <!-- Camera Modal for Barcode Scanning -->
-<div id="camera-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90" onclick="if(event.target===this) stopBarcodeScanner()">
-    <div class="relative w-full max-w-2xl px-4" onclick="event.stopPropagation()">
-        <button onclick="stopBarcodeScanner()" class="absolute right-8 top-4 z-10 rounded-lg bg-red-600 p-2 text-white hover:bg-red-700 transition">
+<div id="camera-modal" class="fixed inset-0 hidden bg-black/95" style="display: none; z-index: 9999;" onclick="if(event.target===this) stopBarcodeScanner()">
+    <div class="relative flex h-full w-full items-center justify-center px-4" onclick="event.stopPropagation()">
+        <button onclick="stopBarcodeScanner()" class="absolute right-4 top-4 rounded-lg bg-red-600 p-3 text-white shadow-lg hover:bg-red-700 transition" style="z-index: 10000;">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
-        <div id="barcode-scanner" class="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl"></div>
-        <div class="mt-4 text-center">
-            <p class="text-sm text-white font-semibold">📱 Enfoca el código de barras en el centro</p>
-            <p class="text-xs text-white/70 mt-1">El escáner se cerrará automáticamente al detectar</p>
-        </div>
-        <div id="scan-status" class="mt-3 hidden rounded-lg bg-emerald-600 p-3 text-center text-white">
-            ✓ Código detectado
+
+        <div class="w-full max-w-3xl">
+            <div id="barcode-scanner" class="relative w-full rounded-xl bg-black shadow-2xl overflow-hidden" style="min-height: 480px;">
+                <!-- QuaggaJS renderizará el video aquí -->
+            </div>
+
+            <div class="mt-6 text-center space-y-2">
+                <p class="text-lg text-white font-semibold">📱 Enfoca el código de barras</p>
+                <p class="text-sm text-white/80">El escáner detectará automáticamente el código</p>
+                <div id="scan-status" class="hidden mt-4 rounded-lg bg-emerald-600 p-4 text-white font-semibold shadow-lg">
+                    ✓ Código detectado correctamente
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -185,29 +192,32 @@ function startBarcodeScanner() {
 
     const cameraModal = document.getElementById('camera-modal');
     const scanStatus = document.getElementById('scan-status');
+    const scannerElement = document.getElementById('barcode-scanner');
 
-    if (!cameraModal) {
-        console.error('Camera modal not found');
+    if (!cameraModal || !scannerElement) {
+        console.error('Camera modal or scanner element not found');
         return;
     }
 
+    // Mostrar el modal con display block
+    cameraModal.style.display = 'flex';
     cameraModal.classList.remove('hidden');
-    cameraModal.classList.add('flex');
     if (scanStatus) scanStatus.classList.add('hidden');
 
     scannerActive = true;
+
+    console.log('Iniciando QuaggaJS...');
 
     Quagga.init({
         inputStream: {
             name: "Live",
             type: "LiveStream",
-            target: document.querySelector('#barcode-scanner'),
+            target: scannerElement,
             constraints: {
                 facingMode: "environment",
-                width: { min: 640, ideal: 1920 },
-                height: { min: 480, ideal: 1080 },
-                aspectRatio: { min: 1, max: 2 }
-            },
+                width: { min: 640, ideal: 1280 },
+                height: { min: 480, ideal: 720 }
+            }
         },
         decoder: {
             readers: [
@@ -215,10 +225,8 @@ function startBarcodeScanner() {
                 "ean_8_reader",
                 "code_128_reader",
                 "code_39_reader",
-                "code_39_vin_reader",
                 "upc_reader",
-                "upc_e_reader",
-                "i2of5_reader"
+                "upc_e_reader"
             ],
             debug: {
                 drawBoundingBox: true,
@@ -232,8 +240,8 @@ function startBarcodeScanner() {
             patchSize: "medium",
             halfSample: true
         },
-        numOfWorkers: navigator.hardwareConcurrency || 4,
-        frequency: 10,
+        numOfWorkers: navigator.hardwareConcurrency || 2,
+        frequency: 10
     }, function(err) {
         if (err) {
             console.error('Error iniciando escáner:', err);
@@ -241,7 +249,7 @@ function startBarcodeScanner() {
             stopBarcodeScanner();
             return;
         }
-        console.log('Escáner iniciado correctamente');
+        console.log('✓ Escáner iniciado correctamente');
         Quagga.start();
     });
 
@@ -302,12 +310,14 @@ function stopBarcodeScanner() {
     if (scannerActive && typeof Quagga !== 'undefined') {
         console.log('Deteniendo escáner...');
         Quagga.stop();
+        Quagga.offDetected();
+        Quagga.offProcessed();
         scannerActive = false;
     }
     const cameraModal = document.getElementById('camera-modal');
     if (cameraModal) {
+        cameraModal.style.display = 'none';
         cameraModal.classList.add('hidden');
-        cameraModal.classList.remove('flex');
     }
     if (detectionTimeout) {
         clearTimeout(detectionTimeout);
