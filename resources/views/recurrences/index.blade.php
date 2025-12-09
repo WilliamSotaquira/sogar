@@ -1,7 +1,7 @@
 <x-layouts.app :title="__('Recurrencias')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Automatiza</p>
                     <h1 class="text-3xl font-bold">Recurrencias</h1>
@@ -9,7 +9,7 @@
                 </div>
                 <div class="hero-chip text-sm font-semibold">daily · weekly · monthly · yearly</div>
             </div>
-            <div class="hero-panel-content flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2">
                 <span class="hero-chip text-xs">Sincroniza a Google Calendar</span>
                 <span class="hero-chip text-xs">Controla estado activo</span>
             </div>

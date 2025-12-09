@@ -4,7 +4,7 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-neutral-primary-soft text-body">
-    <nav class="bg-neutral-primary fixed w-full z-20 top-0 start-0 border-b border-default">
+    <nav class="bg-neutral-primary fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-800">
         <div class="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl p-4">
             <a href="https://flowbite.com" class="flex items-center space-x-3 rtl:space-x-reverse">
                 <img src="https://flowbite.com/docs/images/logo.svg" class="h-7" alt="Flowbite Logo" />
@@ -37,7 +37,7 @@
                 </ul>
             </div>
         </div>
-        <div id="mega-menu-full-dropdown" class="mt-1 bg-neutral-primary-soft border-default shadow-xs border-y">
+        <div id="mega-menu-full-dropdown" class="mt-1 bg-neutral-primary-soft border-gray-200 dark:border-gray-800 shadow-xs border-y">
             <div class="grid max-w-screen-xl px-4 py-5 mx-auto text-heading sm:grid-cols-2 md:grid-cols-3 md:px-6">
                 <ul aria-labelledby="mega-menu-full-dropdown-button">
                     <li>

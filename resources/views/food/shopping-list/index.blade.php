@@ -17,8 +17,8 @@
 <x-layouts.app :title="__('Lista de compra')">
     <div class="mx-auto w-full max-w-6xl space-y-6 pb-28 md:pb-0">
         {{-- Hero Panel --}}
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Compras inteligentes</p>
                     <h1 class="text-3xl font-bold">Lista de Compra</h1>
@@ -45,7 +45,7 @@
 
         @if($list)
             <div class="md:hidden sticky top-3 z-20 -mx-4 px-4">
-                <div class="rounded-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur ring-1 ring-gray-100 shadow-md dark:ring-gray-800">
+                <div class="rounded-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur ring-1 ring-gray-100 shadow-md dark:ring-gray-800">
                     <div class="flex text-sm font-semibold">
                         <a href="{{ route('food.shopping-list.index', ['status' => 'active']) }}"
                            class="flex-1 px-4 py-3 text-center {{ ($statusFilter ?? 'active') === 'active' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-500 dark:text-gray-400' }}">
@@ -357,7 +357,7 @@
 
     @if($list)
         <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-6xl px-4 pb-4 md:hidden">
-            <div class="flex items-center justify-between rounded-2xl bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
+            <div class="flex items-center justify-between rounded-lg bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
                 <a href="{{ route('food.shopping-list.index', ['status' => $statusFilter ?? 'active']) }}" class="flex-1 text-center text-xs font-semibold {{ ($statusFilter ?? 'active') === 'active' ? 'text-emerald-600' : 'text-gray-500' }}">
                     🗒️ Lista
                 </a>

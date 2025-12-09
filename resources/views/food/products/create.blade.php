@@ -8,8 +8,8 @@
     @endphp
 
     <div class="mx-auto w-full max-w-4xl space-y-6">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Inventario doméstico</p>
                     <h1 class="text-3xl font-bold">Agregar Nuevo Producto</h1>
@@ -48,7 +48,7 @@
                 @csrf
                 <div class="lg:grid lg:grid-cols-12 gap-6">
                     <div class="space-y-6 lg:col-span-8">
-                        <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 md:p-5 space-y-4">
+                        <section class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 md:p-5 space-y-4">
                             <header class="flex flex-col gap-1">
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Identificación</h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Estos datos nos ayudan a localizar y sugerir el producto.</p>
@@ -90,7 +90,7 @@
                             </div>
                         </section>
 
-                        <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 md:p-5 space-y-4">
+                        <section class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 md:p-5 space-y-4">
                             <header>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Inventario y control</h3>
                             </header>
@@ -134,7 +134,7 @@
                             </div>
                         </section>
 
-                        <section class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 md:p-5 space-y-4">
+                        <section class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-4 md:p-5 space-y-4">
                             <header>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Notas y compra</h3>
                             </header>
@@ -158,7 +158,7 @@
                     </div>
 
                     <aside class="lg:col-span-4 space-y-4">
-                        <div class="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5 space-y-4">
+                        <div class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5 space-y-4">
                             <header>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Imagen del producto</h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Usamos la imagen de OpenFoodFacts si está disponible. Puedes reemplazarla pegando tu propia URL.</p>
@@ -175,7 +175,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <div class="rounded-lg border border-dashed border-gray-200 dark:border-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400 space-y-2">
                             <p class="font-semibold text-gray-900 dark:text-gray-100">Consejos rápidos</p>
                             <ul class="list-disc pl-5 space-y-1">
                                 <li>Los campos con * son obligatorios.</li>

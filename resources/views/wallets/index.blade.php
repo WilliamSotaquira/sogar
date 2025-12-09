@@ -4,7 +4,7 @@
 
 <x-layouts.app :title="__('Bolsillos')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="hero-panel p-6">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <p class="text-sm uppercase tracking-wide font-semibold text-white/90">Fondos separados</p>
             <h1 class="text-3xl font-bold text-white">Bolsillos</h1>
             <p class="text-sm text-white/85">Monitorea saldos, metas y registra ajustes manuales.</p>

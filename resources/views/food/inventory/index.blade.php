@@ -75,8 +75,8 @@
     @endphp
     <div class="mx-auto w-full max-w-7xl space-y-6 pb-28 md:pb-0">
         {{-- Header --}}
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Inventario doméstico</p>
                     <h1 class="text-3xl font-bold">Stock por Ubicación</h1>
@@ -111,10 +111,10 @@
         </div>
 
         @if($pendingInventoryCount > 0)
-            <section id="pending-inventory-panel" class="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20">
+            <section id="pending-inventory-panel" class="rounded-lg border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700 dark:text-amber-200">Alertas de sincronización</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">Alertas de sincronización</p>
                         <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-100">{{ $pendingInventoryCount }} ítem{{ $pendingInventoryCount === 1 ? '' : 's' }} siguen sin lote</h2>
                         <p class="text-sm text-amber-800/80 dark:text-amber-100/80">Identifica los productos marcados como comprados que aún no generan stock.</p>
                     </div>
@@ -147,7 +147,7 @@
                             $pendingReason = empty($pendingItem->product_id) ? 'Producto sin asociar' : 'Lote no creado';
                             $unitLabel = $pendingItem->unit_base ?? $pendingItem->qty_unit_label ?? 'unidad';
                         @endphp
-                        <article class="rounded-2xl border border-amber-100 bg-white/80 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/10">
+                        <article class="rounded-lg border border-amber-100 bg-white/80 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/10">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ $pendingItem->name }}</p>
@@ -320,7 +320,7 @@
         </div>
 
         {{-- Inventario agrupado por ubicación --}}
-        <section class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div class="flex flex-col gap-2 border-b border-gray-100 px-6 py-4 dark:border-gray-800/70 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Inventario por ubicación</h2>
@@ -512,7 +512,7 @@
     </div>
 
     <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-7xl px-4 pb-4 md:hidden">
-        <div class="flex items-center justify-between rounded-2xl bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
+        <div class="flex items-center justify-between rounded-lg bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
             <a href="{{ route('food.shopping-list.index') }}" class="flex-1 text-center text-xs font-semibold text-gray-600 hover:text-emerald-600">
                 🗒️ Lista
             </a>

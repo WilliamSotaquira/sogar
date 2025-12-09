@@ -16,9 +16,10 @@ class FamilyGroupSeeder extends Seeder
     public function run(): void
     {
         // Buscar usuarios existentes
-        $padre = User::where('email', 'william@sogar.com')->first();
-        $madre = User::where('email', 'Jazmin@sogar.com')->first();
-        $hijo = User::where('email', 'Santiago@sogar.com')->first();
+
+        $padre = User::where('email', 'william.sotaquira@gmail.com')->first();
+        $madre = User::where('email', 'valeria920309@gmail.com')->first();
+        $hijo = User::where('email', 'santiago.sotaquira.suarez@gmail.com')->first();
 
         if (!$padre || !$madre || !$hijo) {
             $this->command->error('❌ No se encontraron todos los usuarios necesarios. Ejecuta primero UserSeeder.');
@@ -27,7 +28,7 @@ class FamilyGroupSeeder extends Seeder
 
         // Crear el núcleo familiar
         $familyGroup = FamilyGroup::updateOrCreate(
-            ['name' => 'Familia Sotaquirá'],
+            ['name' => 'Sotaquirá Suárez'],
             [
                 'description' => 'Núcleo familiar principal',
                 'admin_user_id' => $padre->id,

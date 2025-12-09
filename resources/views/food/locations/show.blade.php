@@ -12,8 +12,8 @@
     @endphp
 
     <div class="mx-auto w-full max-w-5xl space-y-6">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-3 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-3 text-white sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Ubicación del inventario</p>
                     <h1 class="text-3xl font-bold flex items-center gap-2">

@@ -4,9 +4,9 @@
 
 <x-layouts.app :title="__('Dashboard')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="hero-panel p-6">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="hero-panel-content text-white">
+                <div class="text-white">
                     <p class="text-sm uppercase tracking-wide font-semibold text-white/90">Finanzas familiares</p>
                     <h1 class="mt-1 text-3xl font-bold">Visión y control en un solo lugar</h1>
                     <p class="mt-2 text-sm text-white/85">Captura, presupuestos, bolsillos y alertas conectadas a Google Calendar.</p>
@@ -28,7 +28,7 @@
                         </a>
                     </div>
                 </div>
-                <div class="hero-panel-content flex flex-col gap-3 text-sm text-white lg:items-end">
+                <div class="flex flex-col gap-3 text-sm text-white lg:items-end">
                     <div class="flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 font-semibold ring-1 ring-white/15">
                         <span class="h-2 w-2 rounded-full bg-emerald-300"></span>
                         Salud: {{ $healthScore }}/100
@@ -52,22 +52,22 @@
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
-            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">Ingresos del mes</p>
                 <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ $fmtMoney($income) }}</h3>
                 <p class="text-xs text-emerald-600 dark:text-emerald-300">Incluye salarios y extras.</p>
             </div>
-            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">Gastos del mes</p>
                 <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ $fmtMoney($expenses) }}</h3>
                 <p class="text-xs text-rose-500 dark:text-rose-300">Controla límites y fugas.</p>
             </div>
-            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">% Ahorro vs ingreso</p>
                 <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ round($savingsRate * 100, 1) }}%</h3>
                 <p class="text-xs text-body">Meta ideal: 20% o más.</p>
             </div>
-            <div class="rounded-xl border border-default bg-white p-4 shadow-md dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">Salud financiera</p>
                 <div class="mt-2 flex items-center gap-3">
                     <div class="h-2 flex-1 rounded-full bg-neutral-100 dark:bg-neutral-800">

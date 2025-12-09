@@ -8,8 +8,8 @@
 <x-layouts.app :title="__('Mis Listas de Compra')">
     <div class="mx-auto w-full max-w-7xl space-y-6">
         {{-- Header --}}
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Compras Inteligentes</p>
                     <h1 class="text-3xl font-bold">Mis Listas de Compra</h1>

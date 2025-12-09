@@ -4,9 +4,9 @@
 
 <x-layouts.app :title="__('Transacciones')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="hero-panel p-6">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div class="space-y-1.5">
+                <div class="space-y-1.5 text-white">
                     <p class="text-sm font-semibold uppercase tracking-wide text-white/90">Historial</p>
                     <h1 class="text-3xl font-bold">Transacciones</h1>
                     <p class="text-sm text-white/85">Controla ingresos, gastos y bolsillos en un solo lugar.</p>
@@ -25,7 +25,7 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-default bg-white p-5 shadow-sm dark:bg-neutral-900">
+        <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-neutral-900">
             <form method="GET" class="grid gap-4 md:grid-cols-4">
                 <div>
                     <label class="block text-sm font-medium text-heading">Mes</label>
@@ -35,7 +35,7 @@
                         min="1"
                         max="12"
                         value="{{ $filters['month'] }}"
-                        class="mt-1 block h-12 w-full rounded-xl border border-default bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                        class="mt-1 block h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-neutral-800 dark:text-white"
                     >
                 </div>
                 <div>
@@ -46,14 +46,14 @@
                         min="2000"
                         max="2100"
                         value="{{ $filters['year'] }}"
-                        class="mt-1 block h-12 w-full rounded-xl border border-default bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                        class="mt-1 block h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-neutral-800 dark:text-white"
                     >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-heading">Categoría</label>
                     <select
                         name="category_id"
-                        class="mt-1 block h-12 w-full rounded-xl border border-default bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white appearance-none"
+                        class="mt-1 block h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-neutral-800 dark:text-white appearance-none"
                     >
                         <option value="">Todas</option>
                         @foreach ($categories as $category)
@@ -67,7 +67,7 @@
                     <label class="block text-sm font-medium text-heading">Bolsillo</label>
                     <select
                         name="wallet_id"
-                        class="mt-1 block h-12 w-full rounded-xl border border-default bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white appearance-none"
+                        class="mt-1 block h-12 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-heading shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-neutral-800 dark:text-white appearance-none"
                     >
                         <option value="">Todos</option>
                         @foreach ($wallets as $wallet)
@@ -88,21 +88,21 @@
         </div>
 
         <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-xl border border-default bg-white p-4 shadow-sm dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">Ingresos</p>
                 <h3 class="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-300">{{ $fmtMoney($totals['income']) }}</h3>
             </div>
-            <div class="rounded-xl border border-default bg-white p-4 shadow-sm dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">Gastos</p>
                 <h3 class="mt-2 text-2xl font-semibold text-rose-600 dark:text-rose-300">{{ $fmtMoney($totals['expense']) }}</h3>
             </div>
-            <div class="rounded-xl border border-default bg-white p-4 shadow-sm dark:bg-neutral-900">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-neutral-900">
                 <p class="text-sm text-body">Neto</p>
                 <h3 class="mt-2 text-2xl font-semibold text-heading dark:text-white">{{ $fmtMoney($totals['income'] - $totals['expense']) }}</h3>
             </div>
         </div>
 
-        <div class="rounded-2xl border border-default bg-white p-4 shadow-sm dark:bg-neutral-900">
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-neutral-900">
             <div class="flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-heading dark:text-white">Movimientos</h2>
                 <span class="text-xs text-body">{{ $transactions->total() }} resultados</span>

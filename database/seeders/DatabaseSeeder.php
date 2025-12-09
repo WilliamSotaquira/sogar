@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
             FinanceSeeder::class,
             FoodTypeSeeder::class,
             FoodLocationSeeder::class,
-            FoodDemoSeeder::class,
         ]);
     }
 }

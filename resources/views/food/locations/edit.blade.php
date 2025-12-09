@@ -7,8 +7,8 @@
     @endphp
 
     <div class="mx-auto w-full max-w-3xl space-y-6">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 text-white">
                 <p class="text-sm uppercase tracking-wide font-semibold">Inventario doméstico</p>
                 <h1 class="text-3xl font-bold">Editar ubicación</h1>
                 <p class="text-sm text-white/80">{{ $location->name }}</p>

@@ -10,8 +10,8 @@
     @endphp
 
     <div class="mx-auto w-full max-w-4xl space-y-6">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Editar producto</p>
                     <h1 class="text-3xl font-bold">{{ $product->name }}</h1>

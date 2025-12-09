@@ -1,7 +1,7 @@
 <x-layouts.app :title="__('Categorías')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Ordena tus ingresos y gastos</p>
                     <h1 class="text-3xl font-bold">Categorías</h1>
@@ -11,7 +11,7 @@
                     Curadas + personales
                 </div>
             </div>
-            <div class="hero-panel-content flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2">
                 <span class="hero-chip text-xs">Colores y descripciones opcionales</span>
                 <span class="hero-chip text-xs">Separación ingreso / gasto</span>
                 <span class="hero-chip text-xs">Solo tú puedes editar tus categorías</span>

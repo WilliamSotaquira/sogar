@@ -16,7 +16,7 @@ class FoodLocationSeeder extends Seeder
     {
         // Obtener el usuario actual o el primero disponible
         $user = User::first();
-        
+
         if (!$user) {
             $this->command->warn('No hay usuarios en la base de datos. Crea un usuario primero.');
             return;
@@ -42,51 +42,32 @@ class FoodLocationSeeder extends Seeder
                 'is_default' => false,
             ],
             [
-                'name' => 'Alacena',
+                'name' => 'Cocina - Alacena Alta',
                 'color' => '#F59E0B', // Naranja
                 'sort_order' => 4,
                 'is_default' => false,
-            ],
-            [
-                'name' => 'Frutas y Verduras',
-                'color' => '#10B981', // Verde
-                'sort_order' => 5,
-                'is_default' => false,
-            ],
-            [
-                'name' => 'Cava de Vinos',
-                'color' => '#7C3AED', // Púrpura
-                'sort_order' => 6,
-                'is_default' => false,
-            ],
-            [
-                'name' => 'Bodega',
-                'color' => '#6B7280', // Gris
-                'sort_order' => 7,
-                'is_default' => false,
-            ],
-            [
+            ],           [
                 'name' => 'Baño',
                 'color' => '#14B8A6', // Teal
-                'sort_order' => 8,
+                'sort_order' => 5,
                 'is_default' => false,
             ],
             [
                 'name' => 'Lavandería',
                 'color' => '#06B6D4', // Cyan
-                'sort_order' => 9,
+                'sort_order' => 6,
                 'is_default' => false,
             ],
             [
-                'name' => 'Cocina - Alacena Alta',
+                'name' => 'Habitación - Alacena Alta',
                 'color' => '#F97316', // Naranja oscuro
-                'sort_order' => 10,
+                'sort_order' => 7,
                 'is_default' => false,
             ],
             [
-                'name' => 'Cocina - Alacena Baja',
+                'name' => 'Otra Ubicación',
                 'color' => '#DC2626', // Rojo
-                'sort_order' => 11,
+                'sort_order' => 8,
                 'is_default' => false,
             ],
         ];

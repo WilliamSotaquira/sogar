@@ -1,6 +1,6 @@
 <x-layouts.app :title="__('Registrar transacción')">
     <div class="mx-auto w-full max-w-6xl space-y-6">
-        <div class="hero-panel p-6">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <p class="text-sm uppercase tracking-wide font-semibold text-white/90">Entrada rápida</p>
             <h1 class="text-3xl font-bold text-white">Registrar transacción</h1>
             <p class="text-sm text-white/85">Sugerencias por palabra clave, categoría y bolsillo en un solo paso.</p>

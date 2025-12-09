@@ -13,8 +13,8 @@
         $pendingInventoryPreview = ($pendingInventoryItems ?? collect())->take(3);
     @endphp
     <div class="mx-auto w-full max-w-6xl space-y-6 pb-28 md:pb-0">
-        <div class="hero-panel p-6">
-            <div class="hero-panel-content flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Gasto de alimentos</p>
                     <h1 class="text-3xl font-bold">Compras</h1>
@@ -35,10 +35,10 @@
         @endif
 
         @if($pendingInventoryCount > 0)
-            <div class="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20">
+            <div class="rounded-lg border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700 dark:text-amber-200">Alertas de sincronización</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">Alertas de sincronización</p>
                         <h3 class="text-lg font-semibold text-amber-800 dark:text-amber-100">{{ $pendingInventoryCount }} ítem{{ $pendingInventoryCount === 1 ? '' : 's' }} marcados sin lote en inventario</h3>
                         <p class="text-sm text-amber-700/80 dark:text-amber-100/80">Confirma estos productos para evitar diferencias entre compras e inventario.</p>
                     </div>
@@ -51,7 +51,7 @@
                                 <p class="font-semibold">{{ $pendingItem->name }}</p>
                                 <p class="text-xs text-amber-700/80 dark:text-amber-100/80">Marcado {{ optional($pendingItem->checked_at)->diffForHumans() ?? 'sin fecha' }} · Cantidad {{ $pendingItem->qty_to_buy_base }} {{ $pendingItem->unit_base }}</p>
                             </div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-200">Pendiente</p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">Pendiente</p>
                         </div>
                     @endforeach
                 </div>
@@ -63,17 +63,17 @@
         @endif
 
         @if($lists->isEmpty())
-            <div class="rounded-2xl border border-dashed border-gray-300 bg-white/80 p-10 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900/70">
+            <div class="rounded-lg border border-dashed border-gray-300 bg-white/80 p-10 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900/70">
                 <div class="mb-4 text-4xl">🛒</div>
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Necesitas una lista activa para registrar compras</h2>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Genera o abre una lista de compras para poder validar qué artículos fueron adquiridos.</p>
                 <a href="{{ route('food.shopping-list.index') }}" class="mt-6 inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">Ir a mis listas</a>
             </div>
         @else
-            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="selected-list-title">
+            <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="selected-list-title">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <p id="selected-list-title" class="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">Lista seleccionada</p>
+                        <p id="selected-list-title" class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Lista seleccionada</p>
                         <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $selectedList->name }}</h2>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             Generada {{ optional($selectedList->generated_at)->format('d M Y') ?? '—' }} · Estado: <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ strtoupper($selectedList->status ?? 'activo') }}</span>
@@ -112,7 +112,7 @@
                 <span id="purchase-form-title" class="sr-only">Registrar compra a partir de la lista seleccionada</span>
 
                 <div class="grid gap-4 md:grid-cols-2">
-                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="purchase-details-title">
+                    <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="purchase-details-title">
                         <h3 id="purchase-details-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">Detalles de la compra</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Define cuándo y dónde hiciste la compra.</p>
                         <div class="mt-4 space-y-3">
@@ -131,7 +131,7 @@
                         </div>
                     </div>
 
-                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="payment-title">
+                    <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="payment-title">
                         <h3 id="payment-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">Pago y control</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Asocia método, transacción y opciones financieras.</p>
                         <div class="mt-4 space-y-3">
@@ -148,7 +148,7 @@
                                 <label class="{{ $label }}">Número de transacción</label>
                                 <input name="receipt_number" class="{{ $input }}" placeholder="Factura, ticket o referencia">
                             </div>
-                            <div class="flex items-center justify-between rounded-2xl bg-gray-50/80 px-4 py-3 dark:bg-gray-800/40">
+                            <div class="flex items-center justify-between rounded-lg bg-gray-50/80 px-4 py-3 dark:bg-gray-800/40">
                                 <div>
                                     <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Impactar finanzas</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Genera movimiento contable al guardar.</p>
@@ -163,7 +163,7 @@
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-[3fr_2fr]">
-                    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="confirm-items-title" aria-describedby="confirm-items-desc">
+                    <section class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="confirm-items-title" aria-describedby="confirm-items-desc">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h3 id="confirm-items-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirmar ítems</h3>
@@ -194,7 +194,7 @@
                                 La lista seleccionada no tiene productos para confirmar.
                             </div>
                         @else
-                            <div id="purchase-items" class="mt-4 overflow-x-auto rounded-2xl border border-gray-100 bg-white/80 p-4 shadow-sm dark:border-gray-800/60 dark:bg-gray-900/40">
+                            <div id="purchase-items" class="mt-4 overflow-x-auto rounded-lg border border-gray-100 bg-white/80 p-4 shadow-sm dark:border-gray-800/60 dark:bg-gray-900/40">
                                 <table class="min-w-full text-sm">
                                     <thead class="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800/60 dark:text-gray-300">
                                         <tr>
@@ -266,7 +266,7 @@
                         @endif
                     </section>
 
-                    <aside class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5 shadow-inner dark:border-emerald-900/50 dark:bg-emerald-900/20 lg:sticky lg:top-6" role="region" aria-labelledby="purchase-summary-title" aria-describedby="purchase-summary-desc">
+                    <aside class="rounded-lg border border-emerald-100 bg-emerald-50/70 p-5 shadow-inner dark:border-emerald-900/50 dark:bg-emerald-900/20 lg:sticky lg:top-6" role="region" aria-labelledby="purchase-summary-title" aria-describedby="purchase-summary-desc">
                         <h3 id="purchase-summary-title" class="text-lg font-semibold text-emerald-800 dark:text-emerald-200">Resumen de la compra</h3>
                         <p id="purchase-summary-desc" class="text-sm text-emerald-700/80 dark:text-emerald-100/80">Confirma al menos un ítem para activar el botón de guardado.</p>
                         <div class="mt-4 space-y-4">
@@ -316,7 +316,7 @@
     </div>
 
     <div class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-6xl px-4 pb-4 md:hidden">
-        <div class="flex items-center justify-between rounded-2xl bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
+        <div class="flex items-center justify-between rounded-lg bg-white/95 p-3 shadow-2xl ring-1 ring-gray-200 dark:bg-gray-900/95 dark:ring-gray-700">
             <a href="{{ route('food.shopping-list.index') }}" class="flex-1 text-center text-xs font-semibold text-gray-600 hover:text-emerald-600">
                 🗒️ Lista
             </a>
