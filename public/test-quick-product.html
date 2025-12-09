@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Producto Rápido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto space-y-4">
+        <h1 class="text-2xl font-bold">Test del Sistema de Producto Rápido</h1>
+
+        <div class="bg-white rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-semibold">1. Test de Biblioteca QuaggaJS</h2>
+            <button onclick="testQuagga()" class="bg-blue-600 text-white px-4 py-2 rounded">
+                Probar QuaggaJS
+            </button>
+            <div id="quagga-result" class="text-sm"></div>
+        </div>
+
+        <div class="bg-white rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-semibold">2. Test de Escáner</h2>
+            <button onclick="startTestScanner()" class="bg-emerald-600 text-white px-4 py-2 rounded">
+                Iniciar Escáner
+            </button>
+            <button onclick="stopTestScanner()" class="bg-red-600 text-white px-4 py-2 rounded">
+                Detener Escáner
+            </button>
+            <div id="scanner-container" class="hidden mt-4">
+                <div id="test-scanner" class="aspect-video bg-black rounded"></div>
+            </div>
+            <div id="scanner-result" class="text-sm mt-2"></div>
+        </div>
+
+        <div class="bg-white rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-semibold">3. Test de OpenFoodFacts</h2>
+            <input type="text" id="test-barcode" placeholder="Código de barras" class="border rounded px-3 py-2 w-full">
+            <button onclick="testOpenFoodFacts()" class="bg-purple-600 text-white px-4 py-2 rounded">
+                Buscar en OpenFoodFacts
+            </button>
+            <div id="openfood-result" class="text-sm mt-2"></div>
+        </div>
+
+        <div class="bg-white rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-semibold">4. Test del Modal (ir a la app)</h2>
+            <a href="/food/inventory" class="inline-block bg-gray-600 text-white px-4 py-2 rounded">
+                Ir a Inventario
+            </a>
+            <p class="text-sm text-gray-600">Activa modo móvil (F12 → Ctrl+Shift+M) y click en ➕</p>
+        </div>
+    </div>
+
+    <script>
+        let scannerActive = false;
+
+        function testQuagga() {
+            const result = document.getElementById('quagga-result');
+            if (typeof Quagga !== 'undefined') {
+                result.innerHTML = '<span class="text-green-600">✓ QuaggaJS cargado correctamente</span>';
+                result.innerHTML += '<br>Versión: ' + (Quagga.version || 'Desconocida');
+            } else {
+                result.innerHTML = '<span class="text-red-600">✗ QuaggaJS NO está cargado</span>';
+            }
+        }
+
+        function startTestScanner() {
+            if (scannerActive) return;
+
+            const container = document.getElementById('scanner-container');
+            const result = document.getElementById('scanner-result');
+
+            container.classList.remove('hidden');
+            scannerActive = true;
+            result.innerHTML = '<span class="text-blue-600">Iniciando escáner...</span>';
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#test-scanner'),
+                    constraints: {
+                        facingMode: "environment",
+                        width: { min: 640, ideal: 1280 },
+                        height: { min: 480, ideal: 720 }
+                    },
+                },
+                decoder: {
+                    readers: [
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_128_reader",
+                        "upc_reader"
+                    ],
+                    debug: {
+                        drawBoundingBox: true,
+                        showFrequency: true,
+                        drawScanline: true,
+                        showPattern: true
+                    }
+                },
+                locate: true,
+                numOfWorkers: 4,
+                frequency: 10,
+            }, function(err) {
+                if (err) {
+                    result.innerHTML = '<span class="text-red-600">✗ Error: ' + err.message + '</span>';
+                    console.error(err);
+                    return;
+                }
+                result.innerHTML = '<span class="text-green-600">✓ Escáner iniciado. Apunta a un código de barras.</span>';
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function(data) {
+                if (data && data.codeResult && data.codeResult.code) {
+                    result.innerHTML = '<span class="text-green-600 font-bold">✓ CÓDIGO DETECTADO: ' + data.codeResult.code + '</span>';
+                    result.innerHTML += '<br>Formato: ' + data.codeResult.format;
+                }
+            });
+        }
+
+        function stopTestScanner() {
+            if (scannerActive) {
+                Quagga.stop();
+                scannerActive = false;
+                document.getElementById('scanner-container').classList.add('hidden');
+                document.getElementById('scanner-result').innerHTML = '<span class="text-gray-600">Escáner detenido</span>';
+            }
+        }
+
+        async function testOpenFoodFacts() {
+            const barcode = document.getElementById('test-barcode').value.trim();
+            const result = document.getElementById('openfood-result');
+
+            if (!barcode) {
+                result.innerHTML = '<span class="text-red-600">Por favor ingresa un código</span>';
+                return;
+            }
+
+            result.innerHTML = '<span class="text-blue-600">Buscando...</span>';
+
+            try {
+                const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+                const data = await response.json();
+
+                if (data.status === 1 && data.product) {
+                    const product = data.product;
+                    result.innerHTML = '<span class="text-green-600">✓ Producto encontrado:</span>';
+                    result.innerHTML += '<br><strong>Nombre:</strong> ' + (product.product_name || 'N/A');
+                    result.innerHTML += '<br><strong>Marca:</strong> ' + (product.brands || 'N/A');
+                    result.innerHTML += '<br><strong>Categorías:</strong> ' + (product.categories || 'N/A');
+                } else {
+                    result.innerHTML = '<span class="text-amber-600">⚠ Producto no encontrado en OpenFoodFacts</span>';
+                }
+            } catch (error) {
+                result.innerHTML = '<span class="text-red-600">✗ Error: ' + error.message + '</span>';
+            }
+        }
+
+        // Test inicial al cargar
+        window.addEventListener('load', () => {
+            testQuagga();
+        });
+    </script>
+</body>
+</html>

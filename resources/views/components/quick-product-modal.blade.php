@@ -48,11 +48,18 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
                         <select id="quick-type" name="type_id" class="mt-1 block w-full rounded-lg border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                            <option value="">Selecciona</option>
-                            @foreach($types as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
+                            <option value="">Selecciona tipo</option>
+                            @if(isset($types) && count($types) > 0)
+                                @foreach($types as $type)
+                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                @endforeach
+                            @else
+                                <option disabled>No hay tipos disponibles</option>
+                            @endif
                         </select>
+                        @if(!isset($types) || count($types) === 0)
+                            <p class="mt-1 text-xs text-amber-600">⚠️ No se cargaron los tipos. Recarga la página.</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -117,14 +124,20 @@
 
 <!-- Camera Modal for Barcode Scanning -->
 <div id="camera-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90" onclick="if(event.target===this) stopBarcodeScanner()">
-    <div class="relative w-full max-w-2xl" onclick="event.stopPropagation()">
-        <button onclick="stopBarcodeScanner()" class="absolute right-4 top-4 z-10 rounded-lg bg-white/10 p-2 text-white backdrop-blur-sm hover:bg-white/20">
+    <div class="relative w-full max-w-2xl px-4" onclick="event.stopPropagation()">
+        <button onclick="stopBarcodeScanner()" class="absolute right-8 top-4 z-10 rounded-lg bg-red-600 p-2 text-white hover:bg-red-700 transition">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
-        <div id="barcode-scanner" class="aspect-video w-full overflow-hidden rounded-xl bg-black"></div>
-        <p class="mt-4 text-center text-sm text-white">Enfoca el código de barras en el centro de la cámara</p>
+        <div id="barcode-scanner" class="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl"></div>
+        <div class="mt-4 text-center">
+            <p class="text-sm text-white font-semibold">📱 Enfoca el código de barras en el centro</p>
+            <p class="text-xs text-white/70 mt-1">El escáner se cerrará automáticamente al detectar</p>
+        </div>
+        <div id="scan-status" class="mt-3 hidden rounded-lg bg-emerald-600 p-3 text-center text-white">
+            ✓ Código detectado
+        </div>
     </div>
 </div>
 
@@ -132,27 +145,55 @@
 
 <script>
 let scannerActive = false;
+let detectionTimeout = null;
 
 function openQuickProductModal() {
-    document.getElementById('quick-product-modal').classList.remove('hidden');
-    document.getElementById('quick-product-modal').classList.add('flex');
-    document.getElementById('quick-name').focus();
+    const modal = document.getElementById('quick-product-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            const nameInput = document.getElementById('quick-name');
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
 }
 
 function closeQuickProductModal() {
     stopBarcodeScanner();
-    document.getElementById('quick-product-modal').classList.add('hidden');
-    document.getElementById('quick-product-modal').classList.remove('flex');
-    document.getElementById('quick-product-form').reset();
-    document.getElementById('quick-inventory-fields').classList.add('hidden');
+    const modal = document.getElementById('quick-product-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    const form = document.getElementById('quick-product-form');
+    if (form) form.reset();
+    const inventoryFields = document.getElementById('quick-inventory-fields');
+    if (inventoryFields) inventoryFields.classList.add('hidden');
 }
 
 function startBarcodeScanner() {
-    if (scannerActive) return;
+    if (scannerActive) {
+        console.log('Scanner already active');
+        return;
+    }
+
+    if (typeof Quagga === 'undefined') {
+        alert('Error: Biblioteca de escaneo no cargada. Recarga la página e intenta nuevamente.');
+        return;
+    }
 
     const cameraModal = document.getElementById('camera-modal');
+    const scanStatus = document.getElementById('scan-status');
+
+    if (!cameraModal) {
+        console.error('Camera modal not found');
+        return;
+    }
+
     cameraModal.classList.remove('hidden');
     cameraModal.classList.add('flex');
+    if (scanStatus) scanStatus.classList.add('hidden');
 
     scannerActive = true;
 
@@ -163,8 +204,9 @@ function startBarcodeScanner() {
             target: document.querySelector('#barcode-scanner'),
             constraints: {
                 facingMode: "environment",
-                width: { min: 640, ideal: 1280 },
-                height: { min: 480, ideal: 720 }
+                width: { min: 640, ideal: 1920 },
+                height: { min: 480, ideal: 1080 },
+                aspectRatio: { min: 1, max: 2 }
             },
         },
         decoder: {
@@ -173,47 +215,104 @@ function startBarcodeScanner() {
                 "ean_8_reader",
                 "code_128_reader",
                 "code_39_reader",
+                "code_39_vin_reader",
                 "upc_reader",
-                "upc_e_reader"
-            ]
+                "upc_e_reader",
+                "i2of5_reader"
+            ],
+            debug: {
+                drawBoundingBox: true,
+                showFrequency: true,
+                drawScanline: true,
+                showPattern: true
+            }
         },
         locate: true,
         locator: {
             patchSize: "medium",
             halfSample: true
         },
-        numOfWorkers: 4,
+        numOfWorkers: navigator.hardwareConcurrency || 4,
         frequency: 10,
     }, function(err) {
         if (err) {
             console.error('Error iniciando escáner:', err);
-            alert('No se pudo acceder a la cámara. Verifica los permisos.');
+            alert('No se pudo acceder a la cámara.\n\nAsegúrate de:\n1. Dar permisos de cámara\n2. Estar en HTTPS o localhost\n3. Tener buena iluminación');
             stopBarcodeScanner();
             return;
         }
+        console.log('Escáner iniciado correctamente');
         Quagga.start();
     });
 
     Quagga.onDetected(function(result) {
         if (result && result.codeResult && result.codeResult.code) {
+            // Evitar múltiples detecciones
+            if (detectionTimeout) return;
+
             const code = result.codeResult.code;
-            document.getElementById('quick-barcode').value = code;
+            console.log('Código detectado:', code);
 
-            // Autocompletar con OpenFoodFacts
-            fetchProductDataFromBarcode(code);
+            // Mostrar feedback visual
+            const scanStatus = document.getElementById('scan-status');
+            if (scanStatus) {
+                scanStatus.classList.remove('hidden');
+            }
 
-            stopBarcodeScanner();
+            // Agregar el código al input
+            const barcodeInput = document.getElementById('quick-barcode');
+            if (barcodeInput) {
+                barcodeInput.value = code;
+            }
+
+            // Esperar un momento y luego autocompletar
+            detectionTimeout = setTimeout(() => {
+                fetchProductDataFromBarcode(code);
+                stopBarcodeScanner();
+                detectionTimeout = null;
+            }, 500);
+        }
+    });
+
+    // Agregar visualización de intentos de detección
+    Quagga.onProcessed(function(result) {
+        const drawingCtx = Quagga.canvas.ctx.overlay;
+        const drawingCanvas = Quagga.canvas.dom.overlay;
+
+        if (result) {
+            if (result.boxes) {
+                drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")));
+                result.boxes.filter(box => box !== result.box).forEach(box => {
+                    Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                });
+            }
+
+            if (result.box) {
+                Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+            }
+
+            if (result.codeResult && result.codeResult.code) {
+                Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
+            }
         }
     });
 }
 
 function stopBarcodeScanner() {
-    if (scannerActive) {
+    if (scannerActive && typeof Quagga !== 'undefined') {
+        console.log('Deteniendo escáner...');
         Quagga.stop();
         scannerActive = false;
     }
-    document.getElementById('camera-modal').classList.add('hidden');
-    document.getElementById('camera-modal').classList.remove('flex');
+    const cameraModal = document.getElementById('camera-modal');
+    if (cameraModal) {
+        cameraModal.classList.add('hidden');
+        cameraModal.classList.remove('flex');
+    }
+    if (detectionTimeout) {
+        clearTimeout(detectionTimeout);
+        detectionTimeout = null;
+    }
 }
 
 async function fetchProductDataFromBarcode(barcode) {

@@ -27,7 +27,7 @@ class InventoryController extends Controller
 
         $products = FoodProduct::where('user_id', $userId)->orderBy('name')->get();
         $locations = FoodLocation::where('user_id', $userId)->orderBy('sort_order')->get();
-        $types = $products->pluck('type')->filter()->unique('id')->values();
+        $types = FoodType::where('user_id', $userId)->orderBy('sort_order')->get();
 
         $activeLocation = $locations->firstWhere('id', (int) $locationId);
         $activeType = $types->firstWhere('id', (int) $typeId);
