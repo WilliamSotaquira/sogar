@@ -1,4 +1,13 @@
 import 'flowbite';
+import Alpine from 'alpinejs';
+import { BarcodeScanner, addScannerButton } from './barcode-scanner.js';
+
+// Exponer globalmente para uso en vistas
+window.Alpine = Alpine;
+window.BarcodeScanner = BarcodeScanner;
+window.addScannerButton = addScannerButton;
+
+Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggleBtn = document.getElementById('theme-toggle');

@@ -6,9 +6,9 @@
 @endphp
 
 <x-layouts.app :title="__('Mis Listas de Compra')">
-    <div class="mx-auto w-full max-w-7xl space-y-6">
+    <div class="mx-auto w-full max-w-7xl space-y-4 px-3 sm:px-0">
         {{-- Header --}}
-        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 sm:p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Compras Inteligentes</p>
@@ -77,7 +77,7 @@
         </div>
 
         {{-- Grid de Listas --}}
-        <div class="grid grid-cols-1 gap-4 max-w-4xl mx-auto w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             @forelse($lists as $list)
                 @php
                     $progress = $list->items->count() > 0 ? ($list->items->where('is_checked', true)->count() / $list->items->count()) * 100 : 0;
@@ -113,12 +113,12 @@
                     $budgetUsage = $budgetAmount > 0 ? min(100, ($actualTotal / $budgetAmount) * 100) : null;
                 @endphp
 
-                <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-all group">
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-all group">
                     {{-- Header --}}
-                    <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-start justify-between mb-4">
                         <div class="flex-1 min-w-0 pr-3">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-lg">{{ $listIcon }}</span>
+                                <span class="text-lg flex-shrink-0">{{ $listIcon }}</span>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 transition truncate" title="{{ $list->name }}">
                                     {{ Str::limit($list->name, 30) }}
                                 </h3>
@@ -143,7 +143,7 @@
                     </div>
 
                     {{-- Progreso --}}
-                    <div class="mb-4">
+                    <div class="mb-5">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm text-gray-600 dark:text-gray-300">
                                 {{ $list->items->where('is_checked', true)->count() }}/{{ $list->items->count() }} items
@@ -158,18 +158,18 @@
                     </div>
 
                     {{-- Totales rápidos --}}
-                    <div class="grid grid-cols-3 gap-3 mb-4 text-sm">
+                    <div class="grid grid-cols-3 gap-3 mb-5 text-sm">
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Items</p>
-                            <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $list->items->count() }}</p>
+                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Items</p>
+                            <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $list->items->count() }}</p>
                         </div>
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Estimado</p>
-                            <p class="font-semibold text-gray-900 dark:text-gray-100">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</p>
+                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Estimado</p>
+                            <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</p>
                         </div>
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">Gastado</p>
-                            <p class="font-semibold {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600' : 'text-emerald-600 dark:text-emerald-300' }}">
+                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Gastado</p>
+                            <p class="font-semibold {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600' : 'text-emerald-600 dark:text-emerald-300' }} truncate">
                                 ${{ number_format($actualTotal, 0, ',', '.') }}
                             </p>
                         </div>
@@ -177,10 +177,10 @@
 
                     {{-- Budget Info --}}
                     @if($list->budget)
-                        <div class="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                        <div class="mb-5 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
                             <div class="flex items-center justify-between mb-2 text-sm">
-                                <span class="font-semibold text-gray-800 dark:text-gray-100">Presupuesto: {{ $list->budget->category->name }}</span>
-                                <span class="text-xs text-gray-500">Disponible: ${{ number_format(max(0, $budgetAmount - $actualTotal), 0, ',', '.') }}</span>
+                                <span class="font-semibold text-gray-800 dark:text-gray-100 truncate">Presupuesto: {{ $list->budget->category->name }}</span>
+                                <span class="text-xs text-gray-500 ml-2 whitespace-nowrap">Disponible: ${{ number_format(max(0, $budgetAmount - $actualTotal), 0, ',', '.') }}</span>
                             </div>
                             @if($budgetUsage !== null)
                                 <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">

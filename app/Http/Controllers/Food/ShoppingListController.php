@@ -328,6 +328,23 @@ class ShoppingListController extends Controller
             'barcode' => 'nullable|string|max:255',
         ]);
 
+        // Buscar producto por nombre o código de barras
+        $product = \App\Models\FoodProduct::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->where(function($q) use ($data) {
+                $q->where('name', $data['name'])
+                  ->orWhere('barcode', $data['name']);
+            })
+            ->first();
+
+        if (!$product) {
+            return back()->withErrors(['name' => 'El producto no existe en el catálogo. Por favor, crea el producto primero.'])->withInput();
+        }
+
+        if (!$product) {
+            return back()->withErrors(['name' => 'El producto no existe en el catálogo. Por favor, crea el producto primero.'])->withInput();
+        }
+
         $list = null;
         if (!empty($data['list_id'])) {
             $list = $this->accessibleListsQuery($request)
@@ -354,44 +371,22 @@ class ShoppingListController extends Controller
 
         $this->authorizeList($request, $list);
 
-        $productId = $data['product_id'] ?? null;
-        $productStock = 0;
-
-        // Si se solicita crear producto y no hay product_id
-        if ($request->boolean('create_product') && !$productId) {
-            $product = FoodProduct::create([
-                'user_id' => $request->user()->id,
-                'name' => $data['name'],
-                'brand' => $data['brand'] ?? null,
-                'type_id' => $data['type_id'] ?? null,
-                'default_location_id' => $data['location_id'] ?? null,
-                'unit_base' => $data['unit_base'] ?? 'unit',
-                'unit_size' => $data['unit_size'] ?? 1,
-                'min_stock_qty' => $data['min_stock_qty'] ?? null,
-                'shelf_life_days' => $data['shelf_life_days'] ?? null,
-                'barcode' => $data['barcode'] ?? null,
-                'is_active' => true,
-            ]);
-
-            $productId = $product->id;
-            $productStock = 0;
-        } elseif ($productId) {
-            $productStock = \App\Models\FoodStockBatch::where('product_id', $productId)
-                ->where('status', 'ok')
-                ->sum('qty_remaining_base');
-        }
+        $productId = $product->id;
+        $productStock = \App\Models\FoodStockBatch::where('product_id', $productId)
+            ->where('status', 'ok')
+            ->sum('qty_remaining_base');
 
         $nextSortOrder = ($list->items()->max('sort_order') ?? -1) + 1;
 
         $item = ShoppingListItem::create([
             'shopping_list_id' => $list->id,
-            'name' => $data['name'],
+            'name' => $product->name,
             'product_id' => $productId,
-            'location_id' => $data['location_id'] ?? null,
+            'location_id' => $product->default_location_id,
             'qty_to_buy_base' => $data['qty_to_buy_base'],
             'qty_suggested_base' => $data['qty_to_buy_base'],
-            'unit_base' => $data['unit_base'] ?? 'unit',
-            'unit_size' => $data['unit_size'] ?? 1,
+            'unit_base' => $product->unit_base ?? 'unit',
+            'unit_size' => $product->unit_size ?? 1,
             'priority' => $data['priority'] ?? 'medium',
             'is_checked' => false,
             'sort_order' => $nextSortOrder,
@@ -402,7 +397,7 @@ class ShoppingListController extends Controller
             'status' => 'ok',
             'item' => $item->load('product'),
             'stock_ok' => $productStock >= $data['qty_to_buy_base'],
-            'product_created' => $request->boolean('create_product') && $productId,
+            'product_created' => false,
         ];
 
         if ($request->wantsJson()) {
@@ -410,6 +405,75 @@ class ShoppingListController extends Controller
         }
 
         return back()->with('status', 'Producto agregado' . ($payload['product_created'] ? ' y creado en catálogo' : '') . '.');
+    }
+
+    /**
+     * Alternar estado de un ítem (solo checkbox)
+     */
+    public function toggleItem(Request $request, ShoppingList $list, int $itemId)
+    {
+        $this->authorizeList($request, $list);
+
+        $item = $list->items()->where('id', $itemId)->firstOrFail();
+        $isChecked = $request->input('is_checked', false);
+
+        $item->is_checked = (bool) $isChecked;
+        $item->checked_at = $isChecked ? now() : null;
+        $item->save();
+
+        // Si se marca como comprado, ingresar al inventario
+        if ($isChecked && $item->product_id) {
+            $meta = $item->metadata ?? [];
+            if (empty($meta['inventory_recorded_at'])) {
+                try {
+                    FoodStockBatch::create([
+                        'product_id' => $item->product_id,
+                        'location_id' => $item->location_id,
+                        'qty_base' => $item->qty_to_buy_base,
+                        'unit_base' => $item->unit_base,
+                        'unit_size' => $item->unit_size ?? 1,
+                        'source' => 'purchase',
+                        'source_id' => $item->id,
+                        'acquired_on' => now()->toDateString(),
+                    ]);
+
+                    $meta['inventory_recorded_at'] = now()->toISOString();
+                    $item->metadata = $meta;
+                    $item->save();
+                } catch (\Exception $e) {
+                    \Log::error('Error al registrar inventario desde toggle:', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok', 'is_checked' => $item->is_checked]);
+        }
+
+        return back();
+    }
+
+    /**
+     * Actualizar cantidad de un ítem
+     */
+    public function updateQuantity(Request $request, ShoppingList $list, int $itemId)
+    {
+        $this->authorizeList($request, $list);
+
+        $item = $list->items()->where('id', $itemId)->firstOrFail();
+        
+        $data = $request->validate([
+            'qty_to_buy_base' => 'required|numeric|min:0',
+        ]);
+
+        $item->qty_to_buy_base = (float) $data['qty_to_buy_base'];
+        $item->save();
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok', 'qty_to_buy_base' => $item->qty_to_buy_base]);
+        }
+
+        return back();
     }
 
     public function bulkAction(Request $request, ShoppingList $list): RedirectResponse
@@ -611,8 +675,18 @@ class ShoppingListController extends Controller
     {
         $this->authorizeList($request, $list);
 
+        $list->load(['items' => function($query) {
+            $query->with('product')->orderBy('created_at', 'desc');
+        }]);
+
+        $products = \App\Models\FoodProduct::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'barcode']);
+
         return view('food.shopping-list.show', [
-            'list' => $list->load('items'),
+            'list' => $list,
+            'products' => $products,
         ]);
     }
 

@@ -9,6 +9,7 @@ use App\Models\FoodProduct;
 use App\Models\FoodStockBatch;
 use App\Models\FoodStockMovement;
 use App\Models\FoodType;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -53,7 +54,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -61,7 +62,7 @@ class ProductController extends Controller
             'type_id' => 'nullable|exists:sogar_food_types,id',
             'default_location_id' => 'nullable|exists:sogar_food_locations,id',
             'unit_base' => 'required|string|max:16',
-            'unit_size' => 'required|numeric|min:0.001',
+            'unit_size' => 'nullable|numeric|min:0.001',
             'min_stock_qty' => 'nullable|numeric|min:0',
             'presentation_qty' => 'nullable|numeric|min:0',
             'shelf_life_days' => 'nullable|integer|min:1|max:3650',
@@ -80,6 +81,7 @@ class ProductController extends Controller
 
         $data['user_id'] = $request->user()->id;
         $data['min_stock_qty'] = $data['min_stock_qty'] ?? 1;
+        $data['unit_size'] = $data['unit_size'] ?? 1;
         $data['presentation_qty'] = $data['presentation_qty'] ?? ($data['unit_size'] ?? 1);
 
         $product = FoodProduct::create($data);
@@ -94,6 +96,19 @@ class ProductController extends Controller
                 'initial',
                 'Precio inicial al crear el producto'
             );
+        }
+
+        // Si es una petición JSON, devolver respuesta JSON
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto creado correctamente',
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'brand' => $product->brand,
+                ]
+            ], 201);
         }
 
         return redirect()
@@ -161,10 +176,30 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, FoodProduct $product): RedirectResponse
+    public function update(Request $request, FoodProduct $product): RedirectResponse|JsonResponse
     {
         $this->authorizeProduct($request, $product);
 
+        // Si solo se actualiza la ubicación (petición AJAX)
+        if ($request->wantsJson() && $request->has('default_location_id') && count($request->all()) <= 2) {
+            $request->validate([
+                'default_location_id' => 'nullable|exists:sogar_food_locations,id',
+            ]);
+
+            $product->update(['default_location_id' => $request->input('default_location_id')]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto asignado correctamente',
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'brand' => $product->brand,
+                ],
+            ]);
+        }
+
+        // Actualización completa del formulario
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'brand' => 'nullable|string|max:255',

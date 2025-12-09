@@ -15,9 +15,9 @@
 @endphp
 
 <x-layouts.app :title="__('Lista de compra')">
-    <div class="mx-auto w-full max-w-6xl space-y-6 pb-28 md:pb-0">
+    <div class="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 sm:px-0 md:pb-0">
         {{-- Hero Panel --}}
-        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
+        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:p-6 md:p-8">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
                 <div>
                     <p class="text-sm uppercase tracking-wide font-semibold">Compras inteligentes</p>
@@ -859,6 +859,21 @@
                 if (mainCol) mainCol.classList.replace('md:col-span-3', 'md:col-span-2');
             }
         });
+
+        // Barcode Scanner para búsqueda de productos
+        const searchInput = document.getElementById('search-product-input');
+        const scanBtn = document.getElementById('scan-product-btn');
+
+        if (searchInput && scanBtn && window.BarcodeScanner) {
+            const scanner = new window.BarcodeScanner({
+                targetInput: searchInput,
+                onScan: (code) => {
+                    console.log('Código escaneado:', code);
+                }
+            });
+
+            scanBtn.addEventListener('click', () => scanner.open());
+        }
     </script>
     @endpush
 </x-layouts.app>

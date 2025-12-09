@@ -26,15 +26,8 @@ class WalletController extends Controller
                 ];
             });
 
-        $editingWallet = null;
-        $editId = $request->input('edit');
-        if ($editId) {
-            $editingWallet = Wallet::where('user_id', $user->id)->find((int) $editId);
-        }
-
         return view('wallets.index', [
             'wallets' => $wallets,
-            'editingWallet' => $editingWallet,
         ]);
     }
 

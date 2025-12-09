@@ -73,7 +73,7 @@
             ->filter(fn ($value) => $value !== null && $value !== '')
             ->all();
     @endphp
-    <div class="mx-auto w-full max-w-7xl space-y-6 pb-28 md:pb-0">
+    <div class="mx-auto w-full max-w-7xl space-y-4 px-3 pb-28 sm:px-0 md:pb-0">
         {{-- Header --}}
         <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
@@ -267,11 +267,6 @@
                     <button type="button" id="inventory-search" class="{{ $btnPrimary }}">
                         🔎 Buscar
                     </button>
-                </div>
-                <div id="inventory-scanner" role="region" aria-live="polite" aria-label="Escáner de códigos" class="mt-3 hidden rounded-xl border border-gray-200 bg-white p-3 text-center text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                    <div id="inventory-camera" class="overflow-hidden rounded-lg"></div>
-                    <p class="mt-2">Apunta la cámara al código de barras. Se cerrará automáticamente al detectarlo.</p>
-                    <button type="button" id="inventory-close" class="mt-2 text-rose-500 hover:text-rose-600 font-semibold">✕ Cerrar</button>
                 </div>
             </div>
         </div>
@@ -532,31 +527,12 @@
         const scanBtn = document.getElementById('inventory-scan');
         const searchBtn = document.getElementById('inventory-search');
         const statusEl = document.getElementById('inventory-status');
-        const scannerWrapper = document.getElementById('inventory-scanner');
-        const cameraEl = document.getElementById('inventory-camera');
-        const closeBtn = document.getElementById('inventory-close');
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        let stream = null;
-        let rafId = null;
-        let detector = null;
 
         const setStatus = (msg, tone = 'text-amber-600') => {
             if (!statusEl) return;
             statusEl.textContent = msg || '';
             statusEl.className = 'text-xs ' + tone;
-        };
-
-        const stopScanner = async () => {
-            if (rafId) cancelAnimationFrame(rafId);
-            rafId = null;
-            if (stream) {
-                stream.getTracks().forEach(t => t.stop());
-                stream = null;
-            }
-            detector = null;
-            cameraEl.innerHTML = '';
-            scannerWrapper?.classList.add('hidden');
-            setStatus('');
         };
 
         const highlightProduct = (productId) => {
@@ -599,85 +575,29 @@
             }
         };
 
-        const startScanner = async () => {
-            if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                setStatus('La cámara requiere HTTPS o localhost.', 'text-rose-500');
-                return;
-            }
-            scannerWrapper?.classList.remove('hidden');
-            setStatus('Buscando cámaras...');
-            try {
-                if (typeof window.ensureBarcodeDetector === 'function') {
-                    try {
-                        await window.ensureBarcodeDetector();
-                    } catch (polyfillErr) {
-                        console.warn(polyfillErr);
-                    }
+        // Inicializar el escáner reutilizable
+        if (window.BarcodeScanner && input && scanBtn) {
+            const scanner = new window.BarcodeScanner({
+                targetInput: input,
+                onScan: (code) => {
+                    setStatus('Código detectado: ' + code, 'text-emerald-600');
+                    lookupAndHighlight(code);
                 }
+            });
 
-                if (!('BarcodeDetector' in window)) {
-                    setStatus('Tu navegador no soporta BarcodeDetector. Usa entrada manual.', 'text-rose-500');
-                    return;
-                }
-                detector = new BarcodeDetector({ formats: ['ean_13', 'code_128', 'ean_8', 'qr_code'] });
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-                const video = document.createElement('video');
-                video.setAttribute('playsinline', true);
-                video.muted = true;
-                video.srcObject = stream;
-                await video.play();
-                cameraEl.innerHTML = '';
-                cameraEl.appendChild(video);
-                setStatus('Escaneando... apunta al código.');
+            scanBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                scanner.open();
+            });
+        }
 
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                const scan = async () => {
-                    if (!video.videoWidth) {
-                        rafId = requestAnimationFrame(scan);
-                        return;
-                    }
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    try {
-                        const codes = await detector.detect(canvas);
-                        if (codes.length) {
-                            const text = codes[0].rawValue || '';
-                            if (text) {
-                                input.value = text;
-                                setStatus('Código detectado: ' + text, 'text-emerald-600');
-                                await stopScanner();
-                                lookupAndHighlight(text);
-                                return;
-                            }
-                        }
-                    } catch (_) {}
-                    rafId = requestAnimationFrame(scan);
-                };
-                rafId = requestAnimationFrame(scan);
-            } catch (err) {
-                console.warn(err);
-                setStatus('No se pudo acceder a la cámara. Revisa permisos.', 'text-rose-500');
-            }
-        };
-
-        scanBtn?.addEventListener('click', (e) => {
-            e.preventDefault();
-            startScanner();
-        });
-
-        closeBtn?.addEventListener('click', (e) => {
-            e.preventDefault();
-            stopScanner();
-        });
-
+        // Botón de búsqueda manual
         searchBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             lookupAndHighlight(input?.value);
         });
 
+        // Enter para buscar
         input?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();

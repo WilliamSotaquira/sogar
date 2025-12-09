@@ -81,17 +81,38 @@ class LocationController extends Controller
             ]);
         }
 
+        // Obtener productos únicos asignados a esta ubicación
+        $locationProducts = $location->products()
+            ->select('id', 'name', 'brand', 'unit_base', 'default_location_id')
+            ->orderBy('name')
+            ->get();
+
         $stats = [
-            'products' => $location->products()->count(),
+            'products' => $locationProducts->count(),
             'batches' => $batches->count(),
             'expiring' => $batches->filter(fn ($batch) => $this->isExpiringSoon($batch))->count(),
             'expired' => $batches->filter(fn ($batch) => $this->isExpired($batch))->count(),
         ];
 
+        // Obtener todos los productos del usuario para el selector
+        $allProducts = $request->user()->foodProducts()
+            ->select('id', 'name', 'brand')
+            ->orderBy('name')
+            ->get();
+
+        // Obtener tipos de productos para el formulario de creación
+        $productTypes = \App\Models\FoodType::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
         return view('food.locations.show', [
             'location' => $location,
             'batches' => $batches,
+            'locationProducts' => $locationProducts,
             'stats' => $stats,
+            'allProducts' => $allProducts,
+            'productTypes' => $productTypes,
         ]);
     }
 

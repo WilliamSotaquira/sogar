@@ -51,8 +51,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
                             </svg>
                         </button>
-                        <div class="pointer-events-none invisible absolute left-0 top-full z-50 mt-1 w-56 origin-top-left scale-95 rounded-lg border border-gray-200/80 bg-white p-2 text-sm opacity-0 shadow-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:scale-100 group-hover:opacity-100 dark:border-neutral-800 dark:bg-neutral-900">
-                            <p class="mb-1.5 px-3 pt-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $menu['group'] }}</p>
+                        <div class="pointer-events-none invisible absolute left-0 top-full z-50 w-56 origin-top-left scale-95 rounded-lg border border-gray-200/80 bg-white p-2 pt-3 text-sm opacity-0 shadow-xl transition-all duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:scale-100 group-hover:opacity-100 dark:border-neutral-800 dark:bg-neutral-900">
+                            <p class="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $menu['group'] }}</p>
                             <ul class="space-y-0.5">
                                 @foreach ($menu['links'] as $link)
                                     @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp

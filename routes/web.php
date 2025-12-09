@@ -60,10 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
-    Route::get('wallets', [WalletController::class, 'index'])->name('wallets.index');
-    Route::post('wallets', [WalletController::class, 'store'])->name('wallets.store');
-    Route::put('wallets/{wallet}', [WalletController::class, 'update'])->name('wallets.update');
-    Route::delete('wallets/{wallet}', [WalletController::class, 'destroy'])->name('wallets.destroy');
+    Route::get('wallets', \App\Livewire\Wallets\Index::class)->name('wallets.index');
     Route::post('wallets/{wallet}/movements', [WalletController::class, 'storeMovement'])->name('wallets.movements.store');
     Route::get('integrations/google', [GoogleIntegrationController::class, 'redirect'])->name('integrations.google.redirect');
     Route::get('integrations/google/callback', [GoogleIntegrationController::class, 'callback'])->name('integrations.google.callback');
@@ -117,11 +114,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('food/purchases', [FoodPurchaseController::class, 'index'])->name('food.purchases.index');
     Route::post('food/purchases', [FoodPurchaseController::class, 'store'])->name('food.purchases.store');
-    
+
     // Shopping Lists - Vista de todas las listas
     Route::get('food/shopping-list/all', [FoodShoppingListController::class, 'all'])->name('food.shopping-list.all');
     Route::post('food/shopping-list/{list}/suggest', [FoodShoppingListController::class, 'generateSuggestions'])->name('food.shopping-list.suggest');
-    
+
     // Shopping Lists - Rutas existentes
     Route::get('food/shopping-list', [FoodShoppingListController::class, 'index'])->name('food.shopping-list.index');
     Route::post('food/shopping-list/generate', [FoodShoppingListController::class, 'generate'])->name('food.shopping-list.generate');
@@ -130,6 +127,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('food/shopping-list/{list}/items/{itemId}', [FoodShoppingListController::class, 'markItem'])
         ->whereNumber('itemId')
         ->name('food.shopping-list.items.mark');
+    Route::post('food/shopping-list/{list}/items/{itemId}/toggle', [FoodShoppingListController::class, 'toggleItem'])
+        ->whereNumber('itemId')
+        ->name('food.shopping-list.items.toggle');
+    Route::post('food/shopping-list/{list}/items/{itemId}/quantity', [FoodShoppingListController::class, 'updateQuantity'])
+        ->whereNumber('itemId')
+        ->name('food.shopping-list.items.quantity');
     Route::post('food/shopping-list/items', [FoodShoppingListController::class, 'storeItem'])->name('food.shopping-list.items.store');
     Route::delete('food/shopping-list/{list}/items/{item}', [FoodShoppingListController::class, 'destroyItem'])->name('food.shopping-list.items.destroy');
     Route::post('food/shopping-list/{list}/items/bulk', [FoodShoppingListController::class, 'bulkAction'])->name('food.shopping-list.items.bulk');
