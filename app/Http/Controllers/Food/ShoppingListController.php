@@ -461,7 +461,7 @@ class ShoppingListController extends Controller
         $this->authorizeList($request, $list);
 
         $item = $list->items()->where('id', $itemId)->firstOrFail();
-        
+
         $data = $request->validate([
             'qty_to_buy_base' => 'required|numeric|min:0',
         ]);

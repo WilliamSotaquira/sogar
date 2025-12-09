@@ -98,7 +98,7 @@
                         @forelse($list->items as $item)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                 <td class="px-3 sm:px-6 py-3 sm:py-4">
-                                    <input type="checkbox" 
+                                    <input type="checkbox"
                                         data-item-id="{{ $item->id }}"
                                         {{ $item->is_checked ? 'checked' : '' }}
                                         class="item-checkbox h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
@@ -115,7 +115,7 @@
                                     </div>
                                 </td>
                                 <td class="px-3 sm:px-6 py-3 sm:py-4">
-                                    <input type="number" 
+                                    <input type="number"
                                         data-item-id="{{ $item->id }}"
                                         value="{{ (int) $item->qty_to_buy_base }}"
                                         min="0"
