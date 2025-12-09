@@ -398,10 +398,20 @@
             };
 
             const fillFromOpenFoodFacts = async (code) => {
+                console.log('fillFromOpenFoodFacts: Consultando código:', code);
+
                 try {
-                    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(code)}.json`);
+                    const url = `https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(code)}.json`;
+                    console.log('fillFromOpenFoodFacts: URL:', url);
+
+                    const res = await fetch(url);
                     const data = await res.json();
+
+                    console.log('fillFromOpenFoodFacts: Respuesta recibida:', data);
+
                     if (data?.status === 1 && data.product) {
+                        console.log('fillFromOpenFoodFacts: Producto encontrado en OpenFoodFacts');
+
                         const p = data.product;
                         const name = p.product_name_es || p.product_name || p.generic_name_es || p.generic_name || '';
                         const brand = resolveBrandFromProduct(p);
@@ -414,12 +424,19 @@
                         const categoriesText = p.categories || (Array.isArray(p.categories_tags) ? p.categories_tags.join(',') : '');
                         const shelfLife = inferShelfLifeFromCategories(categoriesText);
                         const imageUrl = p.image_front_url || p.image_url || null;
+
+                        console.log('fillFromOpenFoodFacts: Datos procesados:', {
+                            name, brand, packQty, servingQty, shelfLife, imageUrl
+                        });
+
                         if (imageUrl) {
                             updateImagePreview(imageUrl);
                             if (imageInput) {
                                 imageInput.value = imageUrl;
                             }
                         }
+
+                        console.log('fillFromOpenFoodFacts: Llamando a fillFromProduct...');
 
                         fillFromProduct({
                             name,
@@ -439,11 +456,13 @@
                             imageInput.value = imageUrl;
                         }
 
-                        console.log('Producto autocompletado desde OpenFoodFacts');
+                        console.log('✅ Producto autocompletado exitosamente desde OpenFoodFacts');
                         return true;
+                    } else {
+                        console.log('fillFromOpenFoodFacts: Producto no encontrado (status:', data?.status, ')');
                     }
-                } catch (_) {
-                    // ignore
+                } catch (err) {
+                    console.error('fillFromOpenFoodFacts: Error:', err);
                 }
                 updatePortionHint('');
                 return false;
@@ -454,8 +473,8 @@
                 console.log('lookupBarcode: Buscando código:', code);
 
                 try {
-                    console.log('lookupBarcode: Enviando petición a /api/food/scan');
-                    const res = await fetch('/api/food/scan', {
+                    console.log('lookupBarcode: Enviando petición a /food/scan');
+                    const res = await fetch('/food/scan', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -470,16 +489,47 @@
 
                     if (res.ok) {
                         const data = await res.json();
-                        console.log('lookupBarcode: Datos recibidos:', data);
+                        console.log('lookupBarcode: Datos recibidos completos:', data);
 
-                        fillFromProduct(data.product);
-                        if (data.product?.image_url) {
-                            updateImagePreview(data.product.image_url);
+                        // El endpoint puede devolver found:false si no encuentra nada
+                        if (data.found === false) {
+                            console.log('Producto no encontrado, consultando OpenFoodFacts...');
+                            const filled = await fillFromOpenFoodFacts(code);
+                            if (!filled) {
+                                console.log('Código no encontrado en OpenFoodFacts');
+                                if (portionInput) {
+                                    portionInput.value = '';
+                                    updatePortionHint('');
+                                }
+                            }
+                            return;
                         }
-                        updatePortionHint('');
-                        console.log('Producto encontrado en inventario');
+
+                        // Si viene con producto, llenar formulario
+                        if (data.product) {
+                            console.log('Producto encontrado:', data.product);
+                            fillFromProduct(data.product);
+                            if (data.product?.image_url) {
+                                updateImagePreview(data.product.image_url);
+                            }
+                            updatePortionHint('');
+                            console.log('Formulario autocompletado exitosamente');
+                        } else {
+                            console.log('No hay datos de producto en la respuesta');
+                        }
+                    } else if (res.status === 404) {
+                        console.log('Producto no encontrado (404), consultando OpenFoodFacts...');
+                        const filled = await fillFromOpenFoodFacts(code);
+                        if (!filled) {
+                            console.log('Código no encontrado en OpenFoodFacts');
+                            if (portionInput) {
+                                portionInput.value = '';
+                                updatePortionHint('');
+                            }
+                        }
                     } else {
-                        console.log('Producto no encontrado en inventario (status:', res.status, '), consultando OpenFoodFacts...');
+                        console.log('Error en la petición, status:', res.status);
+                        console.log('Consultando OpenFoodFacts directamente...');
                         const filled = await fillFromOpenFoodFacts(code);
                         if (!filled) {
                             console.log('Código no encontrado en OpenFoodFacts');
@@ -490,8 +540,19 @@
                         }
                     }
                 } catch (err) {
-                    console.warn(err);
-                    console.error('Error al buscar el código:', err);
+                    console.warn('Error en lookupBarcode:', err);
+                    console.error('Detalles del error:', err);
+
+                    // Intentar con OpenFoodFacts como fallback
+                    console.log('Intentando OpenFoodFacts como fallback...');
+                    try {
+                        const filled = await fillFromOpenFoodFacts(code);
+                        if (!filled) {
+                            console.log('Código no encontrado en OpenFoodFacts');
+                        }
+                    } catch (offErr) {
+                        console.error('Error también en OpenFoodFacts:', offErr);
+                    }
                 }
             };            barcodeInput?.addEventListener('input', (e) => {
                 const code = e.target.value.trim();
