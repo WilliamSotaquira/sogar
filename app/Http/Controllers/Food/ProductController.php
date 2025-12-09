@@ -118,64 +118,88 @@ class ProductController extends Controller
 
     public function quickStore(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'brand' => 'nullable|string|max:255',
-            'type_id' => 'nullable|exists:sogar_food_types,id',
-            'barcode' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('sogar_food_products', 'barcode')
-                    ->where('user_id', $request->user()->id)
-            ],
-            'add_to_inventory' => 'nullable|boolean',
-            'inventory_qty' => 'nullable|numeric|min:0.1',
-            'unit_base' => 'nullable|string|max:16',
-            'location_id' => 'nullable|exists:sogar_food_locations,id',
-            'expiry_date' => 'nullable|date|after:today',
-        ]);
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'brand' => 'nullable|string|max:255',
+                'type_id' => 'nullable|exists:sogar_food_types,id',
+                'barcode' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                    Rule::unique('sogar_food_products', 'barcode')
+                        ->where('user_id', $request->user()->id)
+                        ->whereNotNull('barcode')
+                ],
+                'add_to_inventory' => 'nullable|boolean',
+                'inventory_qty' => 'nullable|numeric|min:0.1',
+                'unit_base' => 'nullable|string|max:16',
+                'location_id' => 'nullable|exists:sogar_food_locations,id',
+                'expiry_date' => 'nullable|date|after_or_equal:today',
+            ]);
 
-        $data['user_id'] = $request->user()->id;
-        $data['unit_base'] = $data['unit_base'] ?? 'unit';
-        $data['unit_size'] = 1;
-        $data['min_stock_qty'] = 1;
-        $data['presentation_qty'] = 1;
+            $data['user_id'] = $request->user()->id;
+            $data['unit_base'] = $data['unit_base'] ?? 'unit';
+            $data['unit_size'] = 1;
+            $data['min_stock_qty'] = 1;
+            $data['presentation_qty'] = 1;
 
-        $product = FoodProduct::create($data);
-
-        // Si se marcó agregar a inventario
-        if ($request->boolean('add_to_inventory') && $request->filled('inventory_qty')) {
-            $batchData = [
-                'product_id' => $product->id,
-                'location_id' => $request->input('location_id'),
-                'qty_purchased_base' => $request->input('inventory_qty'),
-                'qty_remaining_base' => $request->input('inventory_qty'),
-                'unit_base' => $request->input('unit_base', 'unit'),
-                'status' => 'ok',
-                'purchased_on' => now(),
-            ];
-
-            if ($request->filled('expiry_date')) {
-                $batchData['expires_on'] = $request->input('expiry_date');
+            // Limpiar barcode vacío
+            if (empty($data['barcode'])) {
+                unset($data['barcode']);
             }
 
-            FoodStockBatch::create($batchData);
+            $product = FoodProduct::create($data);
+
+            // Si se marcó agregar a inventario
+            if ($request->boolean('add_to_inventory') && $request->filled('inventory_qty')) {
+                $batchData = [
+                    'product_id' => $product->id,
+                    'location_id' => $request->input('location_id'),
+                    'qty_purchased_base' => $request->input('inventory_qty'),
+                    'qty_remaining_base' => $request->input('inventory_qty'),
+                    'unit_base' => $request->input('unit_base', 'unit'),
+                    'status' => 'ok',
+                    'purchased_on' => now(),
+                ];
+
+                if ($request->filled('expiry_date')) {
+                    $batchData['expires_on'] = $request->input('expiry_date');
+                }
+
+                FoodStockBatch::create($batchData);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Producto creado y agregado al inventario',
+                    'product' => $product,
+                    'redirect' => route('food.inventory.index')
+                ], 201);
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Producto creado y agregado al inventario',
+                'message' => 'Producto creado correctamente',
                 'product' => $product,
-                'redirect' => route('food.inventory.index')
+                'redirect' => route('food.products.show', $product)
             ], 201);
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Producto creado correctamente',
-            'product' => $product,
-            'redirect' => route('food.products.show', $product)
-        ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error en quickStore: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el producto: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(Request $request, FoodProduct $product): View

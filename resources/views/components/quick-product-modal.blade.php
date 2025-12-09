@@ -115,7 +115,24 @@
     </div>
 </div>
 
+<!-- Camera Modal for Barcode Scanning -->
+<div id="camera-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90" onclick="if(event.target===this) stopBarcodeScanner()">
+    <div class="relative w-full max-w-2xl" onclick="event.stopPropagation()">
+        <button onclick="stopBarcodeScanner()" class="absolute right-4 top-4 z-10 rounded-lg bg-white/10 p-2 text-white backdrop-blur-sm hover:bg-white/20">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div id="barcode-scanner" class="aspect-video w-full overflow-hidden rounded-xl bg-black"></div>
+        <p class="mt-4 text-center text-sm text-white">Enfoca el código de barras en el centro de la cámara</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+
 <script>
+let scannerActive = false;
+
 function openQuickProductModal() {
     document.getElementById('quick-product-modal').classList.remove('hidden');
     document.getElementById('quick-product-modal').classList.add('flex');
@@ -123,10 +140,101 @@ function openQuickProductModal() {
 }
 
 function closeQuickProductModal() {
+    stopBarcodeScanner();
     document.getElementById('quick-product-modal').classList.add('hidden');
     document.getElementById('quick-product-modal').classList.remove('flex');
     document.getElementById('quick-product-form').reset();
     document.getElementById('quick-inventory-fields').classList.add('hidden');
+}
+
+function startBarcodeScanner() {
+    if (scannerActive) return;
+
+    const cameraModal = document.getElementById('camera-modal');
+    cameraModal.classList.remove('hidden');
+    cameraModal.classList.add('flex');
+
+    scannerActive = true;
+
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#barcode-scanner'),
+            constraints: {
+                facingMode: "environment",
+                width: { min: 640, ideal: 1280 },
+                height: { min: 480, ideal: 720 }
+            },
+        },
+        decoder: {
+            readers: [
+                "ean_reader",
+                "ean_8_reader",
+                "code_128_reader",
+                "code_39_reader",
+                "upc_reader",
+                "upc_e_reader"
+            ]
+        },
+        locate: true,
+        locator: {
+            patchSize: "medium",
+            halfSample: true
+        },
+        numOfWorkers: 4,
+        frequency: 10,
+    }, function(err) {
+        if (err) {
+            console.error('Error iniciando escáner:', err);
+            alert('No se pudo acceder a la cámara. Verifica los permisos.');
+            stopBarcodeScanner();
+            return;
+        }
+        Quagga.start();
+    });
+
+    Quagga.onDetected(function(result) {
+        if (result && result.codeResult && result.codeResult.code) {
+            const code = result.codeResult.code;
+            document.getElementById('quick-barcode').value = code;
+
+            // Autocompletar con OpenFoodFacts
+            fetchProductDataFromBarcode(code);
+
+            stopBarcodeScanner();
+        }
+    });
+}
+
+function stopBarcodeScanner() {
+    if (scannerActive) {
+        Quagga.stop();
+        scannerActive = false;
+    }
+    document.getElementById('camera-modal').classList.add('hidden');
+    document.getElementById('camera-modal').classList.remove('flex');
+}
+
+async function fetchProductDataFromBarcode(barcode) {
+    try {
+        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        const data = await response.json();
+
+        if (data.status === 1 && data.product) {
+            const product = data.product;
+
+            if (product.product_name) {
+                document.getElementById('quick-name').value = product.product_name;
+            }
+
+            if (product.brands) {
+                document.getElementById('quick-brand').value = product.brands.split(',')[0].trim();
+            }
+        }
+    } catch (error) {
+        console.error('Error obteniendo datos del producto:', error);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -152,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalText = submitBtn.innerHTML;
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Guardando...';
+        submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Guardando...';
 
         try {
             const response = await fetch('{{ route("food.products.quick-store") }}', {
@@ -174,27 +282,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.reload();
                 }
             } else {
-                alert(data.message || 'Error al guardar el producto');
+                let errorMsg = 'Error al guardar el producto';
+                if (data.errors) {
+                    const errors = Object.values(data.errors).flat();
+                    errorMsg = errors.join('\n');
+                } else if (data.message) {
+                    errorMsg = data.message;
+                }
+                alert(errorMsg);
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al guardar el producto');
+            alert('Error de conexión. Verifica tu conexión a internet e intenta nuevamente.');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         }
     });
 
-    // Barcode scanner
-    document.getElementById('quick-scan-barcode')?.addEventListener('click', async () => {
-        if (!('BarcodeDetector' in window)) {
-            alert('Tu navegador no soporta escaneo de códigos de barras. Por favor, escribe el código manualmente.');
-            return;
-        }
+    // Barcode scanner button
+    document.getElementById('quick-scan-barcode')?.addEventListener('click', () => {
+        startBarcodeScanner();
+    });
 
-        // Aquí se integraría con la cámara
-        alert('Funcionalidad de escaneo en desarrollo. Por favor, escribe el código manualmente.');
+    // También permitir escaneo con Enter en el campo de código
+    document.getElementById('quick-barcode')?.addEventListener('change', async (e) => {
+        const barcode = e.target.value.trim();
+        if (barcode.length >= 8) {
+            await fetchProductDataFromBarcode(barcode);
+        }
     });
 });
 </script>

@@ -69,7 +69,7 @@ class PurchaseController extends Controller
             'budgets' => Budget::where('user_id', $userId)->orderByDesc('year')->orderByDesc('month')->limit(24)->get(),
             'products' => FoodProduct::where('user_id', $userId)->orderBy('name')->get(),
             'locations' => FoodLocation::where('user_id', $userId)->orderBy('sort_order')->get(),
-            'types' => FoodType::where('user_id', $userId)->where('is_active', true)->orderBy('sort_order')->get(),
+            'types' => FoodType::where('user_id', $userId)->orderBy('sort_order')->get(),
             'lists' => $lists,
             'selectedList' => $selectedList,
             'listItems' => $selectedList?->items ?? collect(),
