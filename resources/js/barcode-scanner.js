@@ -676,18 +676,27 @@ export class BarcodeScanner {
 
     handleBarcodeDetected(code) {
         console.log('BarcodeScanner: Procesando código detectado:', code);
+        console.log('BarcodeScanner: targetInput existe?', !!this.targetInput);
+        console.log('BarcodeScanner: targetInput value actual:', this.targetInput?.value);
+
         this.statusDiv.textContent = `✓ Código detectado: ${code}`;
         this.statusDiv.classList.remove('bg-black/75');
         this.statusDiv.classList.add('bg-emerald-600');
 
         // Insertar en el input objetivo si existe
         if (this.targetInput) {
-            console.log('BarcodeScanner: Insertando código en input');
+            console.log('BarcodeScanner: ✓ Insertando código en input');
             this.targetInput.value = code;
+            console.log('BarcodeScanner: ✓ Valor insertado:', this.targetInput.value);
 
             // Disparar evento change para que otros listeners lo detecten
+            console.log('BarcodeScanner: ✓ Disparando evento input');
             this.targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('BarcodeScanner: ✓ Disparando evento change');
             this.targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('BarcodeScanner: ✓ Eventos disparados correctamente');
+        } else {
+            console.error('BarcodeScanner: ❌ targetInput NO EXISTE - No se puede insertar código');
         }
 
         // Ejecutar callback si existe

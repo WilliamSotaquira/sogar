@@ -227,10 +227,19 @@ class ProductController extends Controller
     public function destroy(Request $request, FoodProduct $product): RedirectResponse
     {
         $this->authorizeProduct($request, $product);
+
+        // Eliminar datos relacionados en cascada
+        $product->barcodes()->delete();
+        $product->batches()->delete();
+        $product->movements()->delete();
+        $product->prices()->delete();
+
+        // Eliminar el producto
         $product->delete();
+
         return redirect()
             ->route('food.products.index')
-            ->with('status', 'Producto eliminado.');
+            ->with('status', 'Producto eliminado correctamente junto con sus datos relacionados.');
     }
 
     private function authorizeProduct(Request $request, FoodProduct $product): void

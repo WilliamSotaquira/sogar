@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="test-token">
+    <title>Test Flujo Completo Barcode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            border: 2px solid #ccc;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover { background: #0056b3; }
+        input {
+            padding: 8px;
+            width: 300px;
+            margin: 5px;
+        }
+        #log {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Flujo Completo - Barcode Scanner</h1>
+
+    <div class="section info">
+        <h2>Paso 1: Test Input Event</h2>
+        <input type="text" id="test-input" placeholder="Escribe o escanea código aquí">
+        <button onclick="testInputEvent()">Simular Código: 7702006298926</button>
+        <p id="input-result"></p>
+    </div>
+
+    <div class="section info">
+        <h2>Paso 2: Test Fetch a /food/scan</h2>
+        <input type="text" id="scan-code" placeholder="Código" value="7702006298926">
+        <button onclick="testFoodScan()">Test /food/scan</button>
+        <p id="scan-result"></p>
+    </div>
+
+    <div class="section info">
+        <h2>Paso 3: Test OpenFoodFacts</h2>
+        <input type="text" id="off-code" placeholder="Código" value="7702006298926">
+        <button onclick="testOpenFoodFacts()">Test OpenFoodFacts</button>
+        <p id="off-result"></p>
+    </div>
+
+    <div class="section info">
+        <h2>Paso 4: Test FillFromProduct</h2>
+        <button onclick="testFillFromProduct()">Test Llenar Formulario</button>
+        <div style="margin-top: 10px;">
+            <input type="text" id="test-name" placeholder="Nombre">
+            <input type="text" id="test-brand" placeholder="Marca">
+            <input type="text" id="test-unit" placeholder="Unidad">
+        </div>
+        <p id="fill-result"></p>
+    </div>
+
+    <div class="section">
+        <h2>📋 Log de Eventos</h2>
+        <button onclick="clearLog()">Limpiar Log</button>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+            logDiv.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function testInputEvent() {
+            log('=== TEST 1: Input Event ===');
+            const input = document.getElementById('test-input');
+            input.value = '7702006298926';
+
+            // Simular eventos
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+
+            log('✓ Eventos disparados: input y change', 'success');
+            log(`✓ Valor del input: ${input.value}`, 'success');
+            document.getElementById('input-result').innerHTML = `✅ Código: ${input.value}`;
+        }
+
+        async function testFoodScan() {
+            log('=== TEST 2: Fetch /food/scan ===');
+            const code = document.getElementById('scan-code').value;
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            try {
+                log(`Enviando petición a /food/scan con código: ${code}`);
+
+                const res = await fetch('/food/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf || '',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ code }),
+                });
+
+                log(`Respuesta recibida: status ${res.status}`);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    log(`✓ Datos recibidos: ${JSON.stringify(data, null, 2)}`, 'success');
+                    document.getElementById('scan-result').innerHTML = `✅ Status: ${res.status}<br>Datos: <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    const text = await res.text();
+                    log(`⚠ Error ${res.status}: ${text}`, 'error');
+                    document.getElementById('scan-result').innerHTML = `❌ Status: ${res.status}<br>${text}`;
+                }
+            } catch (err) {
+                log(`❌ Error de red: ${err.message}`, 'error');
+                document.getElementById('scan-result').innerHTML = `❌ Error: ${err.message}`;
+            }
+        }
+
+        async function testOpenFoodFacts() {
+            log('=== TEST 3: OpenFoodFacts API ===');
+            const code = document.getElementById('off-code').value;
+
+            try {
+                const url = `https://world.openfoodfacts.org/api/v0/product/${code}.json`;
+                log(`Consultando: ${url}`);
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                log(`Respuesta: status=${data.status}`);
+
+                if (data.status === 1 && data.product) {
+                    const p = data.product;
+                    const name = p.product_name_es || p.product_name || 'Sin nombre';
+                    const brand = p.brands || 'Sin marca';
+
+                    log(`✓ Producto encontrado: ${name}`, 'success');
+                    log(`✓ Marca: ${brand}`, 'success');
+                    log(`✓ Imagen: ${p.image_front_url || 'No disponible'}`, 'success');
+
+                    document.getElementById('off-result').innerHTML = `✅ Encontrado<br>Nombre: ${name}<br>Marca: ${brand}`;
+                } else {
+                    log(`⚠ Producto no encontrado en OpenFoodFacts`, 'error');
+                    document.getElementById('off-result').innerHTML = `❌ No encontrado`;
+                }
+            } catch (err) {
+                log(`❌ Error: ${err.message}`, 'error');
+                document.getElementById('off-result').innerHTML = `❌ Error: ${err.message}`;
+            }
+        }
+
+        function testFillFromProduct() {
+            log('=== TEST 4: Fill From Product ===');
+
+            const testProduct = {
+                name: 'Producto de Prueba',
+                brand: 'Marca Test',
+                unit_base: 'g',
+                unit_size: 500
+            };
+
+            log(`Datos a llenar: ${JSON.stringify(testProduct)}`);
+
+            document.getElementById('test-name').value = testProduct.name;
+            document.getElementById('test-brand').value = testProduct.brand;
+            document.getElementById('test-unit').value = `${testProduct.unit_size} ${testProduct.unit_base}`;
+
+            log('✓ Campos llenados correctamente', 'success');
+            document.getElementById('fill-result').innerHTML = '✅ Formulario llenado';
+        }
+
+        // Log inicial
+        log('🚀 Test de flujo iniciado');
+        log('ℹ️ Ejecuta cada test en orden para validar el flujo completo');
+    </script>
+</body>
+</html>
