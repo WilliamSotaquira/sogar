@@ -31,6 +31,10 @@ export class BarcodeScanner {
         this.minZoom = 1;
         this.maxZoom = 1;
 
+        // Detectar si es dispositivo móvil
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        console.log('BarcodeScanner: Dispositivo móvil:', this.isMobile);
+
         this.init();
     }
 
@@ -53,6 +57,9 @@ export class BarcodeScanner {
     }
 
     createModal() {
+        // Detectar móvil para instrucciones personalizadas
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
         const modalHTML = `
             <div id="barcode-scanner-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
                 <div class="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-800">
@@ -106,14 +113,21 @@ export class BarcodeScanner {
 
                     <div class="mt-4 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 p-4 dark:from-gray-800 dark:to-gray-900">
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                            💡 Usa el ZOOM para acercar:
+                            ${isMobile ? '📱 Instrucciones para móvil:' : '💡 Instrucciones:'}
                         </p>
                         <ul class="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 ml-4 list-disc">
-                            <li><strong>Zoom 2-3x:</strong> Usa los botones + / - para acercar el objetivo</li>
-                            <li><strong>Distancia normal:</strong> Mantén el código a <strong>20-30 cm</strong> con zoom activo</li>
-                            <li><strong>Sin zoom:</strong> A 10-15 cm de la cámara</li>
+                            ${isMobile ? `
+                            <li><strong>Distancia:</strong> Mantén el código a <strong>10-15 cm</strong> de la cámara</li>
+                            <li><strong>Zoom opcional:</strong> Si necesitas, usa los botones + / - para acercar</li>
+                            <li><strong>Código centrado:</strong> Alinea el código dentro del marco verde</li>
+                            <li><strong>Luz:</strong> Asegúrate de tener buena iluminación 💡</li>
+                            <li><strong>Enfoque:</strong> Toca la pantalla si la imagen está borrosa</li>
+                            ` : `
+                            <li><strong>Zoom:</strong> Usa los botones + / - para acercar el código</li>
+                            <li><strong>Distancia:</strong> Mantén el código a <strong>20-30 cm</strong> de la cámara</li>
                             <li><strong>Código centrado:</strong> El código debe estar dentro del marco verde</li>
                             <li><strong>Buena luz:</strong> Evita sombras, usa la linterna 💡 si es necesario</li>
+                            `}
                         </ul>
                     </div>
                 </div>
@@ -272,10 +286,12 @@ export class BarcodeScanner {
             const constraints = {
                 video: {
                     facingMode: 'environment',
-                    width: { ideal: 1280, max: 1920 },
-                    height: { ideal: 720, max: 1080 },
+                    // Resolución más baja en móviles para mejor rendimiento y menor distancia
+                    width: { ideal: this.isMobile ? 1280 : 1920 },
+                    height: { ideal: this.isMobile ? 720 : 1080 },
                     focusMode: { ideal: 'continuous' },
-                    focusDistance: { ideal: 0.2 }, // ~20cm
+                    // Distancia de enfoque más cercana en móviles
+                    focusDistance: { ideal: this.isMobile ? 0.15 : 0.2 }, // 15cm en móvil, 20cm en escritorio
                     whiteBalanceMode: { ideal: 'continuous' },
                     exposureMode: { ideal: 'continuous' },
                     brightness: { ideal: 1.2 },
@@ -363,17 +379,21 @@ export class BarcodeScanner {
             if (capabilities.zoom) {
                 const minZoom = capabilities.zoom.min || 1;
                 const maxZoom = capabilities.zoom.max || 1;
-                const midZoom = minZoom + (maxZoom - minZoom) * 0.4; // 40% del rango
+
+                // En móviles: zoom más bajo (20% del rango) o ninguno
+                // En escritorio: zoom medio (40% del rango)
+                const zoomPercent = this.isMobile ? 0.15 : 0.4;
+                const initialZoom = minZoom + (maxZoom - minZoom) * zoomPercent;
 
                 try {
                     await track.applyConstraints({
-                        advanced: [{ zoom: midZoom }]
+                        advanced: [{ zoom: initialZoom }]
                     });
-                    this.currentZoom = midZoom;
-                    console.log('BarcodeScanner: ✓ Zoom óptico aplicado:', midZoom.toFixed(2) + 'x (rango:', minZoom, '-', maxZoom + ')');
+                    this.currentZoom = initialZoom;
+                    console.log('BarcodeScanner: ✓ Zoom óptico aplicado:', initialZoom.toFixed(2) + 'x (rango:', minZoom, '-', maxZoom + ')');
 
                     if (this.zoomLevelDiv) {
-                        this.zoomLevelDiv.textContent = `Zoom: ${midZoom.toFixed(1)}x`;
+                        this.zoomLevelDiv.textContent = `Zoom: ${initialZoom.toFixed(1)}x`;
                     }
                 } catch (e) {
                     console.log('BarcodeScanner: No se pudo aplicar zoom inicial:', e.message);
@@ -387,8 +407,9 @@ export class BarcodeScanner {
             } else {
                 console.log('BarcodeScanner: Zoom óptico no disponible, usando zoom digital (CSS)');
                 this.hasOpticalZoom = false;
-                // Aplicar zoom digital inicial
-                this.currentZoom = 2.0;
+                // En móviles: zoom digital más bajo (1.3x) o ninguno
+                // En escritorio: zoom digital medio (2.0x)
+                this.currentZoom = this.isMobile ? 1.3 : 2.0;
                 if (this.video) {
                     this.video.style.transform = `scale(${this.currentZoom})`;
                 }
@@ -397,7 +418,8 @@ export class BarcodeScanner {
                 }
             }
 
-            this.statusDiv.innerHTML = 'Escaneando...<br><small>Código a 20-25cm de la cámara</small>';
+            const distanceMsg = this.isMobile ? '10-15cm' : '20-25cm';
+            this.statusDiv.innerHTML = `Escaneando...<br><small>Código a ${distanceMsg} de la cámara</small>`;
             this.scannerActive = true;
 
             // Usar Quagga.js (más efectivo para códigos de barras)
@@ -502,21 +524,29 @@ export class BarcodeScanner {
     initQuagga() {
         console.log('BarcodeScanner: Configurando Quagga con alta precisión...');
 
+        // Área de detección más amplia en móviles
+        const detectionArea = this.isMobile ? {
+            top: "20%",
+            right: "10%",
+            left: "10%",
+            bottom: "20%"
+        } : {
+            top: "30%",
+            right: "20%",
+            left: "20%",
+            bottom: "30%"
+        };
+
         const config = {
             inputStream: {
                 type: "LiveStream",
                 target: this.video,
                 constraints: {
                     facingMode: "environment",
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                    width: { ideal: this.isMobile ? 1280 : 1920 },
+                    height: { ideal: this.isMobile ? 720 : 1080 }
                 },
-                area: {
-                    top: "30%",
-                    right: "20%",
-                    left: "20%",
-                    bottom: "30%"
-                }
+                area: detectionArea
             },
             decoder: {
                 readers: [
@@ -550,9 +580,10 @@ export class BarcodeScanner {
 
         // Almacenar detecciones para validación con timestamp
         let detectionHistory = [];
-        const REQUIRED_MATCHES = 5; // Aumentar a 5 coincidencias
+        // En móviles: requisitos más relajados para compensar menor precisión de cámara
+        const REQUIRED_MATCHES = this.isMobile ? 3 : 5; // 3 en móvil, 5 en escritorio
         const HISTORY_SIZE = 10;
-        const MIN_QUALITY = 0.85; // Aumentar calidad mínima a 85%
+        const MIN_QUALITY = this.isMobile ? 0.75 : 0.85; // 75% en móvil, 85% en escritorio
 
         // Listener para códigos detectados con validación estricta
         Quagga.onDetected((result) => {
