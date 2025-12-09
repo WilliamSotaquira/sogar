@@ -154,21 +154,21 @@ export class BarcodeScanner {
         if (this.hasOpticalZoom && this.stream) {
             // Zoom óptico (real de la cámara)
             const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.currentZoom + delta));
-            
+
             if (newZoom === this.currentZoom) return;
-            
+
             const track = this.stream.getVideoTracks()[0];
-            
+
             track.applyConstraints({
                 advanced: [{ zoom: newZoom }]
             }).then(() => {
                 this.currentZoom = newZoom;
                 console.log('BarcodeScanner: Zoom óptico ajustado a', this.currentZoom.toFixed(2) + 'x');
-                
+
                 if (this.zoomLevelDiv) {
                     this.zoomLevelDiv.textContent = `Zoom: ${this.currentZoom.toFixed(1)}x`;
                 }
-                
+
                 this.updateDistanceMessage();
             }).catch(error => {
                 console.error('BarcodeScanner: Error al ajustar zoom óptico:', error);
@@ -176,16 +176,16 @@ export class BarcodeScanner {
         } else {
             // Zoom digital (CSS transform)
             this.currentZoom = Math.max(1.0, Math.min(4.0, this.currentZoom + delta));
-            
+
             if (this.video) {
                 this.video.style.transform = `scale(${this.currentZoom})`;
                 console.log('BarcodeScanner: Zoom digital ajustado a', this.currentZoom.toFixed(1) + 'x');
             }
-            
+
             if (this.zoomLevelDiv) {
                 this.zoomLevelDiv.textContent = `Zoom: ${this.currentZoom.toFixed(1)}x (digital)`;
             }
-            
+
             this.updateDistanceMessage();
         }
     }
@@ -209,9 +209,9 @@ export class BarcodeScanner {
                 await track.applyConstraints({
                     advanced: [{ torch: this.torchEnabled }]
                 });
-                
+
                 console.log('BarcodeScanner: Linterna', this.torchEnabled ? 'ACTIVADA' : 'DESACTIVADA');
-                
+
                 // Feedback visual
                 if (this.torchEnabled) {
                     this.torchBtn.classList.add('bg-yellow-500', 'text-white');
@@ -239,7 +239,7 @@ export class BarcodeScanner {
                     advanced: [{ focusMode: 'single-shot' }]
                 });
                 console.log('BarcodeScanner: Enfoque manual aplicado');
-                
+
                 // Feedback visual
                 this.statusDiv.textContent = '🎯 Enfocando...';
                 setTimeout(() => {
@@ -288,7 +288,7 @@ export class BarcodeScanner {
 
             this.video.srcObject = this.stream;
             await this.video.play();
-            
+
             // Esperar a que el video esté realmente reproduciendo
             await new Promise(resolve => {
                 if (this.video.readyState >= 2) {
@@ -297,52 +297,52 @@ export class BarcodeScanner {
                     this.video.addEventListener('loadeddata', resolve, { once: true });
                 }
             });
-            
+
             console.log('BarcodeScanner: Video listo - Dimensiones:', this.video.videoWidth, 'x', this.video.videoHeight);
-            
+
             // Optimizar configuración de la cámara
             const track = this.stream.getVideoTracks()[0];
             const capabilities = track.getCapabilities();
             const settings = track.getSettings();
-            
+
             console.log('BarcodeScanner: Capacidades disponibles:', capabilities);
             console.log('BarcodeScanner: Configuración actual:', settings);
-            
+
             // Aplicar optimizaciones si están disponibles
             const optimizedConstraints = {};
-            
+
             // Enfoque continuo para códigos de barras
             if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
                 optimizedConstraints.focusMode = 'continuous';
             }
-            
+
             // Distancia de enfoque óptima (cerca, para códigos de barras)
             if (capabilities.focusDistance) {
                 optimizedConstraints.focusDistance = capabilities.focusDistance.min || 0.1;
             }
-            
+
             // Brillo aumentado
             if (capabilities.brightness) {
                 const midBrightness = (capabilities.brightness.min + capabilities.brightness.max) / 2;
                 optimizedConstraints.brightness = Math.min(midBrightness * 1.3, capabilities.brightness.max);
             }
-            
+
             // Contraste aumentado para mejor definición
             if (capabilities.contrast) {
                 const midContrast = (capabilities.contrast.min + capabilities.contrast.max) / 2;
                 optimizedConstraints.contrast = Math.min(midContrast * 1.4, capabilities.contrast.max);
             }
-            
+
             // Exposición automática continua
             if (capabilities.exposureMode && capabilities.exposureMode.includes('continuous')) {
                 optimizedConstraints.exposureMode = 'continuous';
             }
-            
+
             // Balance de blancos automático
             if (capabilities.whiteBalanceMode && capabilities.whiteBalanceMode.includes('continuous')) {
                 optimizedConstraints.whiteBalanceMode = 'continuous';
             }
-            
+
             // Aplicar optimizaciones
             if (Object.keys(optimizedConstraints).length > 0) {
                 try {
@@ -352,33 +352,33 @@ export class BarcodeScanner {
                     console.log('BarcodeScanner: No se pudieron aplicar algunas optimizaciones:', e.message);
                 }
             }
-            
+
             // Habilitar botón de linterna si está disponible
             if (capabilities.torch && this.torchBtn) {
                 this.torchBtn.classList.remove('hidden');
                 console.log('BarcodeScanner: ✓ Linterna disponible');
             }
-            
+
             // Aplicar zoom inicial automático si está disponible
             if (capabilities.zoom) {
                 const minZoom = capabilities.zoom.min || 1;
                 const maxZoom = capabilities.zoom.max || 1;
                 const midZoom = minZoom + (maxZoom - minZoom) * 0.4; // 40% del rango
-                
+
                 try {
                     await track.applyConstraints({
                         advanced: [{ zoom: midZoom }]
                     });
                     this.currentZoom = midZoom;
                     console.log('BarcodeScanner: ✓ Zoom óptico aplicado:', midZoom.toFixed(2) + 'x (rango:', minZoom, '-', maxZoom + ')');
-                    
+
                     if (this.zoomLevelDiv) {
                         this.zoomLevelDiv.textContent = `Zoom: ${midZoom.toFixed(1)}x`;
                     }
                 } catch (e) {
                     console.log('BarcodeScanner: No se pudo aplicar zoom inicial:', e.message);
                 }
-                
+
                 // Guardar capacidades de zoom
                 this.minZoom = minZoom;
                 this.maxZoom = maxZoom;
@@ -396,7 +396,7 @@ export class BarcodeScanner {
                     this.zoomLevelDiv.textContent = `Zoom: ${this.currentZoom.toFixed(1)}x (digital)`;
                 }
             }
-            
+
             this.statusDiv.innerHTML = 'Escaneando...<br><small>Código a 20-25cm de la cámara</small>';
             this.scannerActive = true;
 
@@ -416,7 +416,7 @@ export class BarcodeScanner {
 
         try {
             const barcodes = await detector.detect(this.video);
-            
+
             if (barcodes.length > 0) {
                 const barcode = barcodes[0];
                 console.log('BarcodeScanner: ✓✓✓ CÓDIGO DETECTADO:', barcode.rawValue, 'Formato:', barcode.format);
@@ -436,7 +436,7 @@ export class BarcodeScanner {
 
     loadZXingScanner() {
         console.log('BarcodeScanner: Cargando Quagga.js (mejor para códigos de barras)...');
-        
+
         if (window.Quagga) {
             console.log('BarcodeScanner: Quagga ya está cargado');
             this.startQuaggaScanner();
@@ -458,7 +458,7 @@ export class BarcodeScanner {
 
     loadZXingFallback() {
         console.log('BarcodeScanner: Cargando ZXing como fallback...');
-        
+
         if (window.ZXing) {
             console.log('BarcodeScanner: ZXing ya está cargado');
             this.startZXingScanner();
@@ -481,10 +481,10 @@ export class BarcodeScanner {
 
     startQuaggaScanner() {
         if (!this.scannerActive) return;
-        
+
         console.log('BarcodeScanner: Iniciando Quagga scanner...');
         console.log('BarcodeScanner: Video listo:', this.video.videoWidth, 'x', this.video.videoHeight);
-        
+
         this.statusDiv.innerHTML = '🔍 Escaneando con Quagga...<br><small>Código dentro del marco verde</small>';
 
         // Esperar a que el video esté listo
@@ -501,7 +501,7 @@ export class BarcodeScanner {
 
     initQuagga() {
         console.log('BarcodeScanner: Configurando Quagga con alta precisión...');
-        
+
         const config = {
             inputStream: {
                 type: "LiveStream",
@@ -542,7 +542,7 @@ export class BarcodeScanner {
                 this.loadZXingFallback();
                 return;
             }
-            
+
             console.log('BarcodeScanner: ✓ Quagga inicializado correctamente');
             Quagga.start();
             console.log('BarcodeScanner: ✓ Quagga escaneando activamente');
@@ -557,21 +557,21 @@ export class BarcodeScanner {
         // Listener para códigos detectados con validación estricta
         Quagga.onDetected((result) => {
             if (!this.scannerActive) return;
-            
+
             if (result && result.codeResult && result.codeResult.code) {
                 const code = result.codeResult.code;
                 const format = result.codeResult.format;
-                
+
                 // Validar que sea EAN-13 (13 dígitos)
                 if (code.length !== 13 || !/^\d{13}$/.test(code)) {
                     console.log(`BarcodeScanner: ⚠️ Código inválido (debe ser 13 dígitos): ${code}`);
                     return;
                 }
-                
+
                 // Calcular confianza promedio
                 let totalError = 0;
                 let errorCount = 0;
-                
+
                 if (result.codeResult.decodedCodes) {
                     result.codeResult.decodedCodes.forEach(decoded => {
                         if (decoded.error !== undefined) {
@@ -580,47 +580,47 @@ export class BarcodeScanner {
                         }
                     });
                 }
-                
+
                 const avgError = errorCount > 0 ? totalError / errorCount : 1;
                 const quality = 1 - avgError;
-                
+
                 console.log(`BarcodeScanner: "${code}" - Calidad: ${(quality * 100).toFixed(1)}%`);
-                
+
                 // Solo aceptar lecturas con calidad muy alta
                 if (quality < MIN_QUALITY) {
                     console.log(`BarcodeScanner: ⚠️ Calidad insuficiente (requiere >${(MIN_QUALITY*100).toFixed(0)}%)`);
                     return;
                 }
-                
+
                 // Agregar a historial con timestamp
                 const now = Date.now();
                 detectionHistory.push({ code, quality, time: now });
-                
+
                 // Limpiar detecciones antiguas (más de 3 segundos)
                 detectionHistory = detectionHistory.filter(d => now - d.time < 3000);
-                
+
                 // Mantener tamaño máximo
                 if (detectionHistory.length > HISTORY_SIZE) {
                     detectionHistory.shift();
                 }
-                
+
                 // Contar coincidencias del mismo código
                 const matches = detectionHistory.filter(d => d.code === code).length;
                 const avgQuality = detectionHistory
                     .filter(d => d.code === code)
                     .reduce((sum, d) => sum + d.quality, 0) / matches;
-                
+
                 console.log(`BarcodeScanner: Coincidencias: ${matches}/${REQUIRED_MATCHES} - Calidad promedio: ${(avgQuality * 100).toFixed(1)}%`);
-                
+
                 if (matches >= REQUIRED_MATCHES) {
                     console.log(`BarcodeScanner: ✓✓✓ CÓDIGO VALIDADO: ${code}`);
                     console.log(`BarcodeScanner: Calidad final: ${(avgQuality * 100).toFixed(1)}%`);
-                    
+
                     // Detener Quagga
                     Quagga.stop();
                     this.quaggaActive = false;
                     detectionHistory = [];
-                    
+
                     this.handleBarcodeDetected(code);
                 } else {
                     this.statusDiv.innerHTML = `🔍 Validando...<br><small>${matches}/${REQUIRED_MATCHES} (${(avgQuality * 100).toFixed(0)}% calidad)</small>`;
@@ -634,39 +634,39 @@ export class BarcodeScanner {
 
     startZXingScanner() {
         if (!this.scannerActive) return;
-        
+
         console.log('BarcodeScanner: Iniciando ZXing scanner...');
-        
+
         try {
             const codeReader = new ZXing.BrowserMultiFormatReader();
-            
+
             console.log('BarcodeScanner: ZXing reader creado');
             this.statusDiv.innerHTML = '🔍 Buscando código...<br><small>Mantén el código centrado y a 15-20cm</small>';
 
             // Almacenar el reader para poder detenerlo después
             this.zxingReader = codeReader;
-            
+
             // Iniciar decodificación continua
             codeReader.decodeFromVideoDevice(null, this.video, (result, error) => {
                 if (result) {
                     console.log('BarcodeScanner: ✓✓✓ ZXing detectó código:', result.text, 'Formato:', result.format);
-                    
+
                     // Detener el scanner antes de manejar el resultado
                     if (this.zxingReader) {
                         this.zxingReader.reset();
                     }
-                    
+
                     this.handleBarcodeDetected(result.text);
                 }
-                
+
                 // Solo mostrar errores que no sean "not found"
                 if (error && error.name !== 'NotFoundException') {
                     console.error('BarcodeScanner: Error ZXing:', error.name, error.message);
                 }
             });
-            
+
             console.log('BarcodeScanner: ✓ ZXing scanner activo y escaneando');
-            
+
         } catch (error) {
             console.error('BarcodeScanner: Error al iniciar ZXing:', error);
             this.statusDiv.textContent = 'Error al iniciar el escáner';

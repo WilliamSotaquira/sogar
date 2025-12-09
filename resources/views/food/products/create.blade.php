@@ -466,12 +466,12 @@
             // Inicializar el nuevo BarcodeScanner optimizado
             if (window.BarcodeScanner && trigger) {
                 barcodeScanner = new window.BarcodeScanner(barcodeInput);
-                
+
                 trigger.addEventListener('click', (e) => {
                     e.preventDefault();
                     barcodeScanner.open();
                 });
-                
+
                 console.log('BarcodeScanner inicializado correctamente');
             } else if (trigger) {
                 console.warn('BarcodeScanner no está disponible');

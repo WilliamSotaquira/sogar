@@ -44,7 +44,7 @@
 </head>
 <body>
     <h1>Test Barcode Scanner</h1>
-    
+
     <div>
         <button onclick="startCamera()">Iniciar Cámara</button>
         <button onclick="stopCamera()">Detener Cámara</button>
@@ -53,7 +53,7 @@
     </div>
 
     <video id="video" playsinline autoplay></video>
-    
+
     <div id="result">
         <strong>Resultado:</strong> <span id="barcode-result">Esperando escaneo...</span>
     </div>
@@ -77,7 +77,7 @@
         async function startCamera() {
             try {
                 log('Solicitando acceso a la cámara...', 'info');
-                
+
                 const constraints = {
                     video: {
                         facingMode: 'environment',
@@ -89,21 +89,21 @@
                         }]
                     }
                 };
-                
+
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
-                
+
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 await video.play();
-                
+
                 log('✓ Cámara iniciada correctamente', 'success');
                 log('Video dimensions: ' + video.videoWidth + 'x' + video.videoHeight, 'info');
-                
+
                 // Obtener capacidades de la cámara
                 const track = stream.getVideoTracks()[0];
                 const capabilities = track.getCapabilities();
                 log('Capacidades: ' + JSON.stringify(capabilities, null, 2), 'info');
-                
+
                 // Intentar habilitar autofocus continuo
                 if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
                     try {
@@ -117,7 +117,7 @@
                 } else {
                     log('⚠ Autofocus continuo no disponible', 'error');
                 }
-                
+
                 // Agregar tap-to-focus
                 video.addEventListener('click', async () => {
                     if (capabilities.focusMode) {
@@ -131,7 +131,7 @@
                         }
                     }
                 });
-                
+
             } catch (error) {
                 log('✗ Error al acceder a la cámara: ' + error.message, 'error');
             }
@@ -149,7 +149,7 @@
 
         async function testBarcodeDetector() {
             log('=== Test BarcodeDetector ===', 'info');
-            
+
             if (!('BarcodeDetector' in window)) {
                 log('✗ BarcodeDetector NO está disponible en este navegador', 'error');
                 log('Navegador: ' + navigator.userAgent, 'info');
@@ -157,19 +157,19 @@
             }
 
             log('✓ BarcodeDetector está disponible', 'success');
-            
+
             try {
                 const formats = await BarcodeDetector.getSupportedFormats();
                 log('Formatos soportados: ' + formats.join(', '), 'success');
-                
+
                 const detector = new BarcodeDetector({
                     formats: ['ean_13', 'ean_8', 'upc_a', 'code_128', 'code_39', 'qr_code']
                 });
                 log('✓ BarcodeDetector creado', 'success');
-                
+
                 scanning = true;
                 scanWithBarcodeDetector(detector);
-                
+
             } catch (error) {
                 log('✗ Error con BarcodeDetector: ' + error.message, 'error');
             }
@@ -177,12 +177,12 @@
 
         async function scanWithBarcodeDetector(detector) {
             if (!scanning) return;
-            
+
             const video = document.getElementById('video');
-            
+
             try {
                 const barcodes = await detector.detect(video);
-                
+
                 if (barcodes.length > 0) {
                     const barcode = barcodes[0];
                     log('✓✓✓ CÓDIGO DETECTADO: ' + barcode.rawValue + ' (Formato: ' + barcode.format + ')', 'success');
@@ -193,19 +193,19 @@
             } catch (error) {
                 log('Error en detect(): ' + error.message, 'error');
             }
-            
+
             requestAnimationFrame(() => scanWithBarcodeDetector(detector));
         }
 
         async function testZXing() {
             log('=== Test ZXing ===', 'info');
-            
+
             if (window.ZXing) {
                 log('✓ ZXing ya está cargado', 'success');
                 startZXingScanner();
                 return;
             }
-            
+
             log('Cargando ZXing desde CDN...', 'info');
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/@zxing/library@latest/umd/index.min.js';
@@ -222,10 +222,10 @@
         function startZXingScanner() {
             const video = document.getElementById('video');
             const codeReader = new ZXing.BrowserMultiFormatReader();
-            
+
             log('Iniciando escaneo con ZXing...', 'info');
             scanning = true;
-            
+
             codeReader.decodeFromVideoElement(video, (result, error) => {
                 if (result) {
                     log('✓✓✓ CÓDIGO DETECTADO (ZXing): ' + result.text + ' (Formato: ' + result.format + ')', 'success');
