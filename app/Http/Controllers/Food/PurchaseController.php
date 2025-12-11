@@ -27,24 +27,22 @@ class PurchaseController extends Controller
     {
         $userId = $request->user()->id;
 
-        $baseListsQuery = ShoppingList::with([
-                'items.product.defaultLocation',
-                'items.location',
-                'budget.category',
+        $baseListsQuery = ShoppingList::withFullDetails()
+            ->withCount([
+                'items as pending_inventory_count' => fn($q) => $q->where('is_checked', true)
+                    ->whereRaw("JSON_EXTRACT(metadata, '$.inventory_batch_id') IS NULL")
             ])
             ->where('user_id', $userId);
 
         $lists = (clone $baseListsQuery)
-            ->where('status', 'active')
-            ->orderByDesc('generated_at')
-            ->limit(12)
+            ->active()
+            ->recent(12)
             ->get();
 
         if ($lists->isEmpty()) {
             $lists = (clone $baseListsQuery)
-                ->whereNotIn('status', ['archived', 'cancelled'])
-                ->orderByDesc('generated_at')
-                ->limit(12)
+                ->notArchived()
+                ->recent(12)
                 ->get();
         }
 
@@ -59,17 +57,21 @@ class PurchaseController extends Controller
         }
 
         return view('food.purchases.index', [
-            'purchases' => FoodPurchase::with('items.product')
+            'purchases' => FoodPurchase::with([
+                    'items:id,purchase_id,product_id,qty,unit,subtotal',
+                    'items.product:id,name,brand'
+                ])
+                ->select('id', 'user_id', 'occurred_on', 'vendor', 'total')
                 ->where('user_id', $userId)
                 ->orderByDesc('occurred_on')
                 ->limit(50)
                 ->get(),
-            'wallets' => Wallet::where('user_id', $userId)->get(),
-            'categories' => Category::where('user_id', $userId)->where('type', 'expense')->get(),
+            'wallets' => Wallet::where('user_id', $userId)->orderBy('name')->get(),
+            'categories' => Category::where('user_id', $userId)->where('type', 'expense')->orderBy('name')->get(),
             'budgets' => Budget::where('user_id', $userId)->orderByDesc('year')->orderByDesc('month')->limit(24)->get(),
             'products' => FoodProduct::where('user_id', $userId)->orderBy('name')->get(),
             'locations' => FoodLocation::where('user_id', $userId)->orderBy('sort_order')->get(),
-            'types' => FoodType::where('user_id', $userId)->orderBy('sort_order')->get(),
+            'types' => FoodType::where('user_id', $userId)->where('is_active', true)->orderBy('sort_order')->get(),
             'lists' => $lists,
             'selectedList' => $selectedList,
             'listItems' => $selectedList?->items ?? collect(),
@@ -118,18 +120,22 @@ class PurchaseController extends Controller
                 ->withInput();
         }
 
-        $purchase = new FoodPurchase([
-            'user_id' => $userId,
-            'wallet_id' => $data['wallet_id'] ?? null,
-            'occurred_on' => $data['occurred_on'],
-            'vendor' => $data['vendor'] ?? null,
-            'receipt_number' => $data['receipt_number'] ?? null,
-            'note' => $data['note'] ?? null,
-        ]);
+        // Iniciar transacción para garantizar integridad de datos
+        \DB::beginTransaction();
 
-        $total = 0;
+        try {
+            $purchase = new FoodPurchase([
+                'user_id' => $userId,
+                'wallet_id' => $data['wallet_id'] ?? null,
+                'occurred_on' => $data['occurred_on'],
+                'vendor' => $data['vendor'] ?? null,
+                'receipt_number' => $data['receipt_number'] ?? null,
+                'note' => $data['note'] ?? null,
+            ]);
 
-        $purchase->save();
+            $total = 0;
+
+            $purchase->save();
 
         $listItems = $list->items->keyBy('id');
 
@@ -287,7 +293,23 @@ class PurchaseController extends Controller
             $finance->registerExpenseFromPurchase($purchase);
         }
 
-        return redirect()->route('food.purchases.index')->with('status', 'Compra registrada.');
+            \DB::commit();
+
+            return redirect()->route('food.purchases.index')->with('status', 'Compra registrada.');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            
+            \Log::error('Error al registrar compra: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'list_id' => $data['shopping_list_id'],
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()
+                ->withErrors(['error' => 'Error al procesar la compra. Intenta nuevamente.'])
+                ->withInput();
+        }
     }
 
 }

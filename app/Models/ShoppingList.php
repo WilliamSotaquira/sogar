@@ -59,4 +59,40 @@ class ShoppingList extends Model
     {
         return $this->belongsTo(FamilyGroup::class);
     }
+
+    // Scopes para queries frecuentes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
+
+    public function scopeNotArchived($query)
+    {
+        return $query->whereNotIn('status', ['archived', 'cancelled']);
+    }
+
+    public function scopeRecent($query, $limit = 12)
+    {
+        return $query->orderByDesc('generated_at')->limit($limit);
+    }
+
+    public function scopeWithFullDetails($query)
+    {
+        return $query->with([
+            'items' => fn($q) => $q->orderBy('sort_order'),
+            'items.product:id,name,brand,unit_base,default_location_id',
+            'items.product.defaultLocation:id,name',
+            'items.location:id,name',
+            'budget:id,category_id,month,year',
+            'budget.category:id,name',
+        ])->withCount([
+            'items',
+            'items as checked_items_count' => fn($q) => $q->where('is_checked', true),
+        ]);
+    }
 }

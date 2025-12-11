@@ -60,4 +60,27 @@ class FoodStockBatch extends Model
     {
         return $this->hasMany(FoodStockMovement::class, 'batch_id');
     }
+
+    // Scopes para queries frecuentes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'ok');
+    }
+
+    public function scopeExpiringSoon($query, $days = 7)
+    {
+        return $query->whereNotNull('expires_on')
+            ->where('expires_on', '<=', now()->addDays($days))
+            ->where('status', 'ok');
+    }
+
+    public function scopeByLocation($query, $locationId)
+    {
+        return $query->where('location_id', $locationId);
+    }
+
+    public function scopeByProduct($query, $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
 }

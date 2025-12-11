@@ -82,4 +82,30 @@ class FoodProduct extends Model
     {
         return $this->hasMany(FoodStockMovement::class, 'product_id');
     }
+
+    // Scopes para queries frecuentes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeWithBarcode($query)
+    {
+        return $query->whereNotNull('barcode');
+    }
+
+    public function scopeByType($query, $typeId)
+    {
+        return $query->where('type_id', $typeId);
+    }
+
+    public function scopeLowStock($query)
+    {
+        return $query->whereRaw('(
+            SELECT COALESCE(SUM(qty_remaining_base), 0)
+            FROM sogar_food_stock_batches
+            WHERE product_id = sogar_food_products.id
+            AND status = "ok"
+        ) < min_stock_qty');
+    }
 }

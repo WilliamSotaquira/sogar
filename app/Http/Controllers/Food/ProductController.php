@@ -19,17 +19,27 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $products = FoodProduct::with('type')
-            ->where('user_id', $request->user()->id)
+        $userId = $request->user()->id;
+        
+        // Pre-cargar precios para evitar N+1
+        $latestPrices = \DB::table('sogar_food_prices as p1')
+            ->select('p1.product_id', 'p1.price_per_base', 'p1.vendor', 'p1.captured_on')
+            ->whereIn('p1.id', function($query) {
+                $query->select(\DB::raw('MAX(p2.id)'))
+                    ->from('sogar_food_prices as p2')
+                    ->whereColumn('p2.product_id', 'p1.product_id')
+                    ->groupBy('p2.product_id');
+            })
+            ->get()
+            ->keyBy('product_id');
+
+        $products = FoodProduct::with(['type:id,name,icon'])
+            ->select('id', 'user_id', 'type_id', 'name', 'brand', 'unit_base', 'unit_size', 'presentation_qty', 'barcode')
+            ->where('user_id', $userId)
             ->orderBy('name')
             ->get()
-            ->map(function (FoodProduct $product) {
-                $latestPrice = FoodPrice::where('product_id', $product->id)
-                    ->orderBy('captured_on', 'desc')
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                $product->current_price = $latestPrice;
+            ->map(function (FoodProduct $product) use ($latestPrices) {
+                $product->current_price = $latestPrices->get($product->id);
                 $product->presentation_label = $this->formatPresentation($product);
                 return $product;
             });
@@ -44,7 +54,7 @@ class ProductController extends Controller
         return view('food.products.create', [
             'types' => FoodType::withCount('products')
                 ->where('user_id', $request->user()->id)
-                ->where('is_active', true)
+                ->active()
                 ->orderBy('sort_order')
                 ->get(),
             'locations' => FoodLocation::withCount('products')
@@ -119,12 +129,21 @@ class ProductController extends Controller
     public function quickStore(Request $request): JsonResponse
     {
         try {
-            // Primero validar los campos básicos
+            $userId = $request->user()->id;
+            
+            // Validación optimizada con Rule::unique
             $basicData = $request->validate([
                 'name' => 'required|string|max:255',
                 'brand' => 'nullable|string|max:255',
                 'type_id' => 'nullable|exists:sogar_food_types,id',
-                'barcode' => 'nullable|string|max:255',
+                'barcode' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                    Rule::unique('sogar_food_products', 'barcode')
+                        ->where('user_id', $userId)
+                        ->whereNotNull('barcode')
+                ],
                 'add_to_inventory' => 'nullable|boolean',
                 'inventory_qty' => 'nullable|numeric|min:0.1',
                 'unit_base' => 'nullable|string|max:16',
@@ -132,23 +151,24 @@ class ProductController extends Controller
                 'expiry_date' => 'nullable|date|after_or_equal:today',
             ]);
 
-            // Si hay barcode, verificar si ya existe
-            if (!empty($basicData['barcode'])) {
-                $existingProduct = FoodProduct::where('user_id', $request->user()->id)
-                    ->where('barcode', $basicData['barcode'])
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Si falla la validación de barcode, verificar si existe para ofrecer agregar a inventario
+            if (!empty($request->barcode) && isset($e->errors()['barcode'])) {
+                $existingProduct = FoodProduct::where('user_id', $userId)
+                    ->where('barcode', $request->barcode)
                     ->first();
 
-                if ($existingProduct) {
-                    // Si el producto ya existe y se quiere agregar a inventario
-                    if ($request->boolean('add_to_inventory') && $request->filled('inventory_qty')) {
+                if ($existingProduct && $request->boolean('add_to_inventory') && $request->filled('inventory_qty')) {
+                    \DB::beginTransaction();
+                    try {
                         $batchData = [
                             'product_id' => $existingProduct->id,
                             'location_id' => $request->input('location_id'),
-                            'qty_purchased_base' => $request->input('inventory_qty'),
+                            'qty_base' => $request->input('inventory_qty'),
                             'qty_remaining_base' => $request->input('inventory_qty'),
                             'unit_base' => $request->input('unit_base', 'unit'),
                             'status' => 'ok',
-                            'purchased_on' => now(),
+                            'entered_on' => now(),
                         ];
 
                         if ($request->filled('expiry_date')) {
@@ -156,6 +176,8 @@ class ProductController extends Controller
                         }
 
                         FoodStockBatch::create($batchData);
+                        
+                        \DB::commit();
 
                         return response()->json([
                             'success' => true,
@@ -163,9 +185,13 @@ class ProductController extends Controller
                             'product' => $existingProduct,
                             'redirect' => route('food.inventory.index')
                         ], 200);
+                    } catch (\Exception $ex) {
+                        \DB::rollBack();
+                        throw $ex;
                     }
+                }
 
-                    // Si solo quería crear el producto (sin inventario)
+                if ($existingProduct) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Este código de barras ya está registrado para: ' . $existingProduct->name,
@@ -176,10 +202,20 @@ class ProductController extends Controller
                     ], 422);
                 }
             }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
+        try {
+            \DB::beginTransaction();
+            
             // Crear nuevo producto
             $data = $basicData;
-            $data['user_id'] = $request->user()->id;
+            $data['user_id'] = $userId;
             $data['unit_base'] = $data['unit_base'] ?? 'unit';
             $data['unit_size'] = 1;
             $data['min_stock_qty'] = 1;
@@ -197,11 +233,11 @@ class ProductController extends Controller
                 $batchData = [
                     'product_id' => $product->id,
                     'location_id' => $request->input('location_id'),
-                    'qty_purchased_base' => $request->input('inventory_qty'),
+                    'qty_base' => $request->input('inventory_qty'),
                     'qty_remaining_base' => $request->input('inventory_qty'),
                     'unit_base' => $request->input('unit_base', 'unit'),
                     'status' => 'ok',
-                    'purchased_on' => now(),
+                    'entered_on' => now(),
                 ];
 
                 if ($request->filled('expiry_date')) {
@@ -209,6 +245,8 @@ class ProductController extends Controller
                 }
 
                 FoodStockBatch::create($batchData);
+                
+                \DB::commit();
 
                 return response()->json([
                     'success' => true,
@@ -217,6 +255,8 @@ class ProductController extends Controller
                     'redirect' => route('food.inventory.index')
                 ], 201);
             }
+            
+            \DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -225,13 +265,9 @@ class ProductController extends Controller
                 'redirect' => route('food.products.show', $product)
             ], 201);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
+            \DB::rollBack();
+            
             \Log::error('Error en quickStore: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
@@ -249,27 +285,27 @@ class ProductController extends Controller
 
         $product->load(['type', 'defaultLocation', 'barcodes']);
 
-        $currentStock = FoodStockBatch::where('product_id', $product->id)
-            ->where('status', 'ok')
+        // Usar scope y sum optimizado
+        $currentStock = $product->batches()
+            ->active()
             ->sum('qty_remaining_base');
 
-        $openBatches = FoodStockBatch::with('location')
-            ->where('product_id', $product->id)
-            ->where('status', 'ok')
+        $openBatches = $product->batches()
+            ->with('location:id,name')
+            ->active()
             ->orderBy('expires_on')
             ->get();
 
-        $expiringSoon = $openBatches
-            ->whereNotNull('expires_on')
-            ->filter(fn ($batch) => $batch->expires_on <= now()->addDays(7))
+        $expiringSoon = $product->batches()
+            ->expiringSoon(7)
             ->count();
 
-        $latestPrice = FoodPrice::where('product_id', $product->id)
-            ->orderBy('captured_on', 'desc')
-            ->orderBy('created_at', 'desc')
+        $latestPrice = $product->prices()
+            ->latest('captured_on')
+            ->latest('created_at')
             ->first();
 
-        $recentMovements = FoodStockMovement::where('product_id', $product->id)
+        $recentMovements = $product->movements()
             ->latest()
             ->limit(5)
             ->get();
@@ -293,7 +329,7 @@ class ProductController extends Controller
             'product' => $product,
             'types' => FoodType::withCount('products')
                 ->where('user_id', $request->user()->id)
-                ->where('is_active', true)
+                ->active()
                 ->orderBy('sort_order')
                 ->get(),
             'locations' => FoodLocation::withCount('products')
