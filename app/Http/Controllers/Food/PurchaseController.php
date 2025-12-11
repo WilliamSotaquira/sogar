@@ -299,7 +299,7 @@ class PurchaseController extends Controller
 
         } catch (\Exception $e) {
             \DB::rollBack();
-            
+
             \Log::error('Error al registrar compra: ' . $e->getMessage(), [
                 'user_id' => $userId,
                 'list_id' => $data['shopping_list_id'],

@@ -20,7 +20,7 @@ class ProductController extends Controller
     public function index(Request $request): View
     {
         $userId = $request->user()->id;
-        
+
         // Pre-cargar precios para evitar N+1
         $latestPrices = \DB::table('sogar_food_prices as p1')
             ->select('p1.product_id', 'p1.price_per_base', 'p1.vendor', 'p1.captured_on')
@@ -130,7 +130,7 @@ class ProductController extends Controller
     {
         try {
             $userId = $request->user()->id;
-            
+
             // Validación optimizada con Rule::unique
             $basicData = $request->validate([
                 'name' => 'required|string|max:255',
@@ -176,7 +176,7 @@ class ProductController extends Controller
                         }
 
                         FoodStockBatch::create($batchData);
-                        
+
                         \DB::commit();
 
                         return response()->json([
@@ -202,7 +202,7 @@ class ProductController extends Controller
                     ], 422);
                 }
             }
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación',
@@ -212,7 +212,7 @@ class ProductController extends Controller
 
         try {
             \DB::beginTransaction();
-            
+
             // Crear nuevo producto
             $data = $basicData;
             $data['user_id'] = $userId;
@@ -245,7 +245,7 @@ class ProductController extends Controller
                 }
 
                 FoodStockBatch::create($batchData);
-                
+
                 \DB::commit();
 
                 return response()->json([
@@ -255,7 +255,7 @@ class ProductController extends Controller
                     'redirect' => route('food.inventory.index')
                 ], 201);
             }
-            
+
             \DB::commit();
 
             return response()->json([
@@ -267,7 +267,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             \DB::rollBack();
-            
+
             \Log::error('Error en quickStore: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
