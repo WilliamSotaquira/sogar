@@ -15,14 +15,14 @@
 @endphp
 
 <x-layouts.app :title="__('Lista de compra')">
-    <div class="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 sm:px-0 md:pb-0">
+    <div class="mx-auto w-full max-w-6xl space-y-2 px-3 pb-20 sm:space-y-4 sm:px-6 md:px-8 md:pb-6">
         {{-- Hero Panel --}}
-        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:p-6 md:p-8">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 p-3 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:rounded-xl sm:p-6 md:p-8">
+            <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between text-white">
                 <div>
-                    <p class="text-sm uppercase tracking-wide font-semibold">Compras inteligentes</p>
-                    <h1 class="text-3xl font-bold">Lista de Compra</h1>
-                    <p class="text-sm text-white/80">Vinculada a presupuesto, con alertas y escaneo inteligente.</p>
+                    <p class="text-[10px] uppercase tracking-wide font-semibold sm:text-xs">Compras inteligentes</p>
+                    <h1 class="text-lg font-bold leading-tight sm:text-2xl md:text-3xl">Lista de Compra</h1>
+                    <p class="text-[11px] leading-tight text-white/80 sm:text-sm">Vinculada a presupuesto.</p>
                 </div>
                 @if($list && $list->budget)
                     <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">

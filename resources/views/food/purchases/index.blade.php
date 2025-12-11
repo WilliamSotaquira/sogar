@@ -12,13 +12,13 @@
         $pendingInventoryCount = $pendingInventoryCount ?? 0;
         $pendingInventoryPreview = ($pendingInventoryItems ?? collect())->take(3);
     @endphp
-    <div class="mx-auto w-full max-w-6xl space-y-4 px-3 pb-28 sm:px-4 md:px-0 md:pb-6">
-        <div class="overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:p-6 md:p-8">
-            <div class="flex flex-col gap-3 text-white md:flex-row md:items-start md:justify-between">
+    <div class="mx-auto w-full max-w-6xl space-y-2 px-3 pb-20 sm:space-y-4 sm:px-6 md:px-8 md:pb-6">
+        <div class="overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 p-3 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:rounded-xl sm:p-6 md:p-8">
+            <div class="flex flex-col gap-1 text-white sm:gap-2 md:flex-row md:items-start md:justify-between">
                 <div class="min-w-0 flex-1">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-white/90 md:text-sm">Gasto de alimentos</p>
-                    <h1 class="mb-1 text-2xl font-bold text-white md:text-3xl">Registro de Compras</h1>
-                    <p class="text-sm text-white/85">Registra tickets y vincula presupuesto, categoría y wallet.</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-white/90 sm:text-xs">Gasto de alimentos</p>
+                    <h1 class="text-lg font-bold leading-tight text-white sm:text-2xl md:text-3xl">Registro de Compras</h1>
+                    <p class="text-[11px] leading-tight text-white/85 sm:text-sm">Registra tickets y vincula presupuesto.</p>
                     @if($pendingInventoryCount > 0)
                         <span class="mt-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
                             <span class="flex-shrink-0">⚠️</span>

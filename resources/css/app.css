@@ -196,6 +196,19 @@ select:focus[data-flux-control] {
     box-shadow: 0 15px 40px rgba(12, 18, 31, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.04);
 }
+
+@layer utilities {
+    .px-6 {
+        padding-inline: 0.5rem;
+    }
+
+    @media (min-width: 640px) {
+        .px-6 {
+            padding-inline: 1.5rem;
+        }
+    }
+}
+
 .hero-panel::before,
 .hero-panel::after {
     content: "";

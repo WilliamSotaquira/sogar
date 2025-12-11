@@ -119,18 +119,12 @@ class ProductController extends Controller
     public function quickStore(Request $request): JsonResponse
     {
         try {
-            $data = $request->validate([
+            // Primero validar los campos básicos
+            $basicData = $request->validate([
                 'name' => 'required|string|max:255',
                 'brand' => 'nullable|string|max:255',
                 'type_id' => 'nullable|exists:sogar_food_types,id',
-                'barcode' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                    Rule::unique('sogar_food_products', 'barcode')
-                        ->where('user_id', $request->user()->id)
-                        ->whereNotNull('barcode')
-                ],
+                'barcode' => 'nullable|string|max:255',
                 'add_to_inventory' => 'nullable|boolean',
                 'inventory_qty' => 'nullable|numeric|min:0.1',
                 'unit_base' => 'nullable|string|max:16',
@@ -138,6 +132,53 @@ class ProductController extends Controller
                 'expiry_date' => 'nullable|date|after_or_equal:today',
             ]);
 
+            // Si hay barcode, verificar si ya existe
+            if (!empty($basicData['barcode'])) {
+                $existingProduct = FoodProduct::where('user_id', $request->user()->id)
+                    ->where('barcode', $basicData['barcode'])
+                    ->first();
+
+                if ($existingProduct) {
+                    // Si el producto ya existe y se quiere agregar a inventario
+                    if ($request->boolean('add_to_inventory') && $request->filled('inventory_qty')) {
+                        $batchData = [
+                            'product_id' => $existingProduct->id,
+                            'location_id' => $request->input('location_id'),
+                            'qty_purchased_base' => $request->input('inventory_qty'),
+                            'qty_remaining_base' => $request->input('inventory_qty'),
+                            'unit_base' => $request->input('unit_base', 'unit'),
+                            'status' => 'ok',
+                            'purchased_on' => now(),
+                        ];
+
+                        if ($request->filled('expiry_date')) {
+                            $batchData['expires_on'] = $request->input('expiry_date');
+                        }
+
+                        FoodStockBatch::create($batchData);
+
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Producto ya existía. Se agregó al inventario',
+                            'product' => $existingProduct,
+                            'redirect' => route('food.inventory.index')
+                        ], 200);
+                    }
+
+                    // Si solo quería crear el producto (sin inventario)
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Este código de barras ya está registrado para: ' . $existingProduct->name,
+                        'errors' => [
+                            'barcode' => ['El código de barras ya existe. El producto se llama: ' . $existingProduct->name]
+                        ],
+                        'existing_product' => $existingProduct
+                    ], 422);
+                }
+            }
+
+            // Crear nuevo producto
+            $data = $basicData;
             $data['user_id'] = $request->user()->id;
             $data['unit_base'] = $data['unit_base'] ?? 'unit';
             $data['unit_size'] = 1;

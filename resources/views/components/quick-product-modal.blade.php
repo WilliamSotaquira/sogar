@@ -1,12 +1,16 @@
 @props(['locations' => [], 'types' => []])
 
 <div id="quick-product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm" onclick="if(event.target===this) closeQuickProductModal()">
-    <div class="mx-4 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-gray-900" onclick="event.stopPropagation()">
+    <div id="modal-container" class="mx-4 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-gray-900 transition-all duration-300" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
             <div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Producto Rápido</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Agrega un producto con lo esencial</p>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    <span id="modal-title">Producto Rápido</span>
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <span id="modal-subtitle">Agrega un producto con lo esencial</span>
+                </p>
             </div>
             <button type="button" onclick="closeQuickProductModal()" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-800">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,7 +19,28 @@
             </button>
         </div>
 
-        <!-- Form -->
+        <!-- Camera Scanner View (Hidden by default) -->
+        <div id="camera-scanner-view" class="hidden p-6">
+            <div class="space-y-4">
+                <div id="barcode-scanner" class="relative w-full rounded-xl bg-black shadow-xl overflow-hidden" style="height: 300px; max-height: 300px;">
+                    <!-- QuaggaJS renderizará el video aquí -->
+                </div>
+
+                <div class="text-center space-y-2">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">📱 Enfoca el código de barras</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">El escáner detectará automáticamente</p>
+                    <div id="scan-status" class="hidden mt-3 rounded-lg bg-emerald-600 p-3 text-white font-semibold">
+                        ✓ Código detectado correctamente
+                    </div>
+                </div>
+
+                <button type="button" onclick="hideCameraScanner()" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                    Cancelar escaneo
+                </button>
+            </div>
+        </div>
+
+        <!-- Form View (Default) -->
         <form id="quick-product-form" class="p-6 space-y-4">
             @csrf
 
@@ -123,30 +148,25 @@
     </div>
 </div>
 
-<!-- Camera Modal for Barcode Scanning -->
-<div id="camera-modal" class="fixed inset-0 hidden bg-black/95" style="display: none; z-index: 9999;" onclick="if(event.target===this) stopBarcodeScanner()">
-    <div class="relative flex h-full w-full items-center justify-center px-4" onclick="event.stopPropagation()">
-        <button onclick="stopBarcodeScanner()" class="absolute right-4 top-4 rounded-lg bg-red-600 p-3 text-white shadow-lg hover:bg-red-700 transition" style="z-index: 10000;">
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-        </button>
+<style>
+#barcode-scanner video,
+#barcode-scanner canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 300px !important;
+    object-fit: cover !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+}
 
-        <div class="w-full max-w-3xl">
-            <div id="barcode-scanner" class="relative w-full rounded-xl bg-black shadow-2xl overflow-hidden" style="min-height: 480px;">
-                <!-- QuaggaJS renderizará el video aquí -->
-            </div>
-
-            <div class="mt-6 text-center space-y-2">
-                <p class="text-lg text-white font-semibold">📱 Enfoca el código de barras</p>
-                <p class="text-sm text-white/80">El escáner detectará automáticamente el código</p>
-                <div id="scan-status" class="hidden mt-4 rounded-lg bg-emerald-600 p-4 text-white font-semibold shadow-lg">
-                    ✓ Código detectado correctamente
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+#barcode-scanner canvas.drawingBuffer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 
@@ -156,9 +176,26 @@ let detectionTimeout = null;
 
 function openQuickProductModal() {
     const modal = document.getElementById('quick-product-modal');
+    const formView = document.getElementById('quick-product-form');
+    const cameraView = document.getElementById('camera-scanner-view');
+    const modalContainer = document.getElementById('modal-container');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+
     if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+
+        // Asegurar estado inicial correcto
+        if (formView) formView.classList.remove('hidden');
+        if (cameraView) cameraView.classList.add('hidden');
+        if (modalContainer) {
+            modalContainer.classList.remove('max-w-md');
+            modalContainer.classList.add('max-w-lg');
+        }
+        if (modalTitle) modalTitle.textContent = 'Producto Rápido';
+        if (modalSubtitle) modalSubtitle.textContent = 'Agrega un producto con lo esencial';
+
         setTimeout(() => {
             const nameInput = document.getElementById('quick-name');
             if (nameInput) nameInput.focus();
@@ -167,14 +204,17 @@ function openQuickProductModal() {
 }
 
 function closeQuickProductModal() {
-    stopBarcodeScanner();
+    hideCameraScanner(); // Asegurar que la cámara se detenga primero
+
     const modal = document.getElementById('quick-product-modal');
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
+
     const form = document.getElementById('quick-product-form');
     if (form) form.reset();
+
     const inventoryFields = document.getElementById('quick-inventory-fields');
     if (inventoryFields) inventoryFields.classList.add('hidden');
 }
@@ -190,18 +230,32 @@ function startBarcodeScanner() {
         return;
     }
 
-    const cameraModal = document.getElementById('camera-modal');
+    const formView = document.getElementById('quick-product-form');
+    const cameraView = document.getElementById('camera-scanner-view');
     const scanStatus = document.getElementById('scan-status');
     const scannerElement = document.getElementById('barcode-scanner');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+    const modalContainer = document.getElementById('modal-container');
 
-    if (!cameraModal || !scannerElement) {
-        console.error('Camera modal or scanner element not found');
+    if (!formView || !cameraView || !scannerElement) {
+        console.error('Required elements not found');
         return;
     }
 
-    // Mostrar el modal con display block
-    cameraModal.style.display = 'flex';
-    cameraModal.classList.remove('hidden');
+    // Ocultar formulario y mostrar cámara
+    formView.classList.add('hidden');
+    cameraView.classList.remove('hidden');
+
+    // Expandir modal para la cámara
+    if (modalContainer) {
+        modalContainer.classList.remove('max-w-lg');
+        modalContainer.classList.add('max-w-md');
+    }
+
+    // Cambiar títulos
+    if (modalTitle) modalTitle.textContent = 'Escanear Código';
+    if (modalSubtitle) modalSubtitle.textContent = 'Enfoca el código de barras';
     if (scanStatus) scanStatus.classList.add('hidden');
 
     scannerActive = true;
@@ -215,8 +269,8 @@ function startBarcodeScanner() {
             target: scannerElement,
             constraints: {
                 facingMode: "environment",
-                width: { min: 640, ideal: 1280 },
-                height: { min: 480, ideal: 720 }
+                width: { min: 480, ideal: 640 },
+                height: { min: 320, ideal: 480 }
             }
         },
         decoder: {
@@ -276,7 +330,7 @@ function startBarcodeScanner() {
             // Esperar un momento y luego autocompletar
             detectionTimeout = setTimeout(() => {
                 fetchProductDataFromBarcode(code);
-                stopBarcodeScanner();
+                hideCameraScanner();
                 detectionTimeout = null;
             }, 500);
         }
@@ -306,19 +360,47 @@ function startBarcodeScanner() {
     });
 }
 
-function stopBarcodeScanner() {
+function hideCameraScanner() {
+    // Detener QuaggaJS si está activo
     if (scannerActive && typeof Quagga !== 'undefined') {
         console.log('Deteniendo escáner...');
-        Quagga.stop();
-        Quagga.offDetected();
-        Quagga.offProcessed();
+        try {
+            Quagga.stop();
+            Quagga.offDetected();
+            Quagga.offProcessed();
+        } catch (e) {
+            console.error('Error deteniendo Quagga:', e);
+        }
         scannerActive = false;
     }
-    const cameraModal = document.getElementById('camera-modal');
-    if (cameraModal) {
-        cameraModal.style.display = 'none';
-        cameraModal.classList.add('hidden');
+
+    // Limpiar el contenido del scanner
+    const scannerElement = document.getElementById('barcode-scanner');
+    if (scannerElement) {
+        scannerElement.innerHTML = '<!-- QuaggaJS renderizará el video aquí -->';
     }
+
+    // Mostrar formulario y ocultar cámara
+    const formView = document.getElementById('quick-product-form');
+    const cameraView = document.getElementById('camera-scanner-view');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+    const modalContainer = document.getElementById('modal-container');
+
+    if (formView) formView.classList.remove('hidden');
+    if (cameraView) cameraView.classList.add('hidden');
+
+    // Restaurar tamaño del modal
+    if (modalContainer) {
+        modalContainer.classList.remove('max-w-md');
+        modalContainer.classList.add('max-w-lg');
+    }
+
+    // Restaurar títulos
+    if (modalTitle) modalTitle.textContent = 'Producto Rápido';
+    if (modalSubtitle) modalSubtitle.textContent = 'Agrega un producto con lo esencial';
+
+    // Limpiar timeout de detección
     if (detectionTimeout) {
         clearTimeout(detectionTimeout);
         detectionTimeout = null;

@@ -73,37 +73,37 @@
             ->filter(fn ($value) => $value !== null && $value !== '')
             ->all();
     @endphp
-    <div class="mx-auto w-full max-w-7xl space-y-4 px-3 pb-28 sm:px-0 md:pb-0">
+    <div class="mx-auto w-full max-w-6xl space-y-2 px-3 pb-20 sm:space-y-4 sm:px-6 md:px-8 md:pb-6">
         {{-- Header --}}
-        <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
+        <div class="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 p-3 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:rounded-xl sm:p-6 md:p-8">
+            <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between text-white">
                 <div>
-                    <p class="text-sm uppercase tracking-wide font-semibold">Inventario doméstico</p>
-                    <h1 class="text-3xl font-bold">Stock por Ubicación</h1>
-                    <p class="text-sm text-white/80">Revisa lotes, ubicaciones y fechas de caducidad</p>
+                    <p class="text-[10px] uppercase tracking-wide font-semibold sm:text-xs">Inventario doméstico</p>
+                    <h1 class="text-lg font-bold leading-tight sm:text-2xl md:text-3xl">Stock por Ubicación</h1>
+                    <p class="text-[11px] leading-tight text-white/80 sm:text-sm">Revisa lotes y fechas</p>
                     @if($pendingInventoryCount > 0)
-                        <span class="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-                            ⚠️ Pendientes inventario: {{ $pendingInventoryCount }}
+                        <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white sm:mt-2 sm:gap-2 sm:px-3 sm:py-1 sm:text-xs">
+                            ⚠️ Pendientes: {{ $pendingInventoryCount }}
                         </span>
                     @endif
                 </div>
-                <div class="flex gap-2 flex-wrap">
+                <div class="flex gap-1 flex-wrap sm:gap-2">
                     @if($activeLocation)
-                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition">
+                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             📍 Ver {{ $activeLocation->name }}
                         </a>
-                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition">
-                            ✏️ Editar ubicación
+                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
+                            ✏️ Editar
                         </a>
                     @else
-                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition">
+                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             📍 Ubicaciones
                         </a>
-                        <a href="{{ route('food.products.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition">
+                        <a href="{{ route('food.products.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             📦 Productos
                         </a>
                     @endif
-                    <a href="{{ route('food.purchases.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition">
+                    <a href="{{ route('food.purchases.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                         🛒 Compras
                     </a>
                 </div>
@@ -111,16 +111,16 @@
         </div>
 
         @if($pendingInventoryCount > 0)
-            <section id="pending-inventory-panel" class="rounded-lg border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20">
-                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <section id="pending-inventory-panel" class="rounded-lg border border-amber-200 bg-amber-50/70 p-3 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20 sm:p-4">
+                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">Alertas de sincronización</p>
-                        <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-100">{{ $pendingInventoryCount }} ítem{{ $pendingInventoryCount === 1 ? '' : 's' }} siguen sin lote</h2>
-                        <p class="text-sm text-amber-800/80 dark:text-amber-100/80">Identifica los productos marcados como comprados que aún no generan stock.</p>
+                        <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200 sm:text-xs">Alertas de sincronización</p>
+                        <h2 class="text-sm font-semibold text-amber-900 dark:text-amber-100 sm:text-base">{{ $pendingInventoryCount }} ítem{{ $pendingInventoryCount === 1 ? '' : 's' }} sin lote</h2>
+                        <p class="text-[11px] text-amber-800/80 dark:text-amber-100/80 sm:text-sm">Productos comprados sin stock.</p>
                     </div>
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <div class="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:gap-2">
                         @if($pendingInventoryFilterOptions->isNotEmpty())
-                            <form method="GET" action="{{ route('food.inventory.index') }}" class="min-w-[220px]">
+                            <form method="GET" action="{{ route('food.inventory.index') }}" class="min-w-[180px] sm:min-w-[220px]">
                                 @foreach($persistedInventoryFilters as $key => $value)
                                     <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                                 @endforeach
@@ -140,14 +140,14 @@
                     </div>
                 </div>
 
-                <div class="mt-4 space-y-3">
+                <div class="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
                     @forelse($pendingInventoryItems as $pendingItem)
                         @php
                             $checkedAgo = optional($pendingItem->checked_at)->diffForHumans();
                             $pendingReason = empty($pendingItem->product_id) ? 'Producto sin asociar' : 'Lote no creado';
                             $unitLabel = $pendingItem->unit_base ?? $pendingItem->qty_unit_label ?? 'unidad';
                         @endphp
-                        <article class="rounded-lg border border-amber-100 bg-white/80 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/10">
+                        <article class="rounded-lg border border-amber-100 bg-white/80 p-2.5 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/10 sm:p-3">
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ $pendingItem->name }}</p>
@@ -218,35 +218,35 @@
         @endif
 
         {{-- Acciones rápidas y búsqueda --}}
-        <div class="grid gap-4 lg:grid-cols-[2fr_3fr]">
-            <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50 mb-3">⚡ Acciones rápidas</h3>
-                <div class="grid gap-3 sm:grid-cols-2">
+        <div class="grid gap-2 sm:gap-3 lg:grid-cols-[2fr_3fr]">
+            <div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-4">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2 sm:mb-3 sm:text-base">⚡ Acciones rápidas</h3>
+                <div class="grid gap-2 sm:grid-cols-2">
                     @if($activeLocation)
-                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
-                            <span class="text-lg">📍</span>
+                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                            <span class="text-base sm:text-lg">📍</span>
                             <span>Ver {{ $activeLocation->name }}</span>
                         </a>
-                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
-                            <span class="text-lg">✏️</span>
+                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                            <span class="text-base sm:text-lg">✏️</span>
                             <span>Editar ubicación</span>
                         </a>
                     @else
-                        <a href="{{ route('food.locations.index') }}" class="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
-                            <span class="text-lg">📍</span>
+                        <a href="{{ route('food.locations.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                            <span class="text-base sm:text-lg">📍</span>
                             <span>Administrar ubicaciones</span>
                         </a>
-                        <a href="{{ route('food.locations.create') }}" class="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
-                            <span class="text-lg">➕</span>
+                        <a href="{{ route('food.locations.create') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                            <span class="text-base sm:text-lg">➕</span>
                             <span>Crear nueva ubicación</span>
                         </a>
                     @endif
-                    <a href="{{ route('food.purchases.index') }}" class="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
-                        <span class="text-lg">🛒</span>
+                    <a href="{{ route('food.purchases.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                        <span class="text-base sm:text-lg">🛒</span>
                         <span>Registrar compra</span>
                     </a>
-                    <a href="{{ route('food.products.index') }}" class="flex items-center gap-3 rounded-xl border border-gray-200 px-3 py-3 text-sm font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
-                        <span class="text-lg">🏷️</span>
+                    <a href="{{ route('food.products.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                        <span class="text-base sm:text-lg">🏷️</span>
                         <span>Gestionar productos</span>
                     </a>
                 </div>
@@ -316,38 +316,38 @@
 
         {{-- Inventario agrupado por ubicación --}}
         <section class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <div class="flex flex-col gap-2 border-b border-gray-100 px-6 py-4 dark:border-gray-800/70 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-1.5 border-b border-gray-100 px-3 py-2.5 dark:border-gray-800/70 sm:px-4 sm:py-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Inventario por ubicación</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $locationsWithInventory }} ubicación{{ $locationsWithInventory === 1 ? '' : 'es' }} con stock · {{ $totalItems }} lote{{ $totalItems === 1 ? '' : 's' }}</p>
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 sm:text-base">Inventario por ubicación</h2>
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 sm:text-xs">{{ $locationsWithInventory }} ubicación{{ $locationsWithInventory === 1 ? '' : 'es' }} · {{ $totalItems }} lote{{ $totalItems === 1 ? '' : 's' }}</p>
                 </div>
                 @if(!$activeLocation)
-                    <div class="flex flex-wrap gap-2 text-xs">
-                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-200">Administrar ubicaciones</a>
-                        <a href="{{ route('food.locations.create') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-200">Nueva ubicación</a>
+                    <div class="flex flex-wrap gap-1.5 text-xs sm:gap-2">
+                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-200 sm:px-2.5 sm:py-1 sm:text-xs">Ubicaciones</a>
+                        <a href="{{ route('food.locations.create') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-200 sm:px-2.5 sm:py-1 sm:text-xs">+ Nueva</a>
                     </div>
                 @endif
             </div>
 
             @if($locationCards->isEmpty())
-                <div class="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                <div class="px-4 py-6 text-center text-xs text-gray-500 dark:text-gray-400 sm:px-6 sm:py-8 sm:text-sm">
                     @if($activeLocation || $activeType)
                         <p>No hay resultados que coincidan con los filtros aplicados.</p>
-                        <a href="{{ route('food.inventory.index') }}" class="mt-3 inline-flex items-center justify-center rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">Limpiar filtros</a>
+                        <a href="{{ route('food.inventory.index') }}" class="mt-2 inline-flex items-center justify-center rounded-full border border-gray-200 px-2.5 py-1 text-[10px] font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:mt-3 sm:px-3 sm:text-xs">Limpiar filtros</a>
                     @else
-                        No hay ubicaciones registradas todavía. Crea una para empezar a controlar tu inventario.
+                        No hay ubicaciones registradas todavía.
                     @endif
                 </div>
             @else
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-900/40 dark:text-gray-300">
+                    <table class="min-w-full text-xs sm:text-sm">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-900/40 dark:text-gray-300 sm:text-xs">
                             <tr>
-                                <th scope="col" class="py-3 pl-6 pr-3 text-left">Ubicación</th>
-                                <th scope="col" class="px-3 py-3 text-center">Productos</th>
-                                <th scope="col" class="px-3 py-3 text-center">Lotes</th>
-                                <th scope="col" class="px-3 py-3 text-center">Por vencer</th>
-                                <th scope="col" class="px-3 py-3 text-center">Caducados</th>
+                                <th scope="col" class="py-2 pl-3 pr-2 text-left sm:py-3 sm:pl-4">Ubicación</th>
+                                <th scope="col" class="px-2 py-2 text-center sm:px-3 sm:py-3">Productos</th>
+                                <th scope="col" class="px-2 py-2 text-center sm:px-3 sm:py-3">Lotes</th>
+                                <th scope="col" class="px-2 py-2 text-center sm:px-3 sm:py-3">Por vencer</th>
+                                <th scope="col" class="px-2 py-2 text-center sm:px-3 sm:py-3">Caducados</th>
                                 <th scope="col" class="px-3 py-3">Último movimiento</th>
                                 <th scope="col" class="px-3 py-3 text-right">Total base</th>
                                 <th scope="col" class="py-3 pr-6 text-right">Acciones</th>
