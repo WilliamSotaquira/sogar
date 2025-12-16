@@ -33,7 +33,7 @@ class ProductController extends Controller
             ->get()
             ->keyBy('product_id');
 
-        $products = FoodProduct::with(['type:id,name,icon'])
+        $products = FoodProduct::with(['type:id,name,color'])
             ->select('id', 'user_id', 'type_id', 'name', 'brand', 'unit_base', 'unit_size', 'presentation_qty', 'barcode')
             ->where('user_id', $userId)
             ->orderBy('name')

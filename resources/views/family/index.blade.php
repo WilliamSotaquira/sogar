@@ -173,11 +173,18 @@
                                     @endif
                                 </div>
                                 @if(auth()->user()->isSystemAdmin() && $canManage)
-                                    <form action="{{ route('family.destroy', $group) }}" method="POST" onsubmit="return confirm('¿Eliminar este núcleo familiar? Esta acción no se puede deshacer.');">
+                                    <form action="{{ route('family.destroy', $group) }}" method="POST" class="grid grid-cols-2 gap-2" data-inline-confirm>
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="{{ $btnDanger }} w-full text-xs">
+                                        <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+                                        <button type="button" class="{{ $btnDanger }} col-span-2 w-full text-xs" data-inline-confirm-arm>
                                             Eliminar
+                                        </button>
+                                        <button type="submit" class="hidden {{ $btnDanger }} w-full text-xs" data-inline-confirm-confirm>
+                                            Confirmar
+                                        </button>
+                                        <button type="button" class="hidden {{ $btnSecondary }} w-full text-xs" data-inline-confirm-cancel>
+                                            Cancelar
                                         </button>
                                     </form>
                                 @endif

@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Budget;
 use App\Models\Integration;
+use App\Models\FoodProduct;
+use App\Models\FoodStockBatch;
+use App\Models\ShoppingList;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Services\ProductPerformanceService;
@@ -32,6 +35,7 @@ class DashboardController extends Controller
 
         $savingsRate = $income > 0 ? ($income - $expenses) / $income : 0;
         $projectedSavings = ($income - $expenses) * 6;
+        $netThisMonth = $income - $expenses;
 
         // Presupuestos
         $budgets = Budget::with('category')
@@ -55,6 +59,8 @@ class DashboardController extends Controller
                 ];
             });
 
+        $budgetsAtRiskCount = $budgets->where('percent', '>=', 90)->count();
+
         // Wallets
         $wallets = Wallet::where('user_id', $user->id)
             ->where('is_active', true)
@@ -69,6 +75,8 @@ class DashboardController extends Controller
                 ];
             });
 
+        $activeWalletsCount = $wallets->count();
+
         // Alertas
         $alerts = collect();
 
@@ -78,6 +86,7 @@ class DashboardController extends Controller
                 $alerts->push([
                     'title' => 'Presupuesto alto',
                     'message' => "Has gastado {$budget['percent']}% del presupuesto de {$budget['category']}.",
+                    'route' => route('budgets.index'),
                 ]);
             }
         }
@@ -91,6 +100,7 @@ class DashboardController extends Controller
                 $alerts->push([
                     'title' => '📉 Producto de bajo rendimiento',
                     'message' => $alert['message'],
+                    'route' => route('food.products.index'),
                 ]);
             }
 
@@ -103,11 +113,32 @@ class DashboardController extends Controller
                 $alerts->push([
                     'title' => "{$icon} Cambio de precio",
                     'message' => "{$alert['product']} {$direction} " . abs(round($alert['change_percent'])) . "% en {$alert['vendor']}",
+                    'route' => route('food.products.index'),
                 ]);
             }
         } catch (\Exception $e) {
             // Ignorar errores del módulo de alimentos si no está completamente configurado
         }
+
+        // Resumen del módulo de alimentos
+        $foodProductsCount = FoodProduct::where('user_id', $user->id)->active()->count();
+        $foodLowStockCount = FoodProduct::where('user_id', $user->id)->active()->lowStock()->count();
+        $foodExpiringSoonCount = FoodStockBatch::where('user_id', $user->id)->active()->expiringSoon(7)->count();
+
+        $listsQuery = $this->accessibleShoppingListsQuery($user);
+        $foodActiveListsCount = (clone $listsQuery)->where('status', 'active')->count();
+        $foodLatestActiveList = (clone $listsQuery)
+            ->where('status', 'active')
+            ->withCount([
+                'items as pending_items_count' => fn ($q) => $q->where('is_checked', false),
+            ])
+            ->latest('generated_at')
+            ->first(['id', 'name', 'generated_at']);
+
+        // Resumen del módulo de familia
+        $activeFamilyGroup = $user->activeFamilyGroup()
+            ->withCount('members')
+            ->first();
 
         // Calcular health score
         $healthScore = $this->calculateHealthScore($income, $expenses, $budgets, $alerts->count());
@@ -121,11 +152,20 @@ class DashboardController extends Controller
             'expenses',
             'savingsRate',
             'projectedSavings',
+            'netThisMonth',
             'healthScore',
             'budgets',
+            'budgetsAtRiskCount',
             'wallets',
+            'activeWalletsCount',
             'alerts',
-            'googleIntegration'
+            'googleIntegration',
+            'foodProductsCount',
+            'foodLowStockCount',
+            'foodExpiringSoonCount',
+            'foodActiveListsCount',
+            'foodLatestActiveList',
+            'activeFamilyGroup'
         ));
     }
 
@@ -143,5 +183,22 @@ class DashboardController extends Controller
             + (20 * ($alertCount === 0 ? 1 : max(0, 1 - ($alertCount * 0.2))));
 
         return (int) round(max(1, min(100, $score)));
+    }
+
+    private function accessibleShoppingListsQuery($user)
+    {
+        $familyGroupIds = method_exists($user, 'familyGroupIds') ? $user->familyGroupIds() : [];
+
+        if (method_exists($user, 'isSystemAdmin') && $user->isSystemAdmin()) {
+            return ShoppingList::query();
+        }
+
+        return ShoppingList::where(function ($query) use ($user, $familyGroupIds) {
+            $query->where('user_id', $user->id);
+
+            if (!empty($familyGroupIds)) {
+                $query->orWhereIn('family_group_id', $familyGroupIds);
+            }
+        });
     }
 }

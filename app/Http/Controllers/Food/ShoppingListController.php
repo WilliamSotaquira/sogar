@@ -7,17 +7,27 @@ use App\Models\FoodProduct;
 use App\Models\FoodStockBatch;
 use App\Models\ShoppingList;
 use App\Models\ShoppingListItem;
+use App\Models\ShoppingListType;
 use App\Services\ShoppingListGenerator;
 use App\Services\ShoppingListSyncService;
 use App\Services\ShoppingListEventLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ShoppingListController extends Controller
 {
     public function index(Request $request): View
     {
+        ShoppingListType::ensureDefaultsForUser($request->user()->id);
+        $listTypes = ShoppingListType::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['name', 'slug']);
+
         $statusFilter = $request->input('status', 'active');
         $baseQuery = $this->accessibleListsQuery($request);
 
@@ -49,6 +59,7 @@ class ShoppingListController extends Controller
             'activeCount' => $activeCount,
             'completedCount' => $completedCount,
             'pendingItems' => $pendingItems,
+            'listTypes' => $listTypes,
             'locations' => \App\Models\FoodLocation::where('user_id', $request->user()->id)->orderBy('sort_order')->get(),
             'types' => \App\Models\FoodType::where('user_id', $request->user()->id)->orderBy('sort_order')->get(),
         ]);
@@ -59,6 +70,13 @@ class ShoppingListController extends Controller
      */
     public function all(Request $request): View
     {
+        ShoppingListType::ensureDefaultsForUser($request->user()->id);
+        $listTypes = ShoppingListType::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['name', 'slug']);
+
         $lists = $this->accessibleListsQuery($request)
             ->with(['items', 'budget.category', 'familyGroup'])
             ->orderBy('created_at', 'desc')
@@ -73,6 +91,7 @@ class ShoppingListController extends Controller
         return view('food.shopping-list.all', [
             'lists' => $lists,
             'budgets' => $budgets,
+            'listTypes' => $listTypes,
         ]);
     }
 
@@ -80,15 +99,23 @@ class ShoppingListController extends Controller
         Request $request,
         ShoppingListGenerator $generator
     ): RedirectResponse {
+        ShoppingListType::ensureDefaultsForUser($request->user()->id);
+
         $data = $request->validate([
             'horizon_days' => 'nullable|integer|min:1|max:30',
             'people_count' => 'nullable|integer|min:1|max:10',
             'safety_factor' => 'nullable|numeric|min:1|max:2',
             'name' => 'nullable|string|max:255',
-            'list_type' => 'nullable|string|in:general,food,cleaning,maintenance,other',
+            'list_type' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::exists('sogar_shopping_list_types', 'slug')
+                    ->where('user_id', $request->user()->id)
+                    ->where('is_active', true),
+            ],
             'expected_purchase_on' => 'nullable|date',
             'budget_id' => 'nullable|exists:sogar_budgets,id',
-            'category_id' => 'nullable|exists:sogar_categories,id',
             'auto_suggest' => 'nullable|boolean',
         ]);
 
@@ -113,12 +140,12 @@ class ShoppingListController extends Controller
                 'user_id' => $request->user()->id,
                 'family_group_id' => $request->user()->active_family_group_id,
                 'name' => $listName,
-                'list_type' => $data['list_type'] ?? 'general',
+                'list_type' => $data['list_type'],
                 'status' => 'active',
                 'generated_at' => now(),
                 'expected_purchase_on' => $data['expected_purchase_on'] ?? now()->addDays(7),
                 'budget_id' => $budget?->id,
-                'category_id' => $data['category_id'] ?? $budget?->category_id,
+                'category_id' => null,
             ]);
         } else {
             $list = $generator->generate(
@@ -132,9 +159,9 @@ class ShoppingListController extends Controller
 
             // Asignar presupuesto, categoría y tipo a la lista
             $list->update([
-                'list_type' => $data['list_type'] ?? 'general',
+                'list_type' => $data['list_type'],
                 'budget_id' => $budget?->id,
-                'category_id' => $data['category_id'] ?? $budget?->category_id,
+                'category_id' => null,
                 'family_group_id' => $request->user()->active_family_group_id,
             ]);
         }
@@ -142,7 +169,7 @@ class ShoppingListController extends Controller
         $this->logListEvent($list, 'list_created', [
             'list_type' => $list->list_type,
             'budget_id' => $list->budget_id,
-            'category_id' => $list->category_id,
+            'category_id' => null,
             'estimated_budget' => (float) ($list->estimated_budget ?? 0),
         ]);
 
@@ -330,6 +357,9 @@ class ShoppingListController extends Controller
             'barcode' => 'nullable|string|max:255',
         ]);
 
+        $wantsJson = $request->wantsJson() || $request->expectsJson();
+        $productCreated = false;
+
         // Buscar producto por nombre o código de barras
         $product = \App\Models\FoodProduct::where('user_id', $request->user()->id)
             ->where('is_active', true)
@@ -340,11 +370,44 @@ class ShoppingListController extends Controller
             ->first();
 
         if (!$product) {
-            return back()->withErrors(['name' => 'El producto no existe en el catálogo. Por favor, crea el producto primero.'])->withInput();
-        }
+            if ($request->boolean('create_product')) {
+                $creation = $request->validate([
+                    'unit_base' => 'required|string|max:16',
+                    'barcode' => [
+                        'nullable',
+                        'string',
+                        'max:255',
+                        Rule::unique('sogar_food_products', 'barcode')
+                            ->where('user_id', $request->user()->id),
+                    ],
+                ]);
 
-        if (!$product) {
-            return back()->withErrors(['name' => 'El producto no existe en el catálogo. Por favor, crea el producto primero.'])->withInput();
+                $product = FoodProduct::create([
+                    'user_id' => $request->user()->id,
+                    'name' => trim($data['name']),
+                    'brand' => $data['brand'] ?? null,
+                    'type_id' => $data['type_id'] ?? null,
+                    'default_location_id' => $data['location_id'] ?? null,
+                    'unit_base' => $creation['unit_base'],
+                    'unit_size' => (float) ($data['unit_size'] ?? 1),
+                    'min_stock_qty' => (float) ($data['min_stock_qty'] ?? 1),
+                    'shelf_life_days' => $data['shelf_life_days'] ?? null,
+                    'barcode' => $creation['barcode'] ?? null,
+                    'is_active' => true,
+                ]);
+                $productCreated = true;
+            } else {
+                $message = 'El producto no existe en el catálogo. Activa "Crear nuevo" para agregarlo al instante.';
+                if ($wantsJson) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $message,
+                        'errors' => ['name' => [$message]],
+                    ], 422);
+                }
+
+                return back()->withErrors(['name' => $message])->withInput();
+            }
         }
 
         $list = null;
@@ -399,10 +462,10 @@ class ShoppingListController extends Controller
             'status' => 'ok',
             'item' => $item->load('product'),
             'stock_ok' => $productStock >= $data['qty_to_buy_base'],
-            'product_created' => false,
+            'product_created' => $productCreated,
         ];
 
-        if ($request->wantsJson()) {
+        if ($wantsJson) {
             return response()->json($payload, 201);
         }
 
@@ -506,11 +569,15 @@ class ShoppingListController extends Controller
         return back()->with('status', $markValue ? 'Productos marcados como comprados.' : 'Productos desmarcados.');
     }
 
-    public function destroyItem(Request $request, ShoppingList $list, ShoppingListItem $item): RedirectResponse
+    public function destroyItem(Request $request, ShoppingList $list, ShoppingListItem $item): RedirectResponse|JsonResponse
     {
         $this->authorizeList($request, $list, 'manage');
         abort_unless($item->shopping_list_id === $list->id, 404);
         $item->delete();
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
 
         return back()->with('status', 'Producto eliminado de la lista.');
     }
@@ -582,15 +649,15 @@ class ShoppingListController extends Controller
         return back()->with('status', "$count productos sugeridos agregados a la lista.");
     }
 
-    public function destroy(Request $request, ShoppingList $list): RedirectResponse
+    public function destroy(Request $request, ShoppingList $list): RedirectResponse|JsonResponse
     {
         $this->authorizeList($request, $list, 'manage');
 
-        if ($list->status === 'active') {
-            return back()->with('status', 'No se puede eliminar la lista activa. Genera una nueva primero.');
-        }
-
         $list->delete();
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
 
         return back()->with('status', 'Lista eliminada.');
     }
@@ -686,9 +753,15 @@ class ShoppingListController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'barcode']);
 
+        $foodTypes = \App\Models\FoodType::where('user_id', $request->user()->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'name']);
+
         return view('food.shopping-list.show', [
             'list' => $list,
             'products' => $products,
+            'foodTypes' => $foodTypes,
         ]);
     }
 

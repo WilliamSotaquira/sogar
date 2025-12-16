@@ -19,12 +19,34 @@
                         <a href="{{ route('food.products.index') }}" class="{{ $btnSecondary }} bg-white/10 text-white border-white/20">Listado</a>
                         <a href="{{ route('food.products.edit', $product) }}" class="{{ $btnSecondary }} bg-white text-emerald-600 border-white">Editar</a>
                         <a href="{{ route('food.prices.show', $product) }}" class="{{ $btnSecondary }} bg-white text-emerald-600 border-white">Precios</a>
-                        <button type="button" onclick="confirmDelete()" class="{{ $btnSecondary }} bg-red-600 text-white border-red-600 hover:bg-red-700">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                            Eliminar
-                        </button>
+                        <form method="POST" action="{{ route('food.products.destroy', $product) }}" class="flex flex-wrap items-center gap-2" data-inline-confirm data-inline-confirm-timeout="12000">
+                            @csrf
+                            @method('DELETE')
+                            <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+
+                            <button type="button" class="{{ $btnSecondary }} bg-red-600 text-white border-red-600 hover:bg-red-700" data-inline-confirm-arm>
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Eliminar
+                            </button>
+                            <button type="submit" class="hidden {{ $btnSecondary }} bg-red-700 text-white border-red-700 hover:bg-red-800" data-inline-confirm-confirm>
+                                Confirmar
+                            </button>
+                            <button type="button" class="hidden {{ $btnSecondary }} bg-white/10 text-white border-white/20" data-inline-confirm-cancel>
+                                Cancelar
+                            </button>
+
+                            <div data-inline-confirm-details class="hidden w-full rounded-lg border border-rose-200 bg-rose-50/70 px-3 py-2 text-xs text-rose-900 dark:border-rose-900/40 dark:bg-rose-900/20 dark:text-rose-100">
+                                <p class="font-semibold">Esta acción no se puede deshacer.</p>
+                                <ul class="mt-1 list-disc pl-4">
+                                    <li>El producto</li>
+                                    <li>Sus lotes de inventario</li>
+                                    <li>Sus movimientos</li>
+                                    <li>Sus precios registrados</li>
+                                </ul>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 @if($product->barcode)
@@ -248,20 +270,4 @@
             </div>
         </div>
     </div>
-
-    {{-- Formulario oculto para eliminar --}}
-    <form id="delete-form" method="POST" action="{{ route('food.products.destroy', $product) }}" class="hidden">
-        @csrf
-        @method('DELETE')
-    </form>
-
-    <script>
-        function confirmDelete() {
-            const productName = "{{ $product->name }}";
-
-            if (confirm(`¿Estás seguro de eliminar el producto "${productName}"?\n\nEsta acción eliminará:\n• El producto\n• Sus lotes de inventario\n• Sus movimientos\n• Sus precios registrados\n\nEsta acción no se puede deshacer.`)) {
-                document.getElementById('delete-form').submit();
-            }
-        }
-    </script>
 </x-layouts.app>

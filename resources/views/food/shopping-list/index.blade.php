@@ -22,7 +22,7 @@
                 <div>
                     <p class="text-[10px] uppercase tracking-wide font-semibold sm:text-xs">Compras inteligentes</p>
                     <h1 class="text-lg font-bold leading-tight sm:text-2xl md:text-3xl">Lista de Compra</h1>
-                    <p class="text-[11px] leading-tight text-white/80 sm:text-sm">Vinculada a presupuesto.</p>
+                    <p class="text-[11px] leading-tight text-white/80 sm:text-sm">Presupuesto opcional.</p>
                 </div>
                 @if($list && $list->budget)
                     <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
@@ -30,6 +30,14 @@
                         <p class="text-xl font-bold">${{ number_format($list->budget->amount, 0, ',', '.') }}</p>
                         @if($list->actual_total > 0)
                             <p class="text-xs text-white/90 mt-1">Gastado: ${{ number_format($list->actual_total, 0, ',', '.') }}</p>
+                        @endif
+                    </div>
+                @elseif($list)
+                    <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
+                        <p class="text-xs text-white/80">Sin presupuesto asignado</p>
+                        <p class="text-xl font-bold">Estimado: ${{ number_format($list->estimated_budget, 0, ',', '.') }}</p>
+                        @if($list->actual_total > 0)
+                            <p class="text-xs text-white/90 mt-1">Real: ${{ number_format($list->actual_total, 0, ',', '.') }}</p>
                         @endif
                     </div>
                 @endif
@@ -91,12 +99,56 @@
                                 <input type="text" name="name" placeholder="Ej: Compra semanal" class="{{ $input }}" value="{{ old('name', 'Compra ' . now()->format('d/m')) }}">
                             </div>
 
+                            <div data-list-type-field>
+                                <div class="flex items-end justify-between gap-3">
+                                    <label class="{{ $label }}">
+                                        Tipo de lista <span class="text-rose-500">*</span>
+                                    </label>
+                                    <button type="button"
+                                            class="text-xs font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200"
+                                            data-list-type-toggle
+                                            aria-expanded="false"
+                                            aria-controls="list-type-panel">
+                                        Agregar tipo
+                                    </button>
+                                </div>
+
+                                <select name="list_type" required class="{{ $input }}" data-list-type-select>
+                                    @foreach(($listTypes ?? collect()) as $type)
+                                        <option value="{{ $type->slug }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+
+                                <div id="list-type-panel" class="hidden" data-list-type-panel>
+                                    <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <input type="text"
+                                               class="h-11 w-full flex-1 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                               placeholder="Nuevo tipo (ej: Mascotas)"
+                                               maxlength="50"
+                                               data-list-type-input>
+                                        <div class="flex gap-2">
+                                            <button type="button"
+                                                    class="h-11 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                                                    data-list-type-add>
+                                                Guardar
+                                            </button>
+                                            <button type="button"
+                                                    class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                                    data-list-type-cancel>
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" role="status" aria-live="polite" aria-atomic="true" data-list-type-status></p>
+                                </div>
+
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Ayuda a organizar tus listas.</p>
+                            </div>
+
                             <div>
-                                <label class="{{ $label }}">
-                                    Presupuesto <span class="text-rose-500">*</span>
-                                </label>
-                                <select name="budget_id" required class="{{ $input }}">
-                                    <option value="">Selecciona un presupuesto...</option>
+                                <label class="{{ $label }}">Presupuesto <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
+                                <select name="budget_id" class="{{ $input }}">
+                                    <option value="">Sin presupuesto</option>
                                     @foreach($budgets as $budget)
                                         <option value="{{ $budget->id }}">
                                             {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}
@@ -106,7 +158,7 @@
                                 </select>
                                 @if($budgets->isEmpty())
                                     <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                                        ⚠️ Debes crear un presupuesto primero en
+                                        ⚠️ No tienes presupuestos este mes (opcional). Puedes crearlos en
                                         <a href="{{ route('budgets.index') }}" class="underline">Presupuestos</a>
                                     </p>
                                 @endif
@@ -128,7 +180,7 @@
                             </div>
 
                             <div class="flex justify-end pt-2">
-                                <button type="submit" class="{{ $btnPrimary }}" @if($budgets->isEmpty()) disabled @endif>
+                                <button type="submit" class="{{ $btnPrimary }}">
                                     🚀 Generar Lista
                                 </button>
                             </div>
@@ -389,6 +441,113 @@
             </a>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                const fields = document.querySelectorAll('[data-list-type-field]');
+
+                const initField = (field) => {
+                    const select = field.querySelector('[data-list-type-select]');
+                    const toggle = field.querySelector('[data-list-type-toggle]');
+                    const panel = field.querySelector('[data-list-type-panel]');
+                    const input = field.querySelector('[data-list-type-input]');
+                    const addBtn = field.querySelector('[data-list-type-add]');
+                    const cancelBtn = field.querySelector('[data-list-type-cancel]');
+                    const status = field.querySelector('[data-list-type-status]');
+
+                    const setStatus = (text, isError = false) => {
+                        if (!status) return;
+                        status.textContent = text || '';
+                        status.className = `mt-1 text-xs ${isError ? 'text-rose-600 dark:text-rose-300' : 'text-gray-500 dark:text-gray-400'}`;
+                    };
+
+                    const openPanel = () => {
+                        panel?.classList.remove('hidden');
+                        toggle?.setAttribute('aria-expanded', 'true');
+                        setTimeout(() => input?.focus(), 0);
+                    };
+
+                    const closePanel = () => {
+                        panel?.classList.add('hidden');
+                        toggle?.setAttribute('aria-expanded', 'false');
+                        setStatus('');
+                        if (input) input.value = '';
+                    };
+
+                    toggle?.addEventListener('click', () => {
+                        if (panel?.classList.contains('hidden')) {
+                            openPanel();
+                        } else {
+                            closePanel();
+                        }
+                    });
+
+                    cancelBtn?.addEventListener('click', closePanel);
+
+                    const submit = async () => {
+                        const name = (input?.value || '').trim();
+                        if (!name) {
+                            setStatus('Escribe un nombre para el tipo.', true);
+                            input?.focus();
+                            return;
+                        }
+
+                        addBtn.disabled = true;
+                        cancelBtn && (cancelBtn.disabled = true);
+                        setStatus('Guardando…');
+
+                        try {
+                            const res = await fetch('{{ route('food.shopping-list.types.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': csrf || '',
+                                },
+                                body: JSON.stringify({ name }),
+                            });
+
+                            const payload = await res.json().catch(() => null);
+                            if (!res.ok || !payload?.data?.slug) {
+                                const msg = payload?.message || payload?.errors?.name?.[0] || 'No se pudo crear el tipo.';
+                                setStatus(msg, true);
+                                return;
+                            }
+
+                            const option = document.createElement('option');
+                            option.value = payload.data.slug;
+                            option.textContent = payload.data.name;
+                            select?.appendChild(option);
+                            if (select) select.value = payload.data.slug;
+                            closePanel();
+                        } catch (e) {
+                            setStatus('Error de red al crear el tipo.', true);
+                        } finally {
+                            addBtn.disabled = false;
+                            cancelBtn && (cancelBtn.disabled = false);
+                        }
+                    };
+
+                    addBtn?.addEventListener('click', submit);
+                    input?.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            submit();
+                        }
+                        if (e.key === 'Escape') {
+                            e.preventDefault();
+                            closePanel();
+                        }
+                    });
+                };
+
+                fields.forEach(initField);
+            });
+        </script>
+    @endpush
 
     <button id="floating-nav-trigger"
             onclick="toggleFloatingNav()"

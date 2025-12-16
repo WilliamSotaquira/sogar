@@ -13,6 +13,7 @@ use App\Http\Controllers\Food\InventoryController;
 use App\Http\Controllers\Food\ProductController as FoodProductController;
 use App\Http\Controllers\Food\PurchaseController as FoodPurchaseController;
 use App\Http\Controllers\Food\ShoppingListController as FoodShoppingListController;
+use App\Http\Controllers\Food\ShoppingListTypeController as FoodShoppingListTypeController;
 use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WalletController;
@@ -119,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
     // Shopping Lists - Vista de todas las listas
     Route::get('food/shopping-list/all', [FoodShoppingListController::class, 'all'])->name('food.shopping-list.all');
     Route::post('food/shopping-list/{list}/suggest', [FoodShoppingListController::class, 'generateSuggestions'])->name('food.shopping-list.suggest');
+    Route::post('food/shopping-list/types', [FoodShoppingListTypeController::class, 'store'])->name('food.shopping-list.types.store');
 
     // Shopping Lists - Rutas existentes
     Route::get('food/shopping-list', [FoodShoppingListController::class, 'index'])->name('food.shopping-list.index');

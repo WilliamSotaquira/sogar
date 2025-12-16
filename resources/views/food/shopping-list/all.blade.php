@@ -7,6 +7,9 @@
 
 <x-layouts.app :title="__('Mis Listas de Compra')">
     <div class="mx-auto w-full max-w-7xl space-y-4 px-3 sm:px-0">
+        @php
+            $listTypeLabels = collect($listTypes ?? [])->pluck('name', 'slug');
+        @endphp
         {{-- Header --}}
         <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 sm:p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
             <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between text-white">
@@ -20,6 +23,14 @@
                 </button>
             </div>
         </div>
+
+        @if (session('status'))
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-100">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <p id="page-status" class="hidden rounded-lg border px-4 py-3 text-sm" role="status" aria-live="polite" aria-atomic="true"></p>
 
         {{-- Métricas Rápidas --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -98,6 +109,7 @@
                         'other' => '📄',
                     ];
                     $listIcon = $typeIcons[$list->list_type ?? 'general'] ?? '📋';
+                    $typeLabel = $listTypeLabels[$list->list_type] ?? ($list->list_type ? ucfirst(str_replace('-', ' ', $list->list_type)) : 'General');
 
                     // Traducción de status
                     $statusLabels = [
@@ -132,7 +144,7 @@
                                 {{ $statusLabel }}
                             </span>
                             <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                                {{ ucfirst($list->list_type ?? 'general') }}
+                                {{ $typeLabel }}
                             </span>
                             @if($list->familyGroup)
                                 <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
@@ -198,12 +210,45 @@
                         <a href="{{ route('food.shopping-list.show', $list) }}" class="{{ $btnPrimary }} flex-1 text-center">
                             Ver Lista
                         </a>
-                        <button type="button" onclick="generateSuggestions({{ $list->id }})" class="{{ $btnSecondary }}" title="Generar sugeridos">
-                            🤖
-                        </button>
-                        <button type="button" onclick="deleteList({{ $list->id }})" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-400" title="Eliminar lista">
-                            🗑️
-                        </button>
+                        <div class="flex items-center gap-2" data-inline-confirm data-inline-confirm-timeout="10000">
+                            <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+                            <button type="button" class="{{ $btnSecondary }}" title="Sugeridos automáticos" aria-label="Sugeridos automáticos" data-inline-confirm-arm>
+                                🤖
+                            </button>
+                            <button type="button" onclick="generateSuggestions({{ $list->id }})" class="hidden {{ $btnSecondary }}" aria-label="Confirmar generar sugeridos" data-inline-confirm-confirm>
+                                Generar
+                            </button>
+                            <button type="button" class="hidden {{ $btnSecondary }}" aria-label="Cancelar generar sugeridos" data-inline-confirm-cancel>
+                                Cancelar
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2" data-delete-wrap="{{ $list->id }}">
+                            <button type="button"
+                                    onclick="armDeleteList({{ $list->id }})"
+                                    class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-400"
+                                    title="Eliminar lista"
+                                    aria-label="Eliminar lista">
+                                🗑️
+                            </button>
+                            <div class="hidden items-center gap-2" data-delete-confirm="{{ $list->id }}">
+                                <button type="button"
+                                        onclick="submitDeleteList({{ $list->id }})"
+                                        class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                                        title="Confirmar eliminar">
+                                    Eliminar
+                                </button>
+                                <button type="button"
+                                        onclick="cancelDeleteList({{ $list->id }})"
+                                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                        title="Cancelar">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                        <form id="delete-list-form-{{ $list->id }}" action="{{ route('food.shopping-list.destroy', $list) }}" method="POST" class="hidden">
+                            @csrf
+                            @method('DELETE')
+                        </form>
                     </div>
                 </div>
             @empty
@@ -234,16 +279,50 @@
                     <p class="text-xs text-gray-500 mt-1">Puedes personalizarlo como desees</p>
                 </div>
 
-                <div>
-                    <label for="list_type" class="{{ $label }}">Tipo de lista</label>
-                    <select id="list_type" name="list_type" class="{{ $input }}">
-                        <option value="general">General</option>
-                        <option value="food">Alimentos</option>
-                        <option value="cleaning">Aseo</option>
-                        <option value="maintenance">Mantenimiento/Arreglos</option>
-                        <option value="other">Otro</option>
+                <div data-list-type-field>
+                    <div class="flex items-end justify-between gap-3">
+                        <label for="list_type" class="{{ $label }}">
+                            Tipo de lista <span class="text-rose-500">*</span>
+                        </label>
+                        <button type="button"
+                                class="text-xs font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200"
+                                data-list-type-toggle
+                                aria-expanded="false"
+                                aria-controls="list-type-panel-modal">
+                            Agregar tipo
+                        </button>
+                    </div>
+
+                    <select id="list_type" name="list_type" required class="{{ $input }}" data-list-type-select>
+                        @foreach(($listTypes ?? collect()) as $type)
+                            <option value="{{ $type->slug }}">{{ $type->name }}</option>
+                        @endforeach
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Ayuda a organizar tus listas</p>
+
+                    <div id="list-type-panel-modal" class="hidden" data-list-type-panel>
+                        <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <input type="text"
+                                   class="h-11 w-full flex-1 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                   placeholder="Nuevo tipo (ej: Mascotas)"
+                                   maxlength="50"
+                                   data-list-type-input>
+                            <div class="flex gap-2">
+                                <button type="button"
+                                        class="h-11 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                                        data-list-type-add>
+                                    Guardar
+                                </button>
+                                <button type="button"
+                                        class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                        data-list-type-cancel>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" role="status" aria-live="polite" aria-atomic="true" data-list-type-status></p>
+                    </div>
+
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Ayuda a organizar tus listas.</p>
                 </div>
 
                 <div>
@@ -313,31 +392,123 @@
             }
         });
 
-        async function deleteList(listId) {
-            if (!confirm('¿Eliminar esta lista de compra?')) return;
+        document.addEventListener('DOMContentLoaded', () => {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const fields = document.querySelectorAll('[data-list-type-field]');
 
-            try {
-                const res = await fetch(`/food/shopping-list/${listId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
+            const initField = (field) => {
+                const select = field.querySelector('[data-list-type-select]');
+                const toggle = field.querySelector('[data-list-type-toggle]');
+                const panel = field.querySelector('[data-list-type-panel]');
+                const input = field.querySelector('[data-list-type-input]');
+                const addBtn = field.querySelector('[data-list-type-add]');
+                const cancelBtn = field.querySelector('[data-list-type-cancel]');
+                const status = field.querySelector('[data-list-type-status]');
+
+                const setStatus = (text, isError = false) => {
+                    if (!status) return;
+                    status.textContent = text || '';
+                    status.className = `mt-1 text-xs ${isError ? 'text-rose-600 dark:text-rose-300' : 'text-gray-500 dark:text-gray-400'}`;
+                };
+
+                const openPanel = () => {
+                    panel?.classList.remove('hidden');
+                    toggle?.setAttribute('aria-expanded', 'true');
+                    setTimeout(() => input?.focus(), 0);
+                };
+
+                const closePanel = () => {
+                    panel?.classList.add('hidden');
+                    toggle?.setAttribute('aria-expanded', 'false');
+                    setStatus('');
+                    if (input) input.value = '';
+                };
+
+                toggle?.addEventListener('click', () => {
+                    if (panel?.classList.contains('hidden')) {
+                        openPanel();
+                    } else {
+                        closePanel();
+                    }
                 });
 
-                if (res.ok) {
-                    location.reload();
-                } else {
-                    alert('Error al eliminar');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Error al eliminar');
-            }
-        }
+                cancelBtn?.addEventListener('click', closePanel);
+
+                const submit = async () => {
+                    const name = (input?.value || '').trim();
+                    if (!name) {
+                        setStatus('Escribe un nombre para el tipo.', true);
+                        input?.focus();
+                        return;
+                    }
+
+                    addBtn.disabled = true;
+                    cancelBtn && (cancelBtn.disabled = true);
+                    setStatus('Guardando…');
+
+                    try {
+                        const res = await fetch('{{ route('food.shopping-list.types.store') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrf || '',
+                            },
+                            body: JSON.stringify({ name }),
+                        });
+
+                        const payload = await res.json().catch(() => null);
+                        if (!res.ok || !payload?.data?.slug) {
+                            const msg = payload?.message || payload?.errors?.name?.[0] || 'No se pudo crear el tipo.';
+                            setStatus(msg, true);
+                            return;
+                        }
+
+                        const option = document.createElement('option');
+                        option.value = payload.data.slug;
+                        option.textContent = payload.data.name;
+                        select?.appendChild(option);
+                        if (select) select.value = payload.data.slug;
+                        closePanel();
+                    } catch (e) {
+                        setStatus('Error de red al crear el tipo.', true);
+                    } finally {
+                        addBtn.disabled = false;
+                        cancelBtn && (cancelBtn.disabled = false);
+                    }
+                };
+
+                addBtn?.addEventListener('click', submit);
+                input?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submit();
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closePanel();
+                    }
+                });
+            };
+
+            fields.forEach(initField);
+        });
 
         async function generateSuggestions(listId) {
-            if (!confirm('¿Generar sugeridos automáticos para esta lista basados en productos con stock bajo?')) return;
+            const statusEl = document.getElementById('page-status');
+            const setStatus = (text, isError = false) => {
+                if (!statusEl) return;
+                statusEl.textContent = text;
+                statusEl.classList.remove('hidden');
+                statusEl.classList.toggle('border-emerald-200', !isError);
+                statusEl.classList.toggle('bg-emerald-50', !isError);
+                statusEl.classList.toggle('text-emerald-900', !isError);
+                statusEl.classList.toggle('border-rose-200', isError);
+                statusEl.classList.toggle('bg-rose-50', isError);
+                statusEl.classList.toggle('text-rose-900', isError);
+            };
+
+            setStatus('Generando sugeridos…');
 
             try {
                 const res = await fetch(`/food/shopping-list/${listId}/suggest`, {
@@ -350,15 +521,48 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    alert(`✅ ${data.count || 0} productos sugeridos agregados`);
+                    setStatus(`${data.count || 0} sugeridos agregados. Actualizando…`);
                     location.reload();
                 } else {
-                    alert('Error al generar sugeridos');
+                    setStatus('No se pudieron generar sugeridos.', true);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Error al generar sugeridos');
+                setStatus('Error de red al generar sugeridos.', true);
             }
+        }
+
+        const __deleteTimers = window.__deleteTimers || {};
+
+        function armDeleteList(listId) {
+            const wrap = document.querySelector(`[data-delete-wrap="${listId}"]`);
+            const confirmRow = document.querySelector(`[data-delete-confirm="${listId}"]`);
+            if (!wrap || !confirmRow) return;
+
+            confirmRow.classList.remove('hidden');
+            confirmRow.classList.add('flex');
+
+            if (__deleteTimers[listId]) {
+                clearTimeout(__deleteTimers[listId]);
+            }
+            __deleteTimers[listId] = setTimeout(() => cancelDeleteList(listId), 6000);
+        }
+
+        function cancelDeleteList(listId) {
+            const confirmRow = document.querySelector(`[data-delete-confirm="${listId}"]`);
+            if (confirmRow) {
+                confirmRow.classList.add('hidden');
+                confirmRow.classList.remove('flex');
+            }
+            if (__deleteTimers[listId]) {
+                clearTimeout(__deleteTimers[listId]);
+                delete __deleteTimers[listId];
+            }
+        }
+
+        function submitDeleteList(listId) {
+            cancelDeleteList(listId);
+            document.getElementById(`delete-list-form-${listId}`)?.submit();
         }
     </script>
     @endpush

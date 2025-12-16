@@ -48,6 +48,7 @@
                     class="flex flex-col sm:flex-row gap-3 mb-4" id="add-product-form">
                     @csrf
                     <input type="hidden" name="list_id" value="{{ $list->id }}">
+                    <input type="hidden" name="create_product" value="0" id="create-product-flag">
                     <div class="relative flex-1">
                         <label for="product-name-input" class="sr-only">Producto</label>
                         <input type="text" id="product-name-input" name="name" list="products-list"
@@ -75,8 +76,53 @@
                     </div>
                     <button type="submit" class="{{ $btnPrimary }}">Adicionar</button>
                 </form>
+                <div class="flex items-center justify-between gap-3">
+                    <button type="button"
+                        id="toggle-quick-create"
+                        class="text-sm font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200"
+                        aria-expanded="false"
+                        aria-controls="quick-create-panel">
+                        Crear producto nuevo (rápido)
+                    </button>
+                    <p id="add-item-status" role="status" aria-live="polite" aria-atomic="true" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                </div>
+                <div id="quick-create-panel" class="hidden mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-800/40">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="{{ $label }}">Marca (opcional)</label>
+                            <input type="text" name="brand" form="add-product-form" class="{{ $input }}" placeholder="Ej: Alpina">
+                        </div>
+                        <div>
+                            <label class="{{ $label }}">Tipo (opcional)</label>
+                            <select name="type_id" form="add-product-form" class="{{ $input }}">
+                                <option value="">Sin tipo</option>
+                                @foreach(($foodTypes ?? collect()) as $t)
+                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="{{ $label }}">Unidad base *</label>
+                            <select name="unit_base" form="add-product-form" class="{{ $input }}">
+                                <option value="unit">Unidad</option>
+                                <option value="g">g</option>
+                                <option value="kg">kg</option>
+                                <option value="ml">ml</option>
+                                <option value="l">l</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="{{ $label }}">Código de barras (opcional)</label>
+                            <input type="text" name="barcode" form="add-product-form" class="{{ $input }}" placeholder="Ej: 770..." inputmode="numeric">
+                        </div>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Escribe el nombre arriba y presiona “Adicionar”. Si no existe, se creará y se añadirá a la lista.
+                    </p>
+                </div>
+
                 @error('name')
-                    <p class="text-sm text-rose-600 dark:text-rose-400 mb-3">{{ $message }}</p>
+                    <p class="text-sm text-rose-600 dark:text-rose-400 mt-3">{{ $message }}</p>
                 @enderror
             </div>
 
@@ -91,12 +137,12 @@
                             <th class="px-3 sm:px-6 py-3 text-left font-medium text-gray-900 dark:text-gray-100">Stock</th>
                             <th class="px-3 sm:px-6 py-3 text-left font-medium text-gray-900 dark:text-gray-100">Prioridad</th>
                             <th class="px-3 sm:px-6 py-3 text-left font-medium text-gray-900 dark:text-gray-100">Estado</th>
-                            <th class="px-3 sm:px-6 py-3 text-right font-medium text-gray-900 dark:text-gray-100">Acciones</th>
+                            <th class="px-3 sm:px-6 py-3 text-right font-medium text-gray-900 dark:text-gray-100 w-20 whitespace-nowrap">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                         @forelse($list->items as $item)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50" data-item-row-id="{{ $item->id }}">
                                 <td class="px-3 sm:px-6 py-3 sm:py-4">
                                     <input type="checkbox"
                                         data-item-id="{{ $item->id }}"
@@ -138,20 +184,17 @@
                                         {{ $item->is_checked ? 'Comprado' : 'Pendiente' }}
                                     </span>
                                 </td>
-                                <td class="px-3 sm:px-6 py-3 sm:py-4">
-                                    <form method="POST"
-                                        action="{{ route('food.shopping-list.items.destroy', [$list, $item]) }}"
-                                        onsubmit="return confirm('¿Eliminar {{ $item->name }}?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="h-8 w-8 rounded-md text-gray-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20"
-                                            title="Eliminar">
-                                            <svg class="h-5 w-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </form>
+                                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right w-20 whitespace-nowrap">
+                                    <button type="button"
+                                        class="item-delete h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-rose-900/20"
+                                        data-item-id="{{ $item->id }}"
+                                        data-armed="0"
+                                        title="Eliminar">
+                                        <span class="sr-only">Eliminar</span>
+                                        <svg class="h-5 w-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -173,11 +216,234 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        // Toggle quick create panel
+        const toggleQuickCreate = document.getElementById('toggle-quick-create');
+        const quickCreatePanel = document.getElementById('quick-create-panel');
+        const createFlag = document.getElementById('create-product-flag');
+        const statusEl = document.getElementById('add-item-status');
+
+        const setStatus = (text, isError = false) => {
+            if (!statusEl) return;
+            statusEl.textContent = text || '';
+            statusEl.className = isError
+                ? 'text-sm text-rose-600 dark:text-rose-300'
+                : 'text-sm text-gray-500 dark:text-gray-400';
+        };
+
+        const setQuickCreateOpen = (open) => {
+            if (!toggleQuickCreate || !quickCreatePanel || !createFlag) return;
+            toggleQuickCreate.setAttribute('aria-expanded', open ? 'true' : 'false');
+            quickCreatePanel.classList.toggle('hidden', !open);
+            createFlag.value = open ? '1' : '0';
+        };
+
+        toggleQuickCreate?.addEventListener('click', () => {
+            const isOpen = toggleQuickCreate.getAttribute('aria-expanded') === 'true';
+            setQuickCreateOpen(!isOpen);
+        });
+
+        // AJAX add (and optionally create product)
+        const addForm = document.getElementById('add-product-form');
+        const nameInput = document.getElementById('product-name-input');
+        const qtyInput = document.getElementById('qty-input');
+        const productsDatalist = document.getElementById('products-list');
+        const tbody = document.querySelector('tbody.divide-y');
+
+        const escapeHtml = (s) => String(s ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+
+        const priorityBadgeClass = (priority) => {
+            if (priority === 'high') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
+            if (priority === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+            return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+        };
+
+        const addRow = (item) => {
+            if (!tbody) return;
+            const emptyRow = tbody.querySelector('tr td[colspan="7"]')?.closest('tr');
+            emptyRow?.remove();
+
+            const barcode = item.product?.barcode || '';
+            const stock = Number(item.qty_current_base || 0);
+            const unitBase = item.unit_base || 'unit';
+            const priority = item.priority || 'medium';
+
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50';
+            row.dataset.itemRowId = String(item.id);
+            row.innerHTML = `
+                <td class="px-3 sm:px-6 py-3 sm:py-4">
+                    <input type="checkbox"
+                        data-item-id="${item.id}"
+                        class="item-checkbox h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        title="Marcar como comprado">
+                </td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4">
+                    <div>
+                        <div class="font-medium text-gray-900 dark:text-gray-100">${escapeHtml(item.name)}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Código: ${barcode ? escapeHtml(barcode) : 'Sin código'}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4">
+                    <input type="number"
+                        data-item-id="${item.id}"
+                        value="${Number(item.qty_to_buy_base || 1)}"
+                        min="0"
+                        step="1"
+                        class="item-quantity h-8 w-16 rounded-md border border-gray-300 bg-white px-2 text-xs text-center dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                </td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-600 dark:text-gray-400">
+                    ${stock.toLocaleString('es-CO')} ${escapeHtml(unitBase)}
+                </td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4">
+                    <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium ${priorityBadgeClass(priority)}">
+                        ${escapeHtml(priority.charAt(0).toUpperCase() + priority.slice(1))}
+                    </span>
+                </td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4">
+                    <span class="item-status-badge-${item.id} inline-flex rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        Pendiente
+                    </span>
+                </td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">
+                    <button type="button"
+                        class="item-delete h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-rose-900/20"
+                        data-item-id="${item.id}"
+                        data-armed="0"
+                        title="Eliminar">
+                        <span class="sr-only">Eliminar</span>
+                        <svg class="h-5 w-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </td>
+            `;
+
+            tbody.prepend(row);
+        };
+
+        addForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setStatus('');
+
+            const fd = new FormData(addForm);
+            try {
+                setStatus('Agregando…');
+                const res = await fetch(addForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: fd,
+                });
+
+                const payload = await res.json().catch(() => null);
+                if (!res.ok) {
+                    const msg = payload?.message || payload?.errors?.name?.[0] || 'No se pudo agregar.';
+                    setStatus(msg, true);
+                    if (msg.includes('Crear nuevo')) {
+                        setQuickCreateOpen(true);
+                    }
+                    return;
+                }
+
+                if (payload?.item) {
+                    addRow(payload.item);
+                }
+
+                if (payload?.item?.product && productsDatalist) {
+                    const opt = document.createElement('option');
+                    const b = payload.item.product.barcode ? ` (${payload.item.product.barcode})` : '';
+                    opt.value = payload.item.product.name;
+                    opt.textContent = `${payload.item.product.name}${b}`;
+                    productsDatalist.appendChild(opt);
+                }
+
+                if (nameInput) nameInput.value = '';
+                if (qtyInput) qtyInput.value = '1';
+                setStatus(payload?.product_created ? 'Producto creado y agregado.' : 'Producto agregado.');
+            } catch (err) {
+                console.error(err);
+                setStatus('Error de red al agregar.', true);
+            }
+        });
+
+        // Eliminar ítem (2 clics, sin confirm del navegador)
+        const deleteTimers = {};
+        document.addEventListener('click', async (event) => {
+            const target = event.target instanceof Element ? event.target.closest('.item-delete') : null;
+            if (!target) return;
+
+            const itemId = target.getAttribute('data-item-id');
+            if (!itemId) return;
+
+            const armed = target.getAttribute('data-armed') === '1';
+            if (!armed) {
+                target.setAttribute('data-armed', '1');
+                target.classList.add('bg-rose-50', 'text-rose-600');
+                target.classList.remove('text-gray-400', 'text-gray-500');
+                target.title = 'Click de nuevo para eliminar';
+
+                clearTimeout(deleteTimers[itemId]);
+                deleteTimers[itemId] = setTimeout(() => {
+                    target.setAttribute('data-armed', '0');
+                    target.classList.remove('bg-rose-50', 'text-rose-600');
+                    target.classList.add('text-gray-500');
+                    target.title = 'Eliminar';
+                }, 4000);
+
+                return;
+            }
+
+            clearTimeout(deleteTimers[itemId]);
+
+            try {
+                const res = await fetch(`/food/shopping-list/{{ $list->id }}/items/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+
+                const payload = await res.json().catch(() => null);
+                if (!res.ok) {
+                    const msg = payload?.message || 'No se pudo eliminar.';
+                    setStatus(msg, true);
+                    target.setAttribute('data-armed', '0');
+                    target.classList.remove('bg-rose-50', 'text-rose-600');
+                    target.classList.add('text-gray-500');
+                    target.title = 'Eliminar';
+                    return;
+                }
+
+                const row = document.querySelector(`tr[data-item-row-id="${itemId}"]`);
+                row?.remove();
+                setStatus('Producto eliminado.');
+            } catch (err) {
+                console.error(err);
+                setStatus('Error de red al eliminar.', true);
+            }
+        });
+
         // Manejo de checkboxes para cambiar estado
-        document.querySelectorAll('.item-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const itemId = this.dataset.itemId;
-                const isChecked = this.checked;
+        document.addEventListener('change', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLInputElement) || !target.classList.contains('item-checkbox')) {
+                return;
+            }
+
+            const itemId = target.dataset.itemId;
+            const isChecked = target.checked;
 
                 // Actualización optimista de UI
                 const statusBadge = document.querySelector(`.item-status-badge-${itemId}`);
@@ -192,20 +458,20 @@
                 }
 
                 // Actualizar título del checkbox
-                this.title = isChecked ? 'Marcar como pendiente' : 'Marcar como comprado';
+                target.title = isChecked ? 'Marcar como pendiente' : 'Marcar como comprado';
 
                 // Enviar actualización al servidor
                 fetch(`/food/shopping-list/{{ $list->id }}/items/${itemId}/toggle`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({ is_checked: isChecked ? 1 : 0 })
                 }).catch(error => {
                     console.error('Error al actualizar estado:', error);
                     // Revertir UI en caso de error
-                    this.checked = !isChecked;
+                    target.checked = !isChecked;
                     if (statusBadge) {
                         if (!isChecked) {
                             statusBadge.className = 'item-status-badge-' + itemId + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
@@ -216,30 +482,32 @@
                         }
                     }
                 });
-            });
         });
 
         // Manejo de cantidad editable
-        document.querySelectorAll('.item-quantity').forEach(input => {
-            let timeout;
-            input.addEventListener('input', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    const itemId = this.dataset.itemId;
-                    const quantity = parseInt(this.value) || 0;
+        const qtyTimers = {};
+        document.addEventListener('input', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLInputElement) || !target.classList.contains('item-quantity')) {
+                return;
+            }
+
+            const itemId = target.dataset.itemId;
+            clearTimeout(qtyTimers[itemId]);
+            qtyTimers[itemId] = setTimeout(() => {
+                const quantity = parseInt(target.value) || 0;
 
                     fetch(`/food/shopping-list/{{ $list->id }}/items/${itemId}/quantity`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            'X-CSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify({ qty_to_buy_base: quantity })
                     }).catch(error => {
                         console.error('Error al actualizar cantidad:', error);
                     });
-                }, 500); // Debounce de 500ms
-            });
+            }, 500); // Debounce de 500ms
         });
 
         // Barcode Scanner usando componente reutilizable

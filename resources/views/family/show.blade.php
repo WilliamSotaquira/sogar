@@ -162,24 +162,47 @@
                                         </div>
                                         @if(auth()->user()->isAdminOfFamilyGroup($familyGroup->id) && $member->user_id !== $familyGroup->admin_user_id)
                                             <div class="flex gap-2">
-                                                <button type="button" 
+                                                <button
+                                                        type="button"
                                                         onclick="editMember({{ $member->id }}, '{{ $member->role }}', {{ $member->is_admin ? 'true' : 'false' }}, {{ $member->can_manage_finances ? 'true' : 'false' }}, {{ $member->can_manage_food ? 'true' : 'false' }}, {{ $member->can_manage_shopping ? 'true' : 'false' }})"
-                                                        class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                                        aria-label="Editar permisos de {{ $member->user->name }}"
+                                                        class="rounded p-1 text-indigo-600 hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus-visible:ring-offset-gray-900">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                     </svg>
                                                 </button>
                                                 <form action="{{ route('family.members.remove', [$familyGroup->id, $member->id]) }}" 
                                                       method="POST" 
-                                                      class="inline delete-member-form"
-                                                      data-member-name="{{ $member->user->name }}">
+                                                      class="inline-flex items-center gap-1"
+                                                      data-inline-confirm>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" 
+                                                    <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+                                                    <button
+                                                            type="button"
                                                             aria-label="Remover a {{ $member->user->name }}"
-                                                            class="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/10 transition-colors">
+                                                            class="rounded p-1 text-red-600 hover:text-red-900 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/10 dark:focus-visible:ring-offset-gray-900 transition-colors"
+                                                            data-inline-confirm-arm>
                                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                            type="submit"
+                                                            aria-label="Confirmar remoción de {{ $member->user->name }}"
+                                                            class="hidden rounded p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 dark:text-emerald-300 dark:hover:text-emerald-200 dark:hover:bg-emerald-900/10 dark:focus-visible:ring-offset-gray-900 transition-colors"
+                                                            data-inline-confirm-confirm>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                            type="button"
+                                                            aria-label="Cancelar remoción"
+                                                            class="hidden rounded p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800/50 dark:focus-visible:ring-offset-gray-900 transition-colors"
+                                                            data-inline-confirm-cancel>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                         </svg>
                                                     </button>
                                                 </form>
@@ -545,16 +568,6 @@
                 }
             });
 
-            // Manejo de confirmación para eliminar miembros
-            document.querySelectorAll('.delete-member-form').forEach(function(form) {
-                form.addEventListener('submit', function(e) {
-                    const memberName = this.dataset.memberName;
-                    const confirmed = confirm(`¿Estás seguro de que deseas remover a ${memberName}?`);
-                    if (!confirmed) {
-                        e.preventDefault();
-                    }
-                });
-            });
         });
     </script>
 </x-layouts.app>

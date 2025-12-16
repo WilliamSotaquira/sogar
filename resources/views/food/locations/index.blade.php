@@ -86,10 +86,13 @@
                                     <div class="flex justify-end gap-2">
                                         <a href="{{ route('food.locations.edit', $location) }}" class="{{ $btnSecondary }}">Editar</a>
                                         @if($location->products_count === 0 && $location->batches_count === 0)
-                                            <form method="POST" action="{{ route('food.locations.destroy', $location) }}" onsubmit="return confirm('¿Eliminar esta ubicación? Esta acción no se puede deshacer.');">
+                                            <form method="POST" action="{{ route('food.locations.destroy', $location) }}" class="inline-flex items-center gap-2" data-inline-confirm>
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="{{ $btnDanger }}">Eliminar</button>
+                                                <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+                                                <button type="button" class="{{ $btnDanger }}" data-inline-confirm-arm>Eliminar</button>
+                                                <button type="submit" class="hidden {{ $btnDanger }}" data-inline-confirm-confirm>Confirmar</button>
+                                                <button type="button" class="hidden {{ $btnSecondary }}" data-inline-confirm-cancel>Cancelar</button>
                                             </form>
                                         @else
                                             <span class="inline-flex items-center rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-400 dark:border-gray-700 dark:text-gray-500" title="No puedes eliminar ubicaciones con productos o lotes asociados.">

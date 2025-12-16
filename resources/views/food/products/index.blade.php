@@ -98,11 +98,18 @@
                                         <div class="flex flex-wrap gap-2">
                                             <a href="{{ route('food.products.show', $product) }}" class="{{ $btnSecondary }}">Ver</a>
                                             <a href="{{ route('food.products.edit', $product) }}" class="{{ $btnSecondary }}">Editar</a>
-                                            <form action="{{ route('food.products.destroy', $product) }}" method="POST" onsubmit="return confirm('¿Eliminar este producto?');">
+                                            <form action="{{ route('food.products.destroy', $product) }}" method="POST" class="inline-flex items-center gap-2" data-inline-confirm>
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-300">
+                                                <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+                                                <button type="button" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-300" data-inline-confirm-arm>
                                                     Eliminar
+                                                </button>
+                                                <button type="submit" class="hidden inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-200" data-inline-confirm-confirm>
+                                                    Confirmar
+                                                </button>
+                                                <button type="button" class="hidden inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700" data-inline-confirm-cancel>
+                                                    Cancelar
                                                 </button>
                                             </form>
                                         </div>
