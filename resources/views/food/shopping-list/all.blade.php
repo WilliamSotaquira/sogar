@@ -3,6 +3,8 @@
     $input = 'mt-1 block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100';
     $btnPrimary = 'inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1';
     $btnSecondary = 'inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
+    $btnIcon = 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
+    $btnIconDanger = 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600 shadow-sm transition hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-400 dark:hover:bg-rose-900/20';
 @endphp
 
 <x-layouts.app :title="__('Mis Listas de Compra')">
@@ -48,7 +50,7 @@
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $totalLists }}</p>
-                        <p class="text-xs text-gray-500">Listas totales</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Listas totales</p>
                     </div>
                 </div>
             </div>
@@ -59,7 +61,7 @@
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $activeLists }}</p>
-                        <p class="text-xs text-gray-500">Listas activas</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Listas activas</p>
                     </div>
                 </div>
             </div>
@@ -70,7 +72,7 @@
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $totalItems }}</p>
-                        <p class="text-xs text-gray-500">Items totales</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Items totales</p>
                     </div>
                 </div>
             </div>
@@ -81,7 +83,7 @@
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $checkedItems }}</p>
-                        <p class="text-xs text-gray-500">Comprados</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Comprados</p>
                     </div>
                 </div>
             </div>
@@ -127,28 +129,28 @@
 
                 <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-all group">
                     {{-- Header --}}
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1 min-w-0 pr-3">
-                            <div class="flex items-center gap-2 mb-1">
+                    <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="min-w-0 sm:flex-1 sm:pr-3">
+                            <div class="flex items-start gap-2 mb-1">
                                 <span class="text-lg flex-shrink-0">{{ $listIcon }}</span>
-                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 transition truncate" title="{{ $list->name }}">
-                                    {{ Str::limit($list->name, 30) }}
+                                <h3 class="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 transition break-words" title="{{ $list->name }}">
+                                    {{ $list->name }}
                                 </h3>
                             </div>
-                            <p class="text-xs text-gray-500">
+                            <p class="text-xs text-gray-600 dark:text-gray-400">
                                 {{ $list->generated_at?->format('d M Y, H:i') }}
                             </p>
                         </div>
-                        <div class="flex flex-wrap gap-2 justify-end">
+                        <div class="flex flex-wrap gap-2 sm:justify-end">
                             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap bg-{{ $color }}-100 text-{{ $color }}-700 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-300">
                                 {{ $statusLabel }}
                             </span>
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                            <span class="inline-flex max-w-[9.5rem] items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 truncate sm:max-w-none">
                                 {{ $typeLabel }}
                             </span>
                             @if($list->familyGroup)
-                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
-                                    👨‍👩‍👧 {{ Str::limit($list->familyGroup->name, 18) }}
+                                <span class="inline-flex max-w-[9.5rem] items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 truncate sm:max-w-none">
+                                    👨‍👩‍👧 {{ $list->familyGroup->name }}
                                 </span>
                             @endif
                         </div>
@@ -172,16 +174,16 @@
                     {{-- Totales rápidos --}}
                     <div class="grid grid-cols-3 gap-3 mb-5 text-sm">
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Items</p>
-                            <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $list->items->count() }}</p>
+                            <p class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">Items</p>
+                            <p class="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">{{ $list->items->count() }}</p>
                         </div>
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Estimado</p>
-                            <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</p>
+                            <p class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">Estimado</p>
+                            <p class="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</p>
                         </div>
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                            <p class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Gastado</p>
-                            <p class="font-semibold {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600' : 'text-emerald-600 dark:text-emerald-300' }} truncate">
+                            <p class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">Gastado</p>
+                            <p class="font-semibold tabular-nums {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
                                 ${{ number_format($actualTotal, 0, ',', '.') }}
                             </p>
                         </div>
@@ -190,15 +192,15 @@
                     {{-- Budget Info --}}
                     @if($list->budget)
                         <div class="mb-5 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
-                            <div class="flex items-center justify-between mb-2 text-sm">
-                                <span class="font-semibold text-gray-800 dark:text-gray-100 truncate">Presupuesto: {{ $list->budget->category->name }}</span>
-                                <span class="text-xs text-gray-500 ml-2 whitespace-nowrap">Disponible: ${{ number_format(max(0, $budgetAmount - $actualTotal), 0, ',', '.') }}</span>
+                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-2 text-sm">
+                                <span class="min-w-0 font-semibold text-gray-800 dark:text-gray-100 break-words">Presupuesto: {{ $list->budget->category->name }}</span>
+                                <span class="text-xs text-gray-700 dark:text-gray-300 tabular-nums">Disponible: ${{ number_format(max(0, $budgetAmount - $actualTotal), 0, ',', '.') }}</span>
                             </div>
                             @if($budgetUsage !== null)
                                 <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div class="h-full {{ $budgetUsage >= 95 ? 'bg-rose-500' : 'bg-emerald-500' }}" style="width: {{ $budgetUsage }}%"></div>
                                 </div>
-                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 text-[11px] text-gray-600 dark:text-gray-400">
                                     {{ round($budgetUsage) }}% del presupuesto usado
                                 </p>
                             @endif
@@ -206,49 +208,36 @@
                     @endif
 
                     {{-- Actions --}}
-                    <div class="flex gap-2">
-                        <a href="{{ route('food.shopping-list.show', $list) }}" class="{{ $btnPrimary }} flex-1 text-center">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('food.shopping-list.show', $list) }}" class="{{ $btnPrimary }} h-11 flex-1 text-center">
                             Ver Lista
-                        </a>
-                        <div class="flex items-center gap-2" data-inline-confirm data-inline-confirm-timeout="10000">
-                            <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
-                            <button type="button" class="{{ $btnSecondary }}" title="Sugeridos automáticos" aria-label="Sugeridos automáticos" data-inline-confirm-arm>
-                                🤖
-                            </button>
-                            <button type="button" onclick="generateSuggestions({{ $list->id }})" class="hidden {{ $btnSecondary }}" aria-label="Confirmar generar sugeridos" data-inline-confirm-confirm>
-                                Generar
-                            </button>
-                            <button type="button" class="hidden {{ $btnSecondary }}" aria-label="Cancelar generar sugeridos" data-inline-confirm-cancel>
-                                Cancelar
-                            </button>
-                        </div>
-                        <div class="flex items-center gap-2" data-delete-wrap="{{ $list->id }}">
-                            <button type="button"
-                                    onclick="armDeleteList({{ $list->id }})"
-                                    class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:bg-gray-900 dark:text-rose-400"
-                                    title="Eliminar lista"
-                                    aria-label="Eliminar lista">
-                                🗑️
-                            </button>
-                            <div class="hidden items-center gap-2" data-delete-confirm="{{ $list->id }}">
-                                <button type="button"
-                                        onclick="submitDeleteList({{ $list->id }})"
-                                        class="inline-flex items-center justify-center rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-                                        title="Confirmar eliminar">
-                                    Eliminar
+                            </a>
+
+                            <div class="flex items-center gap-2" data-inline-confirm data-inline-confirm-timeout="10000">
+                                <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
+                                <button type="button" class="{{ $btnIcon }}" title="Sugeridos automáticos" aria-label="Sugeridos automáticos" data-inline-confirm-arm>
+                                    🤖<span class="sr-only">Sugeridos</span>
                                 </button>
-                                <button type="button"
-                                        onclick="cancelDeleteList({{ $list->id }})"
-                                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-                                        title="Cancelar">
-                                    Cancelar
+                                <button type="button" onclick="generateSuggestions({{ $list->id }})" class="hidden {{ $btnIcon }}" aria-label="Confirmar sugeridos automáticos" data-inline-confirm-confirm>
+                                    ✓<span class="sr-only">Confirmar</span>
+                                </button>
+                                <button type="button" class="hidden {{ $btnIcon }}" aria-label="Cancelar sugeridos automáticos" data-inline-confirm-cancel>
+                                    ✕<span class="sr-only">Cancelar</span>
                                 </button>
                             </div>
+
+                            <form action="{{ route('food.shopping-list.destroy', $list) }}" method="POST" class="inline-flex">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="{{ $btnIconDanger }}"
+                                        title="Eliminar lista"
+                                        aria-label="Eliminar lista">
+                                    🗑️<span class="sr-only">Eliminar</span>
+                                </button>
+                            </form>
                         </div>
-                        <form id="delete-list-form-{{ $list->id }}" action="{{ route('food.shopping-list.destroy', $list) }}" method="POST" class="hidden">
-                            @csrf
-                            @method('DELETE')
-                        </form>
                     </div>
                 </div>
             @empty
@@ -348,12 +337,12 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                    <input type="checkbox" name="auto_suggest" id="auto-suggest" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" checked aria-describedby="auto-suggest-help">
-                    <label for="auto-suggest" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer" id="auto-suggest-help">
-                        🤖 Generar sugeridos automáticos basados en stock bajo
-                    </label>
-                </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                        <input type="checkbox" name="auto_suggest" id="auto-suggest" value="1" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" checked aria-describedby="auto-suggest-help">
+                        <label for="auto-suggest" class="min-w-0 flex-1 break-words text-sm text-gray-700 dark:text-gray-300 cursor-pointer" id="auto-suggest-help">
+                            🤖 Generar sugeridos automáticos basados en stock bajo
+                        </label>
+                    </div>
 
                 <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" onclick="closeCreateListModal()" class="{{ $btnSecondary }} flex-1">
@@ -532,38 +521,6 @@
             }
         }
 
-        const __deleteTimers = window.__deleteTimers || {};
-
-        function armDeleteList(listId) {
-            const wrap = document.querySelector(`[data-delete-wrap="${listId}"]`);
-            const confirmRow = document.querySelector(`[data-delete-confirm="${listId}"]`);
-            if (!wrap || !confirmRow) return;
-
-            confirmRow.classList.remove('hidden');
-            confirmRow.classList.add('flex');
-
-            if (__deleteTimers[listId]) {
-                clearTimeout(__deleteTimers[listId]);
-            }
-            __deleteTimers[listId] = setTimeout(() => cancelDeleteList(listId), 6000);
-        }
-
-        function cancelDeleteList(listId) {
-            const confirmRow = document.querySelector(`[data-delete-confirm="${listId}"]`);
-            if (confirmRow) {
-                confirmRow.classList.add('hidden');
-                confirmRow.classList.remove('flex');
-            }
-            if (__deleteTimers[listId]) {
-                clearTimeout(__deleteTimers[listId]);
-                delete __deleteTimers[listId];
-            }
-        }
-
-        function submitDeleteList(listId) {
-            cancelDeleteList(listId);
-            document.getElementById(`delete-list-form-${listId}`)?.submit();
-        }
     </script>
     @endpush
 </x-layouts.app>

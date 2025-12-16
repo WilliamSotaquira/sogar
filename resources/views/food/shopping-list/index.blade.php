@@ -15,94 +15,122 @@
 @endphp
 
 <x-layouts.app :title="__('Lista de compra')">
-    <div class="mx-auto w-full max-w-6xl space-y-2 px-3 pb-20 sm:space-y-4 sm:px-6 md:px-8 md:pb-6">
-        {{-- Hero Panel --}}
-        <div class="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 p-3 shadow-lg dark:from-emerald-600 dark:to-teal-700 sm:rounded-xl sm:p-6 md:p-8">
-            <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between text-white">
+    <div class="mx-auto w-full max-w-6xl space-y-4 px-3 pb-20 sm:px-6 md:px-8 md:pb-6">
+        {{-- Encabezado (simplificado) --}}
+        <header class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="text-[10px] uppercase tracking-wide font-semibold sm:text-xs">Compras inteligentes</p>
-                    <h1 class="text-lg font-bold leading-tight sm:text-2xl md:text-3xl">Lista de Compra</h1>
-                    <p class="text-[11px] leading-tight text-white/80 sm:text-sm">Presupuesto opcional.</p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                        Compras
+                    </p>
+                    <h1 class="mt-1 text-xl font-semibold text-gray-900 dark:text-gray-50 sm:text-2xl">
+                        Lista de compras
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        Agrega productos y marca lo comprado. El presupuesto es opcional.
+                    </p>
                 </div>
-                @if($list && $list->budget)
-                    <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-                        <p class="text-xs text-white/80">Presupuesto: {{ $list->budget->category->name }}</p>
-                        <p class="text-xl font-bold">${{ number_format($list->budget->amount, 0, ',', '.') }}</p>
-                        @if($list->actual_total > 0)
-                            <p class="text-xs text-white/90 mt-1">Gastado: ${{ number_format($list->actual_total, 0, ',', '.') }}</p>
-                        @endif
-                    </div>
-                @elseif($list)
-                    <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-                        <p class="text-xs text-white/80">Sin presupuesto asignado</p>
-                        <p class="text-xl font-bold">Estimado: ${{ number_format($list->estimated_budget, 0, ',', '.') }}</p>
-                        @if($list->actual_total > 0)
-                            <p class="text-xs text-white/90 mt-1">Real: ${{ number_format($list->actual_total, 0, ',', '.') }}</p>
-                        @endif
-                    </div>
+
+                @if($list)
+                    @php
+                        $checkedCount = $list->items->where('is_checked', true)->count();
+                        $totalCount = $list->items->count();
+                        $pendingCount = max(0, $totalCount - $checkedCount);
+                        $progress = $totalCount > 0 ? (int) round(($checkedCount / $totalCount) * 100) : 0;
+                    @endphp
+                    <dl class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                            <dt class="text-xs font-medium text-gray-600 dark:text-gray-300">Pendientes</dt>
+                            <dd class="mt-1 text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-50">{{ $pendingCount }}</dd>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                            <dt class="text-xs font-medium text-gray-600 dark:text-gray-300">Completados</dt>
+                            <dd class="mt-1 text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-50">{{ $checkedCount }}</dd>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                            <dt class="text-xs font-medium text-gray-600 dark:text-gray-300">Estimado</dt>
+                            <dd class="mt-1 text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-50">${{ number_format($list->estimated_budget, 0, ',', '.') }}</dd>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                            <dt class="text-xs font-medium text-gray-600 dark:text-gray-300">Real</dt>
+                            <dd class="mt-1 text-lg font-semibold tabular-nums {{ $list->actual_total > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-gray-50' }}">${{ number_format($list->actual_total ?: 0, 0, ',', '.') }}</dd>
+                        </div>
+                    </dl>
                 @endif
             </div>
-        </div>
+
+            @if($list)
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-300">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                            {{ $list->name }}
+                        </span>
+                        @if($list->budget)
+                            <span class="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                Presupuesto: {{ $list->budget->category->name }}
+                            </span>
+                        @endif
+                    </div>
+                    <a href="{{ route('food.shopping-list.all') }}"
+                       class="font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">
+                        Ver mis listas
+                    </a>
+                </div>
+            @endif
+        </header>
 
         {{-- Status Messages --}}
         @if (session('status'))
-            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-100">
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-100" role="status" aria-live="polite">
                 {{ session('status') }}
             </div>
         @endif
 
         @if($list)
-            <div class="md:hidden sticky top-3 z-20 -mx-4 px-4">
-                <div class="rounded-lg bg-white/90 dark:bg-gray-900/90 backdrop-blur ring-1 ring-gray-100 shadow-md dark:ring-gray-800">
-                    <div class="flex text-sm font-semibold">
+            <nav class="md:hidden sticky top-3 z-20 -mx-4 px-4" aria-label="Filtrar listas">
+                <div class="rounded-lg bg-white/90 backdrop-blur ring-1 ring-gray-100 shadow-md dark:bg-gray-900/90 dark:ring-gray-800">
+                    <div class="flex text-sm font-semibold" role="tablist" aria-label="Estado de listas">
                         <a href="{{ route('food.shopping-list.index', ['status' => 'active']) }}"
-                           class="flex-1 px-4 py-3 text-center {{ ($statusFilter ?? 'active') === 'active' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-500 dark:text-gray-400' }}">
-                            Activas ({{ $activeCount ?? 0 }})
+                           class="flex-1 px-4 py-3 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 {{ ($statusFilter ?? 'active') === 'active' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-600 dark:text-gray-300' }}"
+                           aria-current="{{ ($statusFilter ?? 'active') === 'active' ? 'page' : 'false' }}">
+                            Activas <span class="tabular-nums">({{ $activeCount ?? 0 }})</span>
                         </a>
                         <a href="{{ route('food.shopping-list.index', ['status' => 'completed']) }}"
-                           class="flex-1 px-4 py-3 text-center {{ ($statusFilter ?? 'active') === 'completed' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-500 dark:text-gray-400' }}">
-                            Completadas ({{ $completedCount ?? 0 }})
+                           class="flex-1 px-4 py-3 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 {{ ($statusFilter ?? 'active') === 'completed' ? 'text-emerald-700 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-gray-600 dark:text-gray-300' }}"
+                           aria-current="{{ ($statusFilter ?? 'active') === 'completed' ? 'page' : 'false' }}">
+                            Completadas <span class="tabular-nums">({{ $completedCount ?? 0 }})</span>
                         </a>
                     </div>
                     <div class="flex items-center justify-between px-4 py-2 text-xs text-gray-600 dark:text-gray-300">
-                        <span>Pendientes: <span class="font-semibold">{{ $pendingItems ?? 0 }}</span></span>
-                        <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
-                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                            Sincronizado COP
+                        <span>Pendientes: <span class="font-semibold tabular-nums">{{ $pendingItems ?? 0 }}</span></span>
+                        <span class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300" aria-label="Moneda COP">
+                            <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+                            COP
                         </span>
                     </div>
                 </div>
-            </div>
+            </nav>
         @endif
 
         <div class="grid gap-4 md:grid-cols-3">
             {{-- Main Content --}}
-            <div class="md:col-span-2 space-y-4">
-                {{-- Generar Lista con Presupuesto --}}
-                <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                    <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50 mb-3">
-                        @if($list)
-                            {{ $list->name }}
-                            <span class="ml-2 text-xs font-normal text-gray-500">
-                                (Generada: {{ $list->generated_at?->format('d/m/Y H:i') }})
-                            </span>
-                        @else
-                            Generar Nueva Lista
-                        @endif
-                    </h3>
+            <div class="md:col-span-2 space-y-4" data-shopping-main>
+                @if(!$list)
+                    {{-- Generar Nueva Lista (simplificado) --}}
+                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                        <h2 class="text-md font-semibold text-gray-900 dark:text-gray-50 mb-3">Generar nueva lista</h2>
 
-                    @if(!$list)
-                        <form method="POST" action="{{ route('food.shopping-list.generate') }}" class="space-y-3">
+                        <form method="POST" action="{{ route('food.shopping-list.generate') }}" class="space-y-3" aria-label="Generar lista de compras">
                             @csrf
                             <div>
-                                <label class="{{ $label }}">Nombre de la lista</label>
-                                <input type="text" name="name" placeholder="Ej: Compra semanal" class="{{ $input }}" value="{{ old('name', 'Compra ' . now()->format('d/m')) }}">
+                                <label class="{{ $label }}" for="list-name">Nombre</label>
+                                <input id="list-name" type="text" name="name" placeholder="Ej: Compra semanal" class="{{ $input }}" value="{{ old('name', 'Compra ' . now()->format('d/m')) }}">
                             </div>
 
                             <div data-list-type-field>
                                 <div class="flex items-end justify-between gap-3">
                                     <label class="{{ $label }}">
-                                        Tipo de lista <span class="text-rose-500">*</span>
+                                        Tipo <span class="text-rose-500">*</span>
                                     </label>
                                     <button type="button"
                                             class="text-xs font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200"
@@ -145,85 +173,118 @@
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Ayuda a organizar tus listas.</p>
                             </div>
 
-                            <div>
-                                <label class="{{ $label }}">Presupuesto <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
-                                <select name="budget_id" class="{{ $input }}">
-                                    <option value="">Sin presupuesto</option>
-                                    @foreach($budgets as $budget)
-                                        <option value="{{ $budget->id }}">
-                                            {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}
-                                            ({{ now()->monthName }} {{ now()->year }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @if($budgets->isEmpty())
-                                    <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                                        ⚠️ No tienes presupuestos este mes (opcional). Puedes crearlos en
-                                        <a href="{{ route('budgets.index') }}" class="underline">Presupuestos</a>
-                                    </p>
-                                @endif
-                            </div>
+                            <details class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-neutral-900">
+                                <summary class="cursor-pointer select-none text-sm font-semibold text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-200">
+                                    Opciones avanzadas
+                                </summary>
 
-                            <div class="grid gap-3 md:grid-cols-3">
-                                <div>
-                                    <label class="{{ $label }}">Fecha estimada</label>
-                                    <input type="date" name="expected_purchase_on" value="{{ now()->addDays(3)->format('Y-m-d') }}" class="{{ $input }}">
-                                </div>
-                                <div>
-                                    <label class="{{ $label }}">Horizonte (días)</label>
-                                    <input type="number" name="horizon_days" min="1" max="30" value="7" class="{{ $input }}">
-                                </div>
-                                <div>
-                                    <label class="{{ $label }}">Personas</label>
-                                    <input type="number" name="people_count" min="1" max="10" value="3" class="{{ $input }}">
-                                </div>
-                            </div>
+                                <div class="mt-3 space-y-3">
+                                    <div>
+                                        <label class="{{ $label }}">Presupuesto <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
+                                        <select name="budget_id" class="{{ $input }}">
+                                            <option value="">Sin presupuesto</option>
+                                            @foreach($budgets as $budget)
+                                                <option value="{{ $budget->id }}">
+                                                    {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}
+                                                    ({{ now()->monthName }} {{ now()->year }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if($budgets->isEmpty())
+                                            <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                                                No tienes presupuestos este mes (opcional). Puedes crearlos en
+                                                <a href="{{ route('budgets.index') }}" class="underline">Presupuestos</a>.
+                                            </p>
+                                        @endif
+                                    </div>
 
-                            <div class="flex justify-end pt-2">
+                                    <div class="grid gap-3 md:grid-cols-3">
+                                        <div>
+                                            <label class="{{ $label }}">Fecha estimada</label>
+                                            <input type="date" name="expected_purchase_on" value="{{ now()->addDays(3)->format('Y-m-d') }}" class="{{ $input }}">
+                                        </div>
+                                        <div>
+                                            <label class="{{ $label }}">Horizonte (días)</label>
+                                            <input type="number" name="horizon_days" min="1" max="30" value="7" class="{{ $input }}">
+                                        </div>
+                                        <div>
+                                            <label class="{{ $label }}">Personas</label>
+                                            <input type="number" name="people_count" min="1" max="10" value="3" class="{{ $input }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <div class="flex justify-end pt-1">
                                 <button type="submit" class="{{ $btnPrimary }}">
-                                    🚀 Generar Lista
+                                    Generar lista
                                 </button>
                             </div>
                         </form>
-                    @endif
-                </div>
+                    </div>
+                @endif
 
                 {{-- Items de la Lista --}}
                 @if($list)
                     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-3">
-                                <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50">
-                                    Items ({{ $list->items->where('is_checked', true)->count() }}/{{ $list->items->count() }})
-                                </h3>
-                                {{-- Barra de progreso --}}
-                                @php $progress = $list->items->count() > 0 ? ($list->items->where('is_checked', true)->count() / $list->items->count()) * 100 : 0; @endphp
-                                <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div class="h-full bg-emerald-500 transition-all" style="width: {{ $progress }}%"></div>
+                                <h2 class="text-md font-semibold text-gray-900 dark:text-gray-50">
+                                    Items <span class="text-xs font-normal text-gray-500 dark:text-gray-400">({{ $checkedCount }}/{{ $totalCount }})</span>
+                                </h2>
+                                <div class="w-28">
+                                    <div class="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300">
+                                        <span id="list-progress-label">Progreso</span>
+                                        <span class="tabular-nums">{{ $progress }}%</span>
+                                    </div>
+                                    <div role="progressbar" aria-labelledby="list-progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progress }}"
+                                         class="mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div class="h-full bg-emerald-500 transition-all" style="width: {{ $progress }}%"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm font-semibold text-emerald-600">${{ number_format($list->actual_total ?: $list->estimated_budget, 0, ',', '.') }}</span>
-                                <button type="button" id="toggle-store-mode" class="px-3 py-1 text-xs font-semibold rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                                    🛒 Modo Tienda
+                                <span class="text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">${{ number_format($list->actual_total ?: $list->estimated_budget, 0, ',', '.') }}</span>
+                                <button type="button" id="toggle-store-mode" aria-pressed="false" class="px-3 py-1 text-xs font-semibold rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:hover:bg-blue-900/20 dark:text-blue-300">
+                                    Modo tienda
                                 </button>
                             </div>
                         </div>
 
                         {{-- Agregar Item --}}
-                        <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 mb-4">
+                        <form class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 mb-4" data-add-item-form aria-label="Agregar item rápido">
                             <div class="grid gap-2 md:grid-cols-5 items-center">
-                                <input type="text" id="search-product-input" placeholder="Buscar producto..." class="h-10 rounded-lg border border-gray-200 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 md:col-span-2">
-                                <input type="number" id="quick-qty" placeholder="Cant." value="1" min="1" class="h-10 rounded-lg border border-gray-200 px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                                <button type="button" id="scan-product-btn" class="h-10 rounded-lg border border-emerald-500 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                                    📷 Escanear
+                                <label class="sr-only" for="search-product-input">Buscar producto</label>
+                                <input type="text"
+                                       id="search-product-input"
+                                       placeholder="Buscar producto…"
+                                       autocomplete="off"
+                                       aria-describedby="search-status"
+                                       class="h-10 rounded-lg border border-gray-200 px-3 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 md:col-span-2">
+
+                                <label class="sr-only" for="quick-qty">Cantidad</label>
+                                <input type="number"
+                                       id="quick-qty"
+                                       placeholder="Cant."
+                                       value="1"
+                                       min="1"
+                                       inputmode="numeric"
+                                       class="h-10 rounded-lg border border-gray-200 px-3 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+
+                                <button type="button"
+                                        id="scan-product-btn"
+                                        class="h-10 rounded-lg border border-emerald-500 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                        aria-label="Escanear código de barras">
+                                    Escanear
                                 </button>
-                                <button type="button" id="quick-add-btn" class="h-10 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700">
-                                    + Agregar
+                                <button type="submit"
+                                        id="quick-add-btn"
+                                        class="h-10 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+                                    Agregar
                                 </button>
                             </div>
-                            <p id="search-status" class="text-xs text-gray-500 mt-2"></p>
-                        </div>
+                            <p id="search-status" class="mt-2 text-xs text-gray-600 dark:text-gray-300" role="status" aria-live="polite" aria-atomic="true"></p>
+                        </form>
 
                         {{-- Lista de Items --}}
                         <div id="items-container" class="space-y-2 max-h-[600px] overflow-y-auto">
@@ -240,7 +301,9 @@
                                         {{-- Checkbox --}}
                                         <button type="button"
                                                 onclick="toggleItem({{ $list->id }}, {{ $item->id }}, {{ $item->is_checked ? 0 : 1 }})"
-                                                class="mt-1 h-6 w-6 flex-shrink-0 rounded-md border transition {{ $item->is_checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-700 hover:border-emerald-400' }}">
+                                                aria-pressed="{{ $item->is_checked ? 'true' : 'false' }}"
+                                                aria-label="{{ $item->is_checked ? 'Desmarcar' : 'Marcar' }} {{ $item->product?->name ?? $item->name }} como comprado"
+                                                class="mt-1 h-6 w-6 flex-shrink-0 rounded-md border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 {{ $item->is_checked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-700 hover:border-emerald-400' }}">
                                             @if($item->is_checked)
                                                 <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -296,29 +359,23 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                Cantidad: {{ $item->qty_to_buy_base }} {{ $item->unit_base }}
-                                                · Stock actual: {{ $item->qty_current_base }}
+                                            <p class="text-xs text-gray-600 dark:text-gray-300">
+                                                Cantidad: <span class="font-semibold">{{ $item->qty_to_buy_base }}</span> {{ $item->unit_base }}
                                             </p>
-                                            <div class="flex items-center gap-3 text-xs">
-                                                <span class="text-gray-600 dark:text-gray-300">
-                                                    Est: ${{ number_format($item->estimated_price, 0, ',', '.') }}
-                                                </span>
+                                            <p class="text-xs text-gray-600 dark:text-gray-300">
+                                                Precio:
                                                 @if($item->actual_price)
-                                                    <span class="font-semibold text-emerald-600 dark:text-emerald-400">
-                                                        Real: ${{ number_format($item->actual_price, 0, ',', '.') }}
-                                                    </span>
+                                                    <span class="font-semibold text-emerald-700 dark:text-emerald-300">${{ number_format($item->actual_price, 0, ',', '.') }}</span>
                                                     @if($item->vendor_name)
-                                                        <span class="text-gray-500">en {{ $item->vendor_name }}</span>
+                                                        <span class="text-gray-500 dark:text-gray-400">({{ $item->vendor_name }})</span>
                                                     @endif
-                                                    @if(!is_null($item->estimated_price))
-                                                        @php $delta = ($item->actual_price ?? 0) - ($item->estimated_price ?? 0); @endphp
-                                                        <span class="font-semibold {{ $delta <= 0 ? 'text-emerald-600' : 'text-rose-500' }}">
-                                                            {{ $delta <= 0 ? 'Ahorro' : 'Extra' }} ${{ number_format(abs($delta), 0, ',', '.') }}
-                                                        </span>
-                                                    @endif
+                                                @elseif(!is_null($item->estimated_price))
+                                                    <span class="font-semibold text-gray-900 dark:text-gray-50">${{ number_format($item->estimated_price, 0, ',', '.') }}</span>
+                                                    <span class="text-gray-500 dark:text-gray-400">(estimado)</span>
+                                                @else
+                                                    <span class="text-gray-500 dark:text-gray-400">Sin precio</span>
                                                 @endif
-                                            </div>
+                                            </p>
                                         </div>
 
                                         {{-- Actions --}}
@@ -327,14 +384,15 @@
                                                 @if(!$item->product)
                                                     <button type="button"
                                                             onclick="showCreateProductModal('{{ $item->name }}', {{ $item->id }})"
-                                                            class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                            class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:hover:bg-blue-900/20"
                                                             title="Crear en catálogo">
                                                         📝 Crear
                                                     </button>
                                                 @endif
                                                 <button type="button"
                                                         onclick="showPriceModal({{ $list->id }}, {{ $item->id }}, '{{ $item->name }}', {{ $item->qty_to_buy_base }})"
-                                                        class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                                                        class="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:hover:bg-blue-900/20"
+                                                        aria-label="Registrar precio para {{ $displayName }}">
                                                     💰 Precio
                                                 </button>
                                             </div>
@@ -350,7 +408,7 @@
             </div>
 
             {{-- Sidebar --}}
-            <div class="space-y-4">
+            <div class="space-y-4" data-shopping-sidebar>
                 {{-- Resumen --}}
                 <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                     <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50 mb-3">Resumen</h3>
@@ -407,40 +465,14 @@
         </div>
     </div>
 
-    <div id="floating-nav" class="fixed right-3 top-1/2 z-30 -translate-y-1/2 transition-transform duration-300 md:hidden">
-        <div class="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-2 shadow-lg ring-1 ring-gray-200/50 backdrop-blur-sm dark:bg-gray-900/80 dark:ring-gray-700/50">
-            <button onclick="toggleFloatingNav()"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition-all hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    title="Ocultar menú">
-                ✕
-            </button>
-            <button onclick="openQuickProductModal()"
-                    class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-emerald-50 hover:scale-105 dark:hover:bg-emerald-900/20"
-                    title="Producto rápido">
-                ➕
-            </button>
-            <a href="{{ route('food.shopping-list.index') }}"
-               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
-               title="Lista de compras">
-                🗒️
-            </a>
-            <a href="{{ route('food.inventory.index') }}"
-               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
-               title="Inventario">
-                📦
-            </a>
-            <a href="{{ route('food.products.index') }}"
-               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
-               title="Catálogo de productos">
-                🥫
-            </a>
-            <a href="{{ route('food.locations.index') }}"
-               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
-               title="Ubicaciones">
-                📍
-            </a>
-        </div>
-    </div>
+    {{-- Acción flotante (simplificada) --}}
+    <button type="button"
+            onclick="openQuickProductModal()"
+            class="fixed bottom-6 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-xl font-semibold text-white shadow-lg transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 md:hidden"
+            aria-label="Agregar producto rápido"
+            title="Producto rápido">
+        +
+    </button>
 
     @push('scripts')
         <script>
@@ -548,30 +580,6 @@
             });
         </script>
     @endpush
-
-    <button id="floating-nav-trigger"
-            onclick="toggleFloatingNav()"
-            class="fixed right-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg bg-emerald-600/90 text-xl text-white shadow-lg backdrop-blur-sm transition-all hover:bg-emerald-700 hover:scale-105 md:hidden"
-            title="Mostrar menú">
-        ☰
-    </button>
-
-    <script>
-        function toggleFloatingNav() {
-            const nav = document.getElementById('floating-nav');
-            const trigger = document.getElementById('floating-nav-trigger');
-
-            if (nav.classList.contains('translate-x-full')) {
-                nav.classList.remove('translate-x-full');
-                trigger.classList.add('hidden');
-                trigger.classList.remove('flex');
-            } else {
-                nav.classList.add('translate-x-full');
-                trigger.classList.remove('hidden');
-                trigger.classList.add('flex');
-            }
-        }
-    </script>
 
     {{-- Modal Precio --}}
     <div id="price-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick="if(event.target===this) closePriceModal()">
@@ -923,24 +931,32 @@
             }
         });
 
-        // Quick add button
-        document.getElementById('quick-add-btn')?.addEventListener('click', async () => {
-            const name = document.getElementById('search-product-input').value.trim();
-            const qty = document.getElementById('quick-qty').value;
+        // Quick add (form submit)
+        document.querySelector('[data-add-item-form]')?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const nameInput = document.getElementById('search-product-input');
+            const qtyInput = document.getElementById('quick-qty');
+            const statusEl = document.getElementById('search-status');
+
+            const name = (nameInput?.value || '').trim();
+            const qty = qtyInput?.value || '1';
 
             if (!name) {
-                alert('Escribe el nombre del producto');
+                if (statusEl) {
+                    statusEl.textContent = 'Escribe el nombre del producto para agregarlo.';
+                    statusEl.className = 'mt-2 text-xs text-amber-700 dark:text-amber-300';
+                }
+                nameInput?.focus();
                 return;
             }
 
             // Si hay un producto encontrado en la búsqueda
-            const found = foundProducts.find(p => p.name.toLowerCase() === name.toLowerCase());
+            const found = foundProducts.find((p) => p.name.toLowerCase() === name.toLowerCase());
 
             if (found) {
-                // Agregar producto existente
                 await addItemToList(found.id, found.name, qty);
             } else {
-                // Mostrar modal para crear producto
                 showCreateProductModal(name, null);
             }
         });
@@ -966,11 +982,11 @@
 
                     if (foundProducts.length > 0) {
                         const match = foundProducts[0];
-                        statusEl.textContent = `✅ Encontrado: ${match.name} (Stock: ${match.stock})`;
-                        statusEl.className = 'text-xs text-emerald-600 mt-2';
+                        statusEl.textContent = `Encontrado: ${match.name} (Stock: ${match.stock})`;
+                        statusEl.className = 'mt-2 text-xs text-emerald-700 dark:text-emerald-300';
                     } else {
-                        statusEl.textContent = `⚠️ "${term}" no existe en tu catálogo. Se creará al agregar.`;
-                        statusEl.className = 'text-xs text-amber-600 mt-2';
+                        statusEl.textContent = `"${term}" no existe en tu catálogo. Se creará al agregar.`;
+                        statusEl.className = 'mt-2 text-xs text-amber-700 dark:text-amber-300';
                     }
                 } catch (err) {
                     console.error(err);
@@ -1012,11 +1028,12 @@
         document.getElementById('toggle-store-mode')?.addEventListener('click', () => {
             storeMode = !storeMode;
             const btn = document.getElementById('toggle-store-mode');
-            const sidebar = document.querySelector('.md\\:col-span-2').parentElement.querySelector('.space-y-4');
-            const addForm = document.querySelector('.p-3.rounded-lg.bg-gray-50');
+            const sidebar = document.querySelector('[data-shopping-sidebar]');
+            const addForm = document.querySelector('[data-add-item-form]');
 
             if (storeMode) {
-                btn.textContent = '📋 Vista Normal';
+                btn.textContent = 'Vista normal';
+                btn.setAttribute('aria-pressed', 'true');
                 btn.classList.remove('border-blue-500', 'text-blue-600');
                 btn.classList.add('border-emerald-500', 'text-emerald-600', 'bg-emerald-50');
 
@@ -1035,10 +1052,11 @@
                 });
 
                 // Expandir contenedor de items
-                const mainCol = document.querySelector('.md\\:col-span-2');
+                const mainCol = document.querySelector('[data-shopping-main]');
                 if (mainCol) mainCol.classList.replace('md:col-span-2', 'md:col-span-3');
             } else {
-                btn.textContent = '🛒 Modo Tienda';
+                btn.textContent = 'Modo tienda';
+                btn.setAttribute('aria-pressed', 'false');
                 btn.classList.add('border-blue-500', 'text-blue-600');
                 btn.classList.remove('border-emerald-500', 'text-emerald-600', 'bg-emerald-50');
 
@@ -1057,7 +1075,7 @@
                 });
 
                 // Restaurar columnas
-                const mainCol = document.querySelector('.md\\:col-span-3');
+                const mainCol = document.querySelector('[data-shopping-main]');
                 if (mainCol) mainCol.classList.replace('md:col-span-3', 'md:col-span-2');
             }
         });
