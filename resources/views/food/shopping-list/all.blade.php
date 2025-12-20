@@ -397,7 +397,7 @@
                 </table>
             </div>
         </div>
-    </div>
+lear</div>
 
     {{-- Modal: Crear Lista --}}
     <div id="create-list-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;" onclick="if(event.target===this) closeCreateListModal()" role="dialog" aria-modal="true" aria-labelledby="create-list-title" aria-hidden="true">

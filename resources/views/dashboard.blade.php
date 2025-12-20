@@ -213,7 +213,7 @@
                 @csrf
                 <div>
                     <label for="need-query" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre o codigo</label>
-                    <div class="mt-1 flex gap-2">
+                    <div class="mt-1">
                         <input id="need-query"
                                name="query"
                                type="text"
@@ -221,12 +221,7 @@
                                maxlength="255"
                                value="{{ old('query') }}"
                                placeholder="Ej: Leche deslactosada"
-                               class="block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                        <button type="button"
-                                id="need-scan-btn"
-                                class="h-11 shrink-0 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
-                            Escanear
-                        </button>
+                               class="h-10 w-full rounded-lg border border-gray-200 bg-white pl-3 pr-9 text-sm text-gray-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
                     </div>
                     @error('query')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
@@ -273,7 +268,6 @@
     <script>
         const needModal = document.getElementById('need-modal');
         const needInput = document.getElementById('need-query');
-        const needScanBtn = document.getElementById('need-scan-btn');
         const needForm = document.getElementById('need-form');
         const needUnitWrapper = document.getElementById('need-unit-wrapper');
         const needConfirmNew = document.getElementById('need-confirm-new');
@@ -439,10 +433,8 @@
             });
         }
 
-        let needScanner = null;
-
         if (needInput && window.addScannerButton) {
-            needScanner = window.addScannerButton(needInput, {
+            window.addScannerButton(needInput, {
                 onScan: (code) => {
                     if (code) needInput.value = code;
                     if (needInput?.value?.trim()) {
@@ -450,8 +442,7 @@
                     }
                 }
             });
-            needScanBtn?.addEventListener('click', () => needScanner?.open());
-        } else if (needInput && needScanBtn && window.BarcodeScanner) {
+        } else if (needInput && window.BarcodeScanner) {
             const scanner = new window.BarcodeScanner({
                 targetInput: needInput,
                 onScan: (code) => {
@@ -461,7 +452,7 @@
                     }
                 },
             });
-            needScanBtn.addEventListener('click', () => scanner.open());
+            needInput.addEventListener('focus', () => scanner.open());
         }
 
         document.addEventListener('keydown', (event) => {

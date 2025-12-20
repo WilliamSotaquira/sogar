@@ -263,13 +263,15 @@
                         {{-- Agregar Item --}}
                         <form class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 mb-4" data-add-item-form aria-label="Agregar item rápido">
                             <div class="grid gap-2 md:grid-cols-5 items-center">
-                                <label class="sr-only" for="search-product-input">Buscar producto</label>
-                                <input type="text"
-                                       id="search-product-input"
-                                       placeholder="Buscar producto…"
-                                       autocomplete="off"
-                                       aria-describedby="search-status"
-                                       class="h-10 rounded-lg border border-gray-200 px-3 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 md:col-span-2">
+                                <div class="w-full md:col-span-2">
+                                    <label class="sr-only" for="search-product-input">Buscar producto</label>
+                                    <input type="text"
+                                           id="search-product-input"
+                                           placeholder="Buscar producto…"
+                                           autocomplete="off"
+                                           aria-describedby="search-status"
+                                           class="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                                </div>
 
                                 <label class="sr-only" for="quick-qty">Cantidad</label>
                                 <input type="number"
@@ -280,12 +282,6 @@
                                        inputmode="numeric"
                                        class="h-10 rounded-lg border border-gray-200 px-3 text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
 
-                                <button type="button"
-                                        id="scan-product-btn"
-                                        class="h-10 rounded-lg border border-emerald-500 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                                        aria-label="Escanear código de barras">
-                                    Escanear
-                                </button>
                                 <button type="submit"
                                         id="quick-add-btn"
                                         class="h-10 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
@@ -1091,25 +1087,36 @@
 
         // Barcode Scanner para búsqueda de productos
         const searchInput = document.getElementById('search-product-input');
-        const scanBtn = document.getElementById('scan-product-btn');
 
-        if (searchInput && window.addScannerButton) {
-            window.addScannerButton(searchInput, {
-                onScan: (code) => {
-                    console.log('Código escaneado:', code);
-                }
-            });
-            scanBtn?.classList.add('hidden');
-        } else if (searchInput && scanBtn && window.BarcodeScanner) {
-            const scanner = new window.BarcodeScanner({
-                targetInput: searchInput,
-                onScan: (code) => {
-                    console.log('Código escaneado:', code);
-                }
-            });
+        const initSearchScanner = (attempt = 0) => {
+            if (!searchInput) return;
 
-            scanBtn.addEventListener('click', () => scanner.open());
-        }
+            if (window.addScannerButton) {
+                window.addScannerButton(searchInput, {
+                    onScan: (code) => {
+                        console.log('Código escaneado:', code);
+                    }
+                });
+                return;
+            }
+
+            if (attempt < 10) {
+                setTimeout(() => initSearchScanner(attempt + 1), 200);
+                return;
+            }
+
+            if (window.BarcodeScanner) {
+                const scanner = new window.BarcodeScanner({
+                    targetInput: searchInput,
+                    onScan: (code) => {
+                        console.log('Código escaneado:', code);
+                    }
+                });
+                searchInput.addEventListener('focus', () => scanner.open());
+            }
+        };
+
+        initSearchScanner();
 
         const initAutoName = () => {
             const nameInput = document.querySelector('[data-list-name-input]');

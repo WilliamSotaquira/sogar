@@ -55,16 +55,7 @@
                             </header>
                             <div class="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <div class="flex items-center justify-between">
-                                        <label class="{{ $label }}">Código de barras</label>
-                                        <button type="button" id="scan-barcode" class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            Escanear código
-                                        </button>
-                                    </div>
+                                    <label class="{{ $label }}">Código de barras</label>
                                     <input id="barcode-input" name="barcode" value="{{ old('barcode') }}" class="{{ $input }}" placeholder="Escanea o escribe el código" autocomplete="off" aria-describedby="barcode-helper" />
                                     <p id="barcode-helper" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Un código válido autocompleta la información del producto</p>
                                 </div>
@@ -196,7 +187,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const trigger = document.getElementById('scan-barcode');
             const barcodeInput = document.getElementById('barcode-input');
             const nameInput = document.querySelector('input[name="name"]');
             const brandInput = document.querySelector('input[name="brand"]');
@@ -587,9 +577,8 @@
                         await lookupBarcode(code);
                     }
                 });
-                trigger?.classList.add('hidden');
                 console.log('BarcodeScanner inicializado correctamente con callback');
-            } else if (window.BarcodeScanner && trigger) {
+            } else if (window.BarcodeScanner && barcodeInput) {
                 barcodeScanner = new window.BarcodeScanner(barcodeInput);
 
                 // Configurar callback para cuando se detecte un código
@@ -606,16 +595,10 @@
                     await lookupBarcode(code);
                 };
 
-                trigger.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    barcodeScanner.open();
-                });
-
                 console.log('BarcodeScanner inicializado correctamente con callback');
-            } else if (trigger) {
+            } else if (barcodeInput) {
                 console.warn('BarcodeScanner no está disponible');
-                trigger.addEventListener('click', (e) => {
-                    e.preventDefault();
+                barcodeInput.addEventListener('focus', () => {
                     alert('El escáner de códigos de barras no está disponible. Por favor, ingresa el código manualmente.');
                 });
             }

@@ -91,6 +91,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('food/products/{product}/edit', [FoodProductController::class, 'edit'])->name('food.products.edit');
     Route::put('food/products/{product}', [FoodProductController::class, 'update'])->name('food.products.update');
     Route::delete('food/products/{product}', [FoodProductController::class, 'destroy'])->name('food.products.destroy');
+    Route::post('food/products/{product}/duplicate', [FoodProductController::class, 'duplicate'])->name('food.products.duplicate');
 
     // Tipos de alimentos
     Route::get('food/types', [\App\Http\Controllers\Food\TypeController::class, 'index'])->name('food.types.index');

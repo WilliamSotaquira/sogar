@@ -261,9 +261,6 @@
                         <label class="{{ $label }}">Código de barras</label>
                         <input id="inventory-barcode-input" class="{{ $input }}" placeholder="Escanea o escribe el código" />
                     </div>
-                    <button type="button" id="inventory-scan" class="{{ $btnSecondary }}">
-                        📷 Escanear
-                    </button>
                     <button type="button" id="inventory-search" class="{{ $btnPrimary }}">
                         🔎 Buscar
                     </button>
@@ -571,7 +568,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('inventory-barcode-input');
-        const scanBtn = document.getElementById('inventory-scan');
         const searchBtn = document.getElementById('inventory-search');
         const statusEl = document.getElementById('inventory-status');
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -630,8 +626,7 @@
                     lookupAndHighlight(code);
                 }
             });
-            scanBtn?.classList.add('hidden');
-        } else if (window.BarcodeScanner && input && scanBtn) {
+        } else if (window.BarcodeScanner && input) {
             const scanner = new window.BarcodeScanner({
                 targetInput: input,
                 onScan: (code) => {
@@ -639,11 +634,7 @@
                     lookupAndHighlight(code);
                 }
             });
-
-            scanBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                scanner.open();
-            });
+            input.addEventListener('focus', () => scanner.open());
         }
 
         // Botón de búsqueda manual

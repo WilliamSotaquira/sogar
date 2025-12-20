@@ -785,19 +785,20 @@ export class BarcodeScanner {
 // Helper function para agregar botón de escaneo a un input
 export function addScannerButton(input, options = {}) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'relative flex-1';
+    wrapper.className = 'relative w-full';
 
     // Mover el input dentro del wrapper
     input.parentNode.insertBefore(wrapper, input);
     wrapper.appendChild(input);
 
     // Agregar padding al input para el botón
-    input.classList.add('pr-10');
+    input.classList.add('pr-16', 'w-full');
 
     // Crear botón
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+    button.className = 'absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600';
+    button.style.borderRadius = '13px';
     button.title = 'Escanear código de barras';
     button.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

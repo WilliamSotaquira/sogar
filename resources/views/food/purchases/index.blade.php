@@ -35,6 +35,18 @@
             </div>
         @endif
 
+        @if($highlightProduct)
+            <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-100">
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <span class="font-semibold">Registrar compra para:</span>
+                    <a href="{{ route('food.products.show', $highlightProduct) }}" class="font-semibold underline">
+                        {{ $highlightProduct->name }}
+                    </a>
+                    <span class="text-xs text-blue-700 dark:text-blue-200">Selecciona la lista y marca el ítem si aplica.</span>
+                </div>
+            </div>
+        @endif
+
         @if($pendingInventoryCount > 0)
             <div class="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 shadow-sm dark:border-amber-900/40 dark:from-amber-900/20 dark:to-orange-900/20">
                 <div class="flex items-start gap-4">

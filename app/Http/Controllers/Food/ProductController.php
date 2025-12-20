@@ -405,6 +405,20 @@ class ProductController extends Controller
             ->with('status', 'Producto eliminado correctamente junto con sus datos relacionados.');
     }
 
+    public function duplicate(Request $request, FoodProduct $product): RedirectResponse
+    {
+        $this->authorizeProduct($request, $product);
+
+        $copy = $product->replicate();
+        $copy->barcode = null;
+        $copy->name = trim($product->name . ' (copia)');
+        $copy->save();
+
+        return redirect()
+            ->route('food.products.edit', $copy)
+            ->with('status', 'Producto duplicado. Ajusta los detalles antes de guardar.');
+    }
+
     private function authorizeProduct(Request $request, FoodProduct $product): void
     {
         abort_unless($product->user_id === $request->user()->id, 403);

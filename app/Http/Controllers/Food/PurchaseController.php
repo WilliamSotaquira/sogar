@@ -48,6 +48,11 @@ class PurchaseController extends Controller
 
         $selectedList = $lists->firstWhere('id', (int) $request->input('list_id')) ?? $lists->first();
 
+        $highlightProduct = null;
+        if ($request->filled('product_id')) {
+            $highlightProduct = FoodProduct::where('user_id', $userId)->find($request->input('product_id'));
+        }
+
         $pendingInventoryItems = collect();
         if ($selectedList) {
             $pendingInventoryItems = $selectedList->items
@@ -77,6 +82,7 @@ class PurchaseController extends Controller
             'listItems' => $selectedList?->items ?? collect(),
             'pendingInventoryItems' => $pendingInventoryItems,
             'pendingInventoryCount' => $pendingInventoryItems->count(),
+            'highlightProduct' => $highlightProduct,
         ]);
     }
 
