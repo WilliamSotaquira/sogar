@@ -11,6 +11,7 @@
     <div class="mx-auto w-full max-w-7xl space-y-4 px-3 sm:px-0">
         @php
             $listTypeLabels = collect($listTypes ?? [])->pluck('name', 'slug');
+            $defaultListName = 'Compra semanal - ' . now()->locale('es')->translatedFormat('j M');
         @endphp
         {{-- Header --}}
         <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 sm:p-8 shadow-lg dark:from-emerald-600 dark:to-teal-700">
@@ -89,8 +90,8 @@
             </div>
         </div>
 
-        {{-- Grid de Listas --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {{-- Listas (cards en móvil) --}}
+        <div class="grid grid-cols-1 gap-4 md:hidden">
             @forelse($lists as $list)
                 @php
                     $progress = $list->items->count() > 0 ? ($list->items->where('is_checked', true)->count() / $list->items->count()) * 100 : 0;
@@ -133,9 +134,11 @@
                         <div class="min-w-0 sm:flex-1 sm:pr-3">
                             <div class="flex items-start gap-2 mb-1">
                                 <span class="text-lg flex-shrink-0">{{ $listIcon }}</span>
-                                <h3 class="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100 group-hover:text-emerald-600 transition break-words" title="{{ $list->name }}">
+                                <a href="{{ route('food.shopping-list.show', $list) }}"
+                                   class="relative z-10 pointer-events-auto text-base font-semibold leading-snug text-gray-900 underline decoration-gray-300 underline-offset-2 hover:text-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-100 dark:hover:text-emerald-200 transition break-words"
+                                   title="{{ $list->name }}">
                                     {{ $list->name }}
-                                </h3>
+                                </a>
                             </div>
                             <p class="text-xs text-gray-600 dark:text-gray-400">
                                 {{ $list->generated_at?->format('d M Y, H:i') }}
@@ -209,34 +212,34 @@
 
                     {{-- Actions --}}
                     <div class="flex flex-col gap-2">
-                        <div class="flex items-center gap-2">
-                            <a href="{{ route('food.shopping-list.show', $list) }}" class="{{ $btnPrimary }} h-11 flex-1 text-center">
-                            Ver Lista
-                            </a>
-
-                            <div class="flex items-center gap-2" data-inline-confirm data-inline-confirm-timeout="10000">
-                                <span class="sr-only" role="status" aria-live="polite" data-inline-confirm-status></span>
-                                <button type="button" class="{{ $btnIcon }}" title="Sugeridos automáticos" aria-label="Sugeridos automáticos" data-inline-confirm-arm>
-                                    🤖<span class="sr-only">Sugeridos</span>
-                                </button>
-                                <button type="button" onclick="generateSuggestions({{ $list->id }})" class="hidden {{ $btnIcon }}" aria-label="Confirmar sugeridos automáticos" data-inline-confirm-confirm>
-                                    ✓<span class="sr-only">Confirmar</span>
-                                </button>
-                                <button type="button" class="hidden {{ $btnIcon }}" aria-label="Cancelar sugeridos automáticos" data-inline-confirm-cancel>
-                                    ✕<span class="sr-only">Cancelar</span>
-                                </button>
+                        <div class="relative">
+                            <button type="button"
+                                    class="{{ $btnIcon }} relative z-10"
+                                    title="Acciones"
+                                    aria-label="Acciones"
+                                    data-menu-trigger
+                                    data-menu-panel="list-menu-{{ $list->id }}">
+                                ⋯
+                            </button>
+                            <div id="list-menu-{{ $list->id }}"
+                                 class="hidden w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-xl z-50 dark:border-gray-800 dark:bg-gray-900"
+                                 data-menu-panel>
+                                <form action="{{ route('food.shopping-list.suggest', $list) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                            class="w-full rounded-lg px-3 py-2 text-left font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800">
+                                        🤖 Agregar sugeridos
+                                    </button>
+                                </form>
+                                <form action="{{ route('food.shopping-list.destroy', $list) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="w-full rounded-lg px-3 py-2 text-left font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20">
+                                        🗑️ Eliminar lista
+                                    </button>
+                                </form>
                             </div>
-
-                            <form action="{{ route('food.shopping-list.destroy', $list) }}" method="POST" class="inline-flex">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="{{ $btnIconDanger }}"
-                                        title="Eliminar lista"
-                                        aria-label="Eliminar lista">
-                                    🗑️<span class="sr-only">Eliminar</span>
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -252,10 +255,152 @@
                 </div>
             @endforelse
         </div>
+
+        {{-- Listas (tabla en desktop) --}}
+        <div class="hidden md:block">
+            <div class="overflow-x-auto md:overflow-visible rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <table class="w-full text-sm md:overflow-visible">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                            <th class="px-4 py-3">Lista</th>
+                            <th class="px-4 py-3">Tipo</th>
+                            <th class="px-4 py-3">Estado</th>
+                            <th class="px-4 py-3">Progreso</th>
+                            <th class="px-4 py-3">Items</th>
+                            <th class="px-4 py-3">Estimado</th>
+                            <th class="px-4 py-3">Gastado</th>
+                            <th class="px-4 py-3 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @forelse($lists as $list)
+                            @php
+                                $progress = $list->items->count() > 0 ? ($list->items->where('is_checked', true)->count() / $list->items->count()) * 100 : 0;
+                                $statusColors = [
+                                    'active' => 'emerald',
+                                    'completed' => 'blue',
+                                    'cancelled' => 'gray',
+                                    'closed' => 'gray',
+                                ];
+                                $color = $statusColors[$list->status] ?? 'gray';
+                                $typeIcons = [
+                                    'food' => '🍎',
+                                    'cleaning' => '🧽',
+                                    'maintenance' => '🔧',
+                                    'general' => '📋',
+                                    'other' => '📄',
+                                ];
+                                $listIcon = $typeIcons[$list->list_type ?? 'general'] ?? '📋';
+                                $typeLabel = $listTypeLabels[$list->list_type] ?? ($list->list_type ? ucfirst(str_replace('-', ' ', $list->list_type)) : 'General');
+                                $statusLabels = [
+                                    'active' => 'Activa',
+                                    'completed' => 'Completada',
+                                    'cancelled' => 'Cancelada',
+                                    'closed' => 'Cerrada',
+                                ];
+                                $statusLabel = $statusLabels[$list->status] ?? ucfirst($list->status);
+                                $budgetAmount = $list->budget?->amount ?? 0;
+                                $estimatedTotal = $list->items->sum(fn($item) => $item->estimated_price ?? 0);
+                                $actualTotal = $list->actual_total ?? 0;
+                            @endphp
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-lg">{{ $listIcon }}</span>
+                                        <div>
+                                            <a href="{{ route('food.shopping-list.show', $list) }}"
+                                               class="relative z-10 pointer-events-auto font-semibold text-gray-900 underline decoration-gray-300 underline-offset-2 hover:text-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-100 dark:hover:text-emerald-200">
+                                                {{ $list->name }}
+                                            </a>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $list->generated_at?->format('d M Y, H:i') }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="inline-flex max-w-[10rem] items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200 truncate">
+                                            {{ $typeLabel }}
+                                        </span>
+                                        @if($list->familyGroup)
+                                            <span class="inline-flex max-w-[10rem] items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 truncate">
+                                                👨‍👩‍👧 {{ $list->familyGroup->name }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap bg-{{ $color }}-100 text-{{ $color }}-700 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-300">
+                                        {{ $statusLabel }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-600 dark:text-gray-300">
+                                            {{ $list->items->where('is_checked', true)->count() }}/{{ $list->items->count() }}
+                                        </span>
+                                        <div class="h-2 w-24 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                                            <div class="h-full bg-emerald-500 transition-all" style="width: {{ $progress }}%"></div>
+                                        </div>
+                                        <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">{{ round($progress) }}%</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 tabular-nums text-gray-700 dark:text-gray-200">{{ $list->items->count() }}</td>
+                                <td class="px-4 py-3 tabular-nums text-gray-700 dark:text-gray-200">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3 tabular-nums {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
+                                    ${{ number_format($actualTotal, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3 relative overflow-visible">
+                                    <div class="relative flex items-center justify-end">
+                                        <div class="relative">
+                                            <button type="button"
+                                                    class="{{ $btnIcon }} h-9 w-9 relative z-10"
+                                                    title="Acciones"
+                                                    aria-label="Acciones"
+                                                    data-menu-trigger
+                                                    data-menu-panel="list-menu-table-{{ $list->id }}">
+                                                ⋯
+                                            </button>
+                                            <div id="list-menu-table-{{ $list->id }}"
+                                                 class="hidden w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-xl z-50 dark:border-gray-800 dark:bg-gray-900"
+                                                 data-menu-panel>
+                                                <form action="{{ route('food.shopping-list.suggest', $list) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="w-full rounded-lg px-3 py-2 text-left font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800">
+                                                        🤖 Agregar sugeridos
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('food.shopping-list.destroy', $list) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="w-full rounded-lg px-3 py-2 text-left font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20">
+                                                        🗑️ Eliminar lista
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <p class="mb-2">No tienes listas de compra aún</p>
+                                    <button type="button" onclick="openCreateListModal()" class="{{ $btnPrimary }}">
+                                        ➕ Crear mi primera lista
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     {{-- Modal: Crear Lista --}}
-    <div id="create-list-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onclick="if(event.target===this) closeCreateListModal()" role="dialog" aria-modal="true" aria-labelledby="create-list-title">
+    <div id="create-list-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;" onclick="if(event.target===this) closeCreateListModal()" role="dialog" aria-modal="true" aria-labelledby="create-list-title" aria-hidden="true">
         <div class="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full shadow-xl" tabindex="-1">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">➕ Nueva Lista de Compra</h3>
 
@@ -264,7 +409,16 @@
 
                 <div>
                     <label for="list_name" class="{{ $label }}" id="create-list-title">Nombre de la lista *</label>
-                    <input id="list_name" type="text" name="name" required class="{{ $input }}" placeholder="Ej: Mercado Semanal, Aseo, Ferretería" value="Compra {{ now()->format('d/m') }}">
+                    <input id="list_name"
+                           type="text"
+                           name="name"
+                           required
+                           class="{{ $input }}"
+                           placeholder="Ej: Mercado Semanal, Aseo, Ferretería"
+                           value="{{ $defaultListName }}"
+                           data-list-name-input
+                           data-date-label="{{ now()->locale('es')->translatedFormat('j M') }}"
+                           data-auto-name="1">
                     <p class="text-xs text-gray-500 mt-1">Puedes personalizarlo como desees</p>
                 </div>
 
@@ -361,6 +515,8 @@
         function openCreateListModal() {
             const modal = document.getElementById('create-list-modal');
             modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
             const nameInput = document.getElementById('list_name');
             if (nameInput) {
                 nameInput.focus();
@@ -368,7 +524,10 @@
         }
 
         function closeCreateListModal() {
-            document.getElementById('create-list-modal').classList.add('hidden');
+            const modal = document.getElementById('create-list-modal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         }
 
         // Cerrar modal con tecla Esc
@@ -478,49 +637,94 @@
                         closePanel();
                     }
                 });
+
+                const nameInput = document.querySelector('[data-list-name-input]');
+                if (select && nameInput) {
+                    const dateLabel = nameInput.getAttribute('data-date-label') || '';
+                    const setName = () => {
+                        const typeLabel = select.options[select.selectedIndex]?.text || 'Compra semanal';
+                        nameInput.value = `${typeLabel} - ${dateLabel}`.trim();
+                    };
+
+                    select.addEventListener('change', () => {
+                        if (nameInput.getAttribute('data-auto-name') !== '1') return;
+                        setName();
+                    });
+
+                    nameInput.addEventListener('input', () => {
+                        nameInput.setAttribute('data-auto-name', '0');
+                    });
+                }
             };
 
             fields.forEach(initField);
         });
 
-        async function generateSuggestions(listId) {
-            const statusEl = document.getElementById('page-status');
-            const setStatus = (text, isError = false) => {
-                if (!statusEl) return;
-                statusEl.textContent = text;
-                statusEl.classList.remove('hidden');
-                statusEl.classList.toggle('border-emerald-200', !isError);
-                statusEl.classList.toggle('bg-emerald-50', !isError);
-                statusEl.classList.toggle('text-emerald-900', !isError);
-                statusEl.classList.toggle('border-rose-200', isError);
-                statusEl.classList.toggle('bg-rose-50', isError);
-                statusEl.classList.toggle('text-rose-900', isError);
+        document.addEventListener('DOMContentLoaded', () => {
+            const triggers = document.querySelectorAll('[data-menu-trigger]');
+            const panels = document.querySelectorAll('[data-menu-panel]');
+
+            const closeAll = () => {
+                panels.forEach((panel) => {
+                    panel.classList.add('hidden');
+                    panel.style.position = '';
+                    panel.style.top = '';
+                    panel.style.left = '';
+                });
             };
 
-            setStatus('Generando sugeridos…');
+            triggers.forEach((btn) => {
+                btn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const panelId = btn.getAttribute('data-menu-panel');
+                    if (!panelId) return;
+                    const panel = document.getElementById(panelId);
+                    if (!panel) return;
 
-            try {
-                const res = await fetch(`/food/shopping-list/${listId}/suggest`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
+                    const isHidden = panel.classList.contains('hidden');
+                    closeAll();
+                    if (!isHidden) return;
+
+                    const rect = btn.getBoundingClientRect();
+                    panel.classList.remove('hidden');
+                    panel.style.position = 'fixed';
+                    panel.style.maxWidth = 'calc(100vw - 16px)';
+
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const panelWidth = panel.offsetWidth;
+                    const panelHeight = panel.offsetHeight;
+
+                    let top = rect.bottom + 8;
+                    let left = rect.right - panelWidth;
+
+                    if (top + panelHeight > viewportHeight - 8) {
+                        top = rect.top - panelHeight - 8;
+                    }
+                    if (left < 8) {
+                        left = 8;
+                    }
+                    if (left + panelWidth > viewportWidth - 8) {
+                        left = viewportWidth - panelWidth - 8;
+                    }
+                    if (top < 8) {
+                        top = 8;
+                    }
+
+                    panel.style.top = `${Math.round(top)}px`;
+                    panel.style.left = `${Math.round(left)}px`;
                 });
+            });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    setStatus(`${data.count || 0} sugeridos agregados. Actualizando…`);
-                    location.reload();
-                } else {
-                    setStatus('No se pudieron generar sugeridos.', true);
+            document.addEventListener('click', closeAll);
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeAll();
                 }
-            } catch (err) {
-                console.error(err);
-                setStatus('Error de red al generar sugeridos.', true);
-            }
-        }
-
+            });
+            window.addEventListener('resize', closeAll);
+            window.addEventListener('scroll', closeAll, true);
+        });
     </script>
     @endpush
 </x-layouts.app>

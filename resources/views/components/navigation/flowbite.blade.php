@@ -3,7 +3,6 @@
         [
             'group' => 'Finanzas',
             'links' => [
-                ['label' => 'Dashboard', 'route' => 'dashboard', 'icon' => '📊'],
                 ['label' => 'Bolsillos', 'route' => 'wallets.index', 'icon' => '💰'],
                 ['label' => 'Presupuestos', 'route' => 'budgets.index', 'icon' => '💵'],
                 ['label' => 'Categorías', 'route' => 'categories.index', 'icon' => '🏷️'],
@@ -28,6 +27,10 @@
             ],
         ],
     ];
+
+    $primaryLinks = [
+        ['label' => 'Dashboard', 'route' => 'dashboard', 'icon' => '📊'],
+    ];
 @endphp
 
 <nav id="primary-navigation" class="fixed inset-x-0 top-0 z-40 border-b border-gray-200 bg-white/90 text-gray-900 backdrop-blur-md dark:border-gray-800 dark:bg-neutral-950/90 dark:text-gray-100">
@@ -43,6 +46,20 @@
 
         <div id="primary-menu-desktop" class="hidden flex-1 items-center justify-center lg:flex">
             <ul class="flex items-center gap-1">
+                @foreach ($primaryLinks as $link)
+                    @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp
+                    <li>
+                        <a
+                            href="{{ route($link['route']) }}"
+                            wire:navigate
+                            class="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-gray-700 transition hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-200 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-300"
+                            aria-current="{{ $active ? 'page' : 'false' }}"
+                        >
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    </li>
+                @endforeach
+
                 @foreach ($menus as $menu)
                     <li class="group relative">
                         <button type="button" class="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-gray-700 transition hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-200 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-300">
@@ -131,6 +148,28 @@
 
     <div id="primary-menu-mobile" class="hidden border-t border-gray-200/70 bg-white/95 text-sm lg:hidden dark:border-neutral-800 dark:bg-neutral-950/90">
         <div class="mx-auto w-full max-w-7xl flex-col gap-3 px-4 py-4">
+            @if (!empty($primaryLinks))
+                <div class="rounded-lg border border-gray-200/80 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                    <p class="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Principal</p>
+                    <ul class="space-y-0.5">
+                        @foreach ($primaryLinks as $link)
+                            @php $active = request()->routeIs(\Illuminate\Support\Str::before($link['route'], '.') . '*'); @endphp
+                            <li>
+                                <a
+                                    href="{{ route($link['route']) }}"
+                                    wire:navigate
+                                    class="flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:bg-neutral-800/50 dark:text-gray-200 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-300"
+                                    aria-current="{{ $active ? 'page' : 'false' }}"
+                                >
+                                    <span class="flex h-5 w-5 items-center justify-center text-base leading-none">{{ $link['icon'] }}</span>
+                                    <span>{{ $link['label'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @foreach ($menus as $menu)
                 <div class="rounded-lg border border-gray-200/80 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                     <p class="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $menu['group'] }}</p>

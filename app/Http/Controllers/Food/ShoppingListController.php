@@ -132,7 +132,12 @@ class ShoppingListController extends Controller
         //     ->where('status', 'active')
         //     ->update(['status' => 'closed']);
 
-        $listName = $data['name'] ?? 'Compra ' . now()->format('d/m/Y');
+        $listTypeLabel = ShoppingListType::where('slug', $data['list_type'])
+            ->where('user_id', $request->user()->id)
+            ->value('name');
+        $dateLabel = now()->locale('es')->translatedFormat('j M');
+        $defaultName = ($listTypeLabel ?: 'Compra semanal') . ' - ' . $dateLabel;
+        $listName = trim((string) ($data['name'] ?? '')) !== '' ? $data['name'] : $defaultName;
 
         // Si auto_suggest está activo y no hay budget, crear lista vacía
         if ($request->boolean('auto_suggest')) {
@@ -427,7 +432,7 @@ class ShoppingListController extends Controller
             $list = ShoppingList::create([
                 'user_id' => $request->user()->id,
                 'family_group_id' => $request->user()->active_family_group_id,
-                'name' => 'Lista de compra ' . now()->format('d/m'),
+                'name' => 'Compra semanal - ' . now()->locale('es')->translatedFormat('j M'),
                 'status' => 'active',
                 'generated_at' => now(),
                 'expected_purchase_on' => now()->addDays(7),

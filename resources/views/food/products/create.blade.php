@@ -574,7 +574,22 @@
             });
 
             // Inicializar el nuevo BarcodeScanner optimizado
-            if (window.BarcodeScanner && trigger) {
+            if (barcodeInput && window.addScannerButton) {
+                window.addScannerButton(barcodeInput, {
+                    onScan: async (code) => {
+                        console.log('✅ Callback onScan ejecutado con código:', code);
+
+                        if (barcodeInput) {
+                            barcodeInput.value = code;
+                            console.log('✅ Código insertado en input barcode:', code);
+                        }
+
+                        await lookupBarcode(code);
+                    }
+                });
+                trigger?.classList.add('hidden');
+                console.log('BarcodeScanner inicializado correctamente con callback');
+            } else if (window.BarcodeScanner && trigger) {
                 barcodeScanner = new window.BarcodeScanner(barcodeInput);
 
                 // Configurar callback para cuando se detecte un código

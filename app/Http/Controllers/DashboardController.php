@@ -133,7 +133,19 @@ class DashboardController extends Controller
                 'items as pending_items_count' => fn ($q) => $q->where('is_checked', false),
             ])
             ->latest('generated_at')
-            ->first(['id', 'name', 'generated_at']);
+            ->first([
+                'id',
+                'name',
+                'generated_at',
+                'list_type',
+                'expected_purchase_on',
+                'estimated_budget',
+                'actual_total',
+                'status',
+            ]);
+        $recentNeedItems = $foodLatestActiveList
+            ? $foodLatestActiveList->items()->with('product')->latest('created_at')->limit(5)->get()
+            : collect();
 
         // Resumen del módulo de familia
         $activeFamilyGroup = $user->activeFamilyGroup()
@@ -165,6 +177,7 @@ class DashboardController extends Controller
             'foodExpiringSoonCount',
             'foodActiveListsCount',
             'foodLatestActiveList',
+            'recentNeedItems',
             'activeFamilyGroup'
         ));
     }

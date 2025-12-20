@@ -12,6 +12,7 @@
 
     $types = \App\Models\FoodType::where('user_id', auth()->id())->where('is_active', true)->orderBy('sort_order')->get();
     $locations = \App\Models\FoodLocation::where('user_id', auth()->id())->orderBy('sort_order')->get();
+    $defaultListName = 'Compra semanal - ' . now()->locale('es')->translatedFormat('j M');
 @endphp
 
 <x-layouts.app :title="__('Lista de compra')">
@@ -124,7 +125,15 @@
                             @csrf
                             <div>
                                 <label class="{{ $label }}" for="list-name">Nombre</label>
-                                <input id="list-name" type="text" name="name" placeholder="Ej: Compra semanal" class="{{ $input }}" value="{{ old('name', 'Compra ' . now()->format('d/m')) }}">
+                                <input id="list-name"
+                                       type="text"
+                                       name="name"
+                                       placeholder="Ej: Compra semanal"
+                                       class="{{ $input }}"
+                                       value="{{ old('name', $defaultListName) }}"
+                                       data-list-name-input
+                                       data-date-label="{{ now()->locale('es')->translatedFormat('j M') }}"
+                                       data-auto-name="1">
                             </div>
 
                             <div data-list-type-field>
@@ -1084,7 +1093,14 @@
         const searchInput = document.getElementById('search-product-input');
         const scanBtn = document.getElementById('scan-product-btn');
 
-        if (searchInput && scanBtn && window.BarcodeScanner) {
+        if (searchInput && window.addScannerButton) {
+            window.addScannerButton(searchInput, {
+                onScan: (code) => {
+                    console.log('Código escaneado:', code);
+                }
+            });
+            scanBtn?.classList.add('hidden');
+        } else if (searchInput && scanBtn && window.BarcodeScanner) {
             const scanner = new window.BarcodeScanner({
                 targetInput: searchInput,
                 onScan: (code) => {
@@ -1094,6 +1110,30 @@
 
             scanBtn.addEventListener('click', () => scanner.open());
         }
+
+        const initAutoName = () => {
+            const nameInput = document.querySelector('[data-list-name-input]');
+            const listTypeSelect = document.querySelector('[data-list-type-select]');
+            if (!nameInput || !listTypeSelect) return;
+
+            const dateLabel = nameInput.getAttribute('data-date-label') || '';
+
+            const setName = () => {
+                const typeLabel = listTypeSelect.options[listTypeSelect.selectedIndex]?.text || 'Compra semanal';
+                nameInput.value = `${typeLabel} - ${dateLabel}`.trim();
+            };
+
+            listTypeSelect.addEventListener('change', () => {
+                if (nameInput.getAttribute('data-auto-name') !== '1') return;
+                setName();
+            });
+
+            nameInput.addEventListener('input', () => {
+                nameInput.setAttribute('data-auto-name', '0');
+            });
+        };
+
+        initAutoName();
     </script>
     @endpush
 </x-layouts.app>

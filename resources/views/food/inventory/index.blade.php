@@ -623,7 +623,15 @@
         };
 
         // Inicializar el escáner reutilizable
-        if (window.BarcodeScanner && input && scanBtn) {
+        if (input && window.addScannerButton) {
+            window.addScannerButton(input, {
+                onScan: (code) => {
+                    setStatus('Código detectado: ' + code, 'text-emerald-600');
+                    lookupAndHighlight(code);
+                }
+            });
+            scanBtn?.classList.add('hidden');
+        } else if (window.BarcodeScanner && input && scanBtn) {
             const scanner = new window.BarcodeScanner({
                 targetInput: input,
                 onScan: (code) => {

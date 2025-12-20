@@ -33,7 +33,18 @@
                         <span>{{ $list->purchase_frequency_days }} días</span>
                         <span class="capitalize">Estado: {{ $list->status }}</span>
                     </div>
-                    <button type="submit" class="{{ $btnPrimary }}">Guardar cambios</button>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('food.shopping-list.all') }}"
+                           class="{{ $btnSecondary }}">
+                            Ver todas las listas
+                        </a>
+                        <button type="button"
+                            onclick="openDeleteListModal()"
+                            class="{{ $btnSecondary }} text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:text-rose-300 dark:hover:bg-rose-900/30">
+                            Eliminar lista
+                        </button>
+                        <button type="submit" class="{{ $btnPrimary }}">Guardar cambios</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -49,7 +60,7 @@
                     @csrf
                     <input type="hidden" name="list_id" value="{{ $list->id }}">
                     <input type="hidden" name="create_product" value="0" id="create-product-flag">
-                    <div class="relative flex-1">
+                    <div class="flex-1">
                         <label for="product-name-input" class="sr-only">Producto</label>
                         <input type="text" id="product-name-input" name="name" list="products-list"
                             placeholder="Selecciona un producto del catálogo"
@@ -61,13 +72,6 @@
                                 </option>
                             @endforeach
                         </datalist>
-                        <button type="button" id="barcode-scanner-btn"
-                            class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                            title="Escanear código de barras">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
-                        </button>
                     </div>
                     <div>
                         <label for="qty-input" class="sr-only">Cantidad</label>
@@ -126,12 +130,41 @@
                 @enderror
             </div>
 
+            <div class="border-b border-gray-200 px-4 py-3 sm:px-6 dark:border-gray-800">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>Acciones multiples</span>
+                        <span id="bulk-checked-count" class="text-xs text-gray-500 dark:text-gray-400">0 seleccionados</span>
+                    </div>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <label class="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                            <input type="checkbox" id="bulk-select-all" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                            Seleccionar todos
+                        </label>
+                        <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+                            <label class="sr-only" for="bulk-action-select">Accion</label>
+                            <select id="bulk-action-select"
+                                class="col-span-2 h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 sm:col-auto sm:w-44 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                                <option value="">Accion...</option>
+                                <option value="mark">Marcar comprados</option>
+                                <option value="unmark">Marcar pendientes</option>
+                                <option value="delete">Eliminar seleccionados</option>
+                            </select>
+                            <button type="button" id="bulk-apply-btn"
+                                class="inline-flex h-9 w-full items-center justify-center rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
+                                Aplicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Tabla --}}
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-gray-800">
-                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-900 dark:text-gray-100">✓</th>
+                            <th class="px-3 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-900 dark:text-gray-100">Sel</th>
                             <th class="px-3 sm:px-6 py-3 text-left font-medium text-gray-900 dark:text-gray-100">Producto</th>
                             <th class="px-3 sm:px-6 py-3 text-left font-medium text-gray-900 dark:text-gray-100">Cantidad</th>
                             <th class="px-3 sm:px-6 py-3 text-left font-medium text-gray-900 dark:text-gray-100">Stock</th>
@@ -145,14 +178,19 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50" data-item-row-id="{{ $item->id }}">
                                 <td class="px-3 sm:px-6 py-3 sm:py-4">
                                     <input type="checkbox"
-                                        data-item-id="{{ $item->id }}"
-                                        {{ $item->is_checked ? 'checked' : '' }}
-                                        class="item-checkbox h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                                        title="Marcar como {{ $item->is_checked ? 'pendiente' : 'comprado' }}">
+                                        class="bulk-item-checkbox h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                        data-item-id="{{ $item->id }}">
                                 </td>
                                 <td class="px-3 sm:px-6 py-3 sm:py-4">
                                     <div>
-                                        <div class="font-medium text-gray-900 dark:text-gray-100">{{ $item->name }}</div>
+                                        @if($item->product)
+                                            <a href="{{ route('food.products.show', $item->product) }}"
+                                               class="font-medium text-gray-900 underline decoration-gray-300 underline-offset-2 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-100 dark:hover:text-emerald-200">
+                                                {{ $item->name }}
+                                            </a>
+                                        @else
+                                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ $item->name }}</div>
+                                        @endif
                                         @if($item->product)
                                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                                 Código: {{ $item->product->barcode ?: 'Sin código' }}
@@ -180,9 +218,14 @@
                                     </span>
                                 </td>
                                 <td class="px-3 sm:px-6 py-3 sm:py-4">
-                                    <span class="item-status-badge-{{ $item->id }} inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $item->is_checked ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' }}">
-                                        {{ $item->is_checked ? 'Comprado' : 'Pendiente' }}
-                                    </span>
+                                    <button type="button"
+                                        class="item-toggle"
+                                        data-item-id="{{ $item->id }}"
+                                        data-checked="{{ $item->is_checked ? '1' : '0' }}">
+                                        <span class="item-status-badge-{{ $item->id }} inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $item->is_checked ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' }}">
+                                            {{ $item->is_checked ? 'Comprado' : 'Pendiente' }}
+                                        </span>
+                                    </button>
                                 </td>
                                 <td class="px-3 sm:px-6 py-3 sm:py-4 text-right w-20 whitespace-nowrap">
                                     <button type="button"
@@ -212,11 +255,51 @@
     </div>
 
     <!-- Modal de escaneo de código de barras (se crea dinámicamente por BarcodeScanner) -->
+
+    <div id="delete-list-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onclick="if(event.target===this) closeDeleteListModal()" role="dialog" aria-modal="true" aria-labelledby="delete-list-title">
+        <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl dark:bg-gray-900" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between">
+                <h2 id="delete-list-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">Eliminar lista</h2>
+                <button type="button" onclick="closeDeleteListModal()" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-gray-300 dark:hover:bg-gray-800">
+                    <span class="sr-only">Cerrar</span>
+                    ✕
+                </button>
+            </div>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Esta accion elimina la lista y todos sus productos. Escribe el nombre exacto para confirmar.
+            </p>
+            <form method="POST" action="{{ route('food.shopping-list.destroy', $list) }}" class="mt-4 space-y-3">
+                @csrf
+                @method('DELETE')
+                <div>
+                    <label for="delete-list-confirm" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre de la lista</label>
+                    <input id="delete-list-confirm"
+                        type="text"
+                        placeholder="{{ $list->name }}"
+                        class="mt-1 block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button type="button" onclick="closeDeleteListModal()" class="{{ $btnSecondary }} flex-1">Cancelar</button>
+                    <button id="delete-list-submit" type="submit" class="{{ $btnPrimary }} flex-1 bg-rose-600 hover:bg-rose-700 focus:ring-rose-500">
+                        Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </x-layouts.app>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const bulkCheckedCount = document.getElementById('bulk-checked-count');
+        const bulkSelectAll = document.getElementById('bulk-select-all');
+        const bulkActionSelect = document.getElementById('bulk-action-select');
+        const bulkApplyBtn = document.getElementById('bulk-apply-btn');
+        const deleteListModal = document.getElementById('delete-list-modal');
+        const deleteListConfirm = document.getElementById('delete-list-confirm');
+        const deleteListSubmit = document.getElementById('delete-list-submit');
+        const listName = @json($list->name ?? '');
 
         // Toggle quick create panel
         const toggleQuickCreate = document.getElementById('toggle-quick-create');
@@ -280,9 +363,8 @@
             row.innerHTML = `
                 <td class="px-3 sm:px-6 py-3 sm:py-4">
                     <input type="checkbox"
-                        data-item-id="${item.id}"
-                        class="item-checkbox h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                        title="Marcar como comprado">
+                        class="bulk-item-checkbox h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        data-item-id="${item.id}">
                 </td>
                 <td class="px-3 sm:px-6 py-3 sm:py-4">
                     <div>
@@ -309,9 +391,14 @@
                     </span>
                 </td>
                 <td class="px-3 sm:px-6 py-3 sm:py-4">
-                    <span class="item-status-badge-${item.id} inline-flex rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                        Pendiente
-                    </span>
+                    <button type="button"
+                        class="item-toggle"
+                        data-item-id="${item.id}"
+                        data-checked="0">
+                        <span class="item-status-badge-${item.id} inline-flex rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                            Pendiente
+                        </span>
+                    </button>
                 </td>
                 <td class="px-3 sm:px-6 py-3 sm:py-4 text-right">
                     <button type="button"
@@ -328,6 +415,7 @@
             `;
 
             tbody.prepend(row);
+            updateBulkState();
         };
 
         addForm?.addEventListener('submit', async (e) => {
@@ -429,24 +517,47 @@
                 const row = document.querySelector(`tr[data-item-row-id="${itemId}"]`);
                 row?.remove();
                 setStatus('Producto eliminado.');
+                updateBulkState();
             } catch (err) {
                 console.error(err);
                 setStatus('Error de red al eliminar.', true);
             }
         });
 
-        // Manejo de checkboxes para cambiar estado
-        document.addEventListener('change', (event) => {
-            const target = event.target;
-            if (!(target instanceof HTMLInputElement) || !target.classList.contains('item-checkbox')) {
-                return;
+        // Toggle de estado (comprado / pendiente)
+        document.addEventListener('click', (event) => {
+            const target = event.target instanceof Element ? event.target.closest('.item-toggle') : null;
+            if (!target) return;
+
+            const itemId = target.getAttribute('data-item-id');
+            if (!itemId) return;
+
+            const isChecked = target.getAttribute('data-checked') === '1';
+            const nextChecked = !isChecked;
+
+            const statusBadge = document.querySelector(`.item-status-badge-${itemId}`);
+            if (statusBadge) {
+                if (nextChecked) {
+                    statusBadge.className = 'item-status-badge-' + itemId + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+                    statusBadge.textContent = 'Comprado';
+                } else {
+                    statusBadge.className = 'item-status-badge-' + itemId + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+                    statusBadge.textContent = 'Pendiente';
+                }
             }
 
-            const itemId = target.dataset.itemId;
-            const isChecked = target.checked;
+            target.setAttribute('data-checked', nextChecked ? '1' : '0');
 
-                // Actualización optimista de UI
-                const statusBadge = document.querySelector(`.item-status-badge-${itemId}`);
+            fetch(`/food/shopping-list/{{ $list->id }}/items/${itemId}/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ is_checked: nextChecked ? 1 : 0 })
+            }).catch(error => {
+                console.error('Error al actualizar estado:', error);
+                target.setAttribute('data-checked', isChecked ? '1' : '0');
                 if (statusBadge) {
                     if (isChecked) {
                         statusBadge.className = 'item-status-badge-' + itemId + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
@@ -456,32 +567,7 @@
                         statusBadge.textContent = 'Pendiente';
                     }
                 }
-
-                // Actualizar título del checkbox
-                target.title = isChecked ? 'Marcar como pendiente' : 'Marcar como comprado';
-
-                // Enviar actualización al servidor
-                fetch(`/food/shopping-list/{{ $list->id }}/items/${itemId}/toggle`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({ is_checked: isChecked ? 1 : 0 })
-                }).catch(error => {
-                    console.error('Error al actualizar estado:', error);
-                    // Revertir UI en caso de error
-                    target.checked = !isChecked;
-                    if (statusBadge) {
-                        if (!isChecked) {
-                            statusBadge.className = 'item-status-badge-' + itemId + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
-                            statusBadge.textContent = 'Comprado';
-                        } else {
-                            statusBadge.className = 'item-status-badge-' + itemId + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
-                            statusBadge.textContent = 'Pendiente';
-                        }
-                    }
-                });
+            });
         });
 
         // Manejo de cantidad editable
@@ -510,20 +596,140 @@
             }, 500); // Debounce de 500ms
         });
 
+        const updateBulkState = () => {
+            const checked = document.querySelectorAll('.bulk-item-checkbox:checked');
+            const count = checked.length;
+            if (bulkCheckedCount) bulkCheckedCount.textContent = `${count} seleccionados`;
+            if (bulkApplyBtn) {
+                const action = bulkActionSelect?.value || '';
+                bulkApplyBtn.disabled = count === 0 || action === '';
+            }
+            if (bulkSelectAll) {
+                const total = document.querySelectorAll('.bulk-item-checkbox').length;
+                bulkSelectAll.checked = total > 0 && count === total;
+                bulkSelectAll.indeterminate = count > 0 && count < total;
+            }
+        };
+
+        bulkSelectAll?.addEventListener('change', (event) => {
+            const checked = event.target.checked;
+            document.querySelectorAll('.bulk-item-checkbox').forEach((box) => {
+                box.checked = checked;
+            });
+            updateBulkState();
+        });
+
+        document.addEventListener('change', (event) => {
+            const target = event.target;
+            if (target instanceof HTMLInputElement && target.classList.contains('bulk-item-checkbox')) {
+                updateBulkState();
+            }
+        });
+
+        bulkActionSelect?.addEventListener('change', () => {
+            updateBulkState();
+        });
+
+        bulkApplyBtn?.addEventListener('click', async () => {
+            const action = bulkActionSelect?.value || '';
+            if (!action) return;
+
+            const selectedIds = Array.from(document.querySelectorAll('.bulk-item-checkbox:checked'))
+                .map((box) => box.getAttribute('data-item-id'))
+                .filter(Boolean);
+
+            if (selectedIds.length === 0) return;
+
+            if (action === 'delete') {
+                const confirmDelete = confirm(`Eliminar ${selectedIds.length} productos?`);
+                if (!confirmDelete) return;
+            }
+
+            try {
+                const res = await fetch(`/food/shopping-list/{{ $list->id }}/items/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: selectedIds.map((id) => Number(id)),
+                        action,
+                    }),
+                });
+
+                if (!res.ok) {
+                    setStatus('No se pudo ejecutar la accion.', true);
+                    return;
+                }
+
+                if (action === 'delete') {
+                    selectedIds.forEach((id) => {
+                        document.querySelector(`tr[data-item-row-id="${id}"]`)?.remove();
+                    });
+                    setStatus('Productos eliminados.');
+                } else if (action === 'mark' || action === 'unmark') {
+                    const markValue = action === 'mark';
+                    selectedIds.forEach((id) => {
+                        const toggleBtn = document.querySelector(`.item-toggle[data-item-id="${id}"]`);
+                        if (toggleBtn) toggleBtn.setAttribute('data-checked', markValue ? '1' : '0');
+                        const statusBadge = document.querySelector(`.item-status-badge-${id}`);
+                        if (statusBadge) {
+                            if (markValue) {
+                                statusBadge.className = 'item-status-badge-' + id + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+                                statusBadge.textContent = 'Comprado';
+                            } else {
+                                statusBadge.className = 'item-status-badge-' + id + ' inline-flex rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+                                statusBadge.textContent = 'Pendiente';
+                            }
+                        }
+                    });
+                    setStatus(markValue ? 'Productos marcados como comprados.' : 'Productos desmarcados.');
+                }
+
+                if (bulkActionSelect) bulkActionSelect.value = '';
+                document.querySelectorAll('.bulk-item-checkbox:checked').forEach((box) => {
+                    box.checked = false;
+                });
+                updateBulkState();
+            } catch (err) {
+                console.error(err);
+                setStatus('Error de red al ejecutar la accion.', true);
+            }
+        });
+
+        window.openDeleteListModal = () => {
+            if (!deleteListModal || !deleteListConfirm || !deleteListSubmit) return;
+            deleteListModal.classList.remove('hidden');
+            deleteListModal.classList.add('flex');
+            deleteListSubmit.disabled = true;
+            deleteListConfirm.value = '';
+            setTimeout(() => deleteListConfirm.focus(), 50);
+        };
+
+        window.closeDeleteListModal = () => {
+            if (!deleteListModal) return;
+            deleteListModal.classList.add('hidden');
+            deleteListModal.classList.remove('flex');
+        };
+
+        deleteListConfirm?.addEventListener('input', () => {
+            if (!deleteListSubmit) return;
+            deleteListSubmit.disabled = deleteListConfirm.value.trim() !== listName;
+        });
+
         // Barcode Scanner usando componente reutilizable
         const productInput = document.getElementById('product-name-input');
-        const scannerBtn = document.getElementById('barcode-scanner-btn');
 
-        if (productInput && scannerBtn && window.BarcodeScanner) {
-            const scanner = new window.BarcodeScanner({
-                targetInput: productInput,
+        if (productInput && window.addScannerButton) {
+            window.addScannerButton(productInput, {
                 onScan: (code) => {
                     console.log('Producto escaneado:', code);
-                    // El código ya se insertó en el input automáticamente
                 }
             });
-
-            scannerBtn.addEventListener('click', () => scanner.open());
         }
+
+        updateBulkState();
     });
 </script>

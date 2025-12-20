@@ -27,7 +27,7 @@ class ShoppingListGenerator
 
             $list = ShoppingList::create([
                 'user_id' => $userId,
-                'name' => $name ?: ('Lista de compra ' . Carbon::now()->format('d/m')),
+                'name' => $name ?: ('Compra semanal - ' . Carbon::now()->locale('es')->translatedFormat('j M')),
                 'status' => 'active',
                 'generated_at' => Carbon::now(),
                 'expected_purchase_on' => $expectedPurchaseOn ?: Carbon::now()->addDays($horizonDays),
