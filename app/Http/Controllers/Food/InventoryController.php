@@ -101,6 +101,58 @@ class InventoryController extends Controller
         ]);
     }
 
+    public function exportCsv(Request $request)
+    {
+        $userId = $request->user()->id;
+        $locationId = $request->input('location_id');
+        $typeId = $request->input('type_id');
+
+        $batches = FoodStockBatch::with(['product.type', 'location'])
+            ->where('user_id', $userId)
+            ->when($locationId, fn ($q) => $q->where('location_id', $locationId))
+            ->when($typeId, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type_id', $typeId)))
+            ->orderBy('expires_on')
+            ->get();
+
+        $fileName = 'inventory-export-' . now()->format('Y-m-d') . '.csv';
+
+        $callback = function () use ($batches) {
+            $out = fopen('php://output', 'w');
+            // BOM UTF-8 para Excel
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'producto',
+                'codigo',
+                'ubicacion',
+                'cantidad',
+                'unidad',
+                'caduca',
+                'ingreso',
+                'estado',
+            ], ';');
+
+            foreach ($batches as $batch) {
+                fputcsv($out, [
+                    $batch->product?->name ?? 'Producto eliminado',
+                    $batch->product?->barcode ?? '',
+                    $batch->location?->name ?? '',
+                    (string) $batch->qty_remaining_base,
+                    $batch->unit_base ?? '',
+                    $batch->expires_on ? $batch->expires_on->toDateString() : '',
+                    $batch->entered_on ? $batch->entered_on->toDateString() : '',
+                    $batch->status ?? '',
+                ], ';');
+            }
+
+            fclose($out);
+        };
+
+        return response()->streamDownload($callback, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     public function templateCsv(Request $request)
     {
         $fileName = 'inventory-template.csv';

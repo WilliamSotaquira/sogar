@@ -97,3 +97,47 @@ it('imports inventory from a simple csv', function () {
     expect((float) $batch->qty_remaining_base)->toBe(2.0);
     expect($batch->location_id)->toBe($location->id);
 });
+
+it('downloads inventory as csv', function () {
+    $user = foodUser();
+
+    $location = FoodLocation::create([
+        'user_id' => $user->id,
+        'name' => 'Despensa',
+        'slug' => Str::slug('Despensa'),
+        'sort_order' => 0,
+        'is_default' => true,
+    ]);
+
+    $product = FoodProduct::create([
+        'user_id' => $user->id,
+        'name' => 'Pasta',
+        'barcode' => '99887766',
+        'default_location_id' => $location->id,
+        'unit_base' => 'unit',
+        'unit_size' => 1,
+        'is_active' => true,
+    ]);
+
+    FoodStockBatch::create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+        'location_id' => $location->id,
+        'qty_base' => 3,
+        'qty_remaining_base' => 3,
+        'unit_base' => 'unit',
+        'entered_on' => now()->toDateString(),
+        'status' => 'ok',
+    ]);
+
+    actingAs($user);
+
+    $res = get(route('food.inventory.exportCsv'));
+    $res->assertOk();
+    $res->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $content = $res->streamedContent();
+    expect($content)->toContain('producto');
+    expect($content)->toContain('Pasta');
+    expect($content)->toContain('Despensa');
+});
