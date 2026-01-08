@@ -137,9 +137,11 @@ class InventoryController extends Controller
                     ?? $batch->product?->defaultLocation?->name
                     ?? '';
 
+                $barcode = $this->formatSpreadsheetCode($batch->product?->barcode);
+
                 fputcsv($out, [
                     $batch->product?->name ?? 'Producto eliminado',
-                    $batch->product?->barcode ?? '',
+                    $barcode,
                     $locationName,
                     (string) $batch->qty_remaining_base,
                     $batch->unit_base ?? '',
@@ -306,28 +308,102 @@ class InventoryController extends Controller
 
         $imported = 0;
         $skipped = 0;
+        $skippedEmpty = 0;
+        $skippedNotFound = 0;
+        $skippedDuplicateName = 0;
+        $skippedSamples = [];
 
-        DB::transaction(function () use ($rows, $request, $userId, $get, $parseFloat, $parseDate, &$imported, &$skipped) {
+        DB::transaction(function () use ($rows, $request, $userId, $get, $parseFloat, $parseDate, &$imported, &$skipped, &$skippedEmpty, &$skippedNotFound, &$skippedDuplicateName, &$skippedSamples) {
             foreach ($rows as $row) {
-                $barcode = trim((string) ($get($row, 'product_barcode') ?? ''));
+                $barcode = $this->normalizeSpreadsheetCode($get($row, 'product_barcode') ?? '');
                 $name = trim((string) ($get($row, 'product_name') ?? ''));
 
                 if ($barcode === '' && $name === '') {
                     $skipped++;
+                    $skippedEmpty++;
                     continue;
                 }
 
+                // 1) Buscar por código (si existe)
                 $product = null;
                 if ($barcode !== '') {
                     $product = FoodProduct::where('user_id', $userId)->where('barcode', $barcode)->first();
                 }
+
+                // 2) Si no se encontró por código, intentar por nombre (case-insensitive)
                 if (!$product && $name !== '') {
-                    $product = FoodProduct::where('user_id', $userId)->where('name', $name)->first();
+                    $byName = FoodProduct::where('user_id', $userId)
+                        ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+                        ->get();
+
+                    if ($byName->count() > 1) {
+                        // Única restricción: nombre duplicado (ambiguo). Pide corregir o usar código.
+                        $skipped++;
+                        $skippedDuplicateName++;
+                        if (count($skippedSamples) < 5) {
+                            $skippedSamples[] = $name;
+                        }
+                        continue;
+                    }
+
+                    $product = $byName->first();
+
+                    // Si encontramos por nombre y trae un barcode nuevo, intentar asignarlo si está libre.
+                    if ($product && $barcode !== '' && empty($product->barcode)) {
+                        $barcodeInUse = FoodProduct::where('user_id', $userId)->where('barcode', $barcode)->exists();
+                        if (!$barcodeInUse) {
+                            $product->barcode = $barcode;
+                            $product->save();
+                        }
+                    }
                 }
 
+                // 3) Si no existe, crear producto automáticamente (sin restricción, salvo nombre duplicado).
                 if (!$product) {
-                    $skipped++;
-                    continue;
+                    $createName = $name !== '' ? $name : ('Producto ' . $barcode);
+
+                    // Si el nombre ya existe en más de un producto, evitar crear por ambigüedad.
+                    if ($createName !== '') {
+                        $nameCount = FoodProduct::where('user_id', $userId)
+                            ->whereRaw('LOWER(name) = ?', [mb_strtolower($createName)])
+                            ->count();
+                        if ($nameCount > 0) {
+                            // Ya existe al menos uno: usar el existente si es único.
+                            $existing = FoodProduct::where('user_id', $userId)
+                                ->whereRaw('LOWER(name) = ?', [mb_strtolower($createName)])
+                                ->get();
+                            if ($existing->count() === 1) {
+                                $product = $existing->first();
+                            } else {
+                                $skipped++;
+                                $skippedDuplicateName++;
+                                if (count($skippedSamples) < 5) {
+                                    $skippedSamples[] = $createName;
+                                }
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (!$product) {
+                        // Respetar unicidad de barcode si viene.
+                        $createBarcode = $barcode !== '' ? $barcode : null;
+                        if ($createBarcode !== null) {
+                            $barcodeInUse = FoodProduct::where('user_id', $userId)->where('barcode', $createBarcode)->exists();
+                            if ($barcodeInUse) {
+                                $createBarcode = null;
+                            }
+                        }
+
+                        $product = FoodProduct::create([
+                            'user_id' => $userId,
+                            'name' => $createName !== '' ? $createName : 'Producto sin nombre',
+                            'barcode' => $createBarcode,
+                            'unit_base' => 'unit',
+                            'unit_size' => 1,
+                            'is_active' => true,
+                        ]);
+                    }
                 }
 
                 $qty = $parseFloat($get($row, 'qty') ?? 1);
@@ -366,6 +442,98 @@ class InventoryController extends Controller
             return back()->withErrors(['file' => 'No se importó ningún ítem (verifica nombres o códigos).']);
         }
 
-        return redirect()->route('food.inventory.index')->with('status', "Inventario importado: {$imported} ítem(s). Omitidos: {$skipped}.");
+        $details = [];
+        if ($skippedEmpty > 0) {
+            $details[] = "sin producto/código: {$skippedEmpty}";
+        }
+        if ($skippedDuplicateName > 0) {
+            $details[] = "nombre duplicado: {$skippedDuplicateName}";
+        }
+        if ($skippedNotFound > 0) {
+            $details[] = "producto no encontrado: {$skippedNotFound}";
+        }
+        $detailText = empty($details) ? '' : ' (' . implode(', ', $details) . ')';
+        $sampleText = empty($skippedSamples) ? '' : ' Ej: ' . implode(', ', array_slice($skippedSamples, 0, 3)) . '.';
+
+        return redirect()->route('food.inventory.index')->with('status', "Inventario importado: {$imported} ítem(s). Omitidos: {$skipped}{$detailText}.{$sampleText}");
+    }
+
+    private function formatSpreadsheetCode(?string $value): string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        // Evita notación científica en Excel/Sheets para códigos largos (EAN/UPC)
+        if (preg_match('/^\d{10,}$/', $value)) {
+            return '="' . $value . '"';
+        }
+
+        return $value;
+    }
+
+    private function normalizeSpreadsheetCode(mixed $value): string
+    {
+        $v = trim((string) $value);
+        if ($v === '') {
+            return '';
+        }
+
+        // Limpiar separadores comunes
+        $v = preg_replace('/[\s\-]+/', '', $v);
+
+        // Sheets/Excel pueden exportar texto forzado como: ="7702..."
+        if (preg_match('/^\s*=\s*"(.*)"\s*$/', $v, $m)) {
+            $v = $m[1];
+        }
+
+        // También puede venir con apóstrofe de "texto": '7702...
+        if (str_starts_with($v, "'")) {
+            $v = substr($v, 1);
+        }
+
+        $v = trim($v);
+
+        // Notación científica (p.ej. 7,702E+12)
+        if (preg_match('/^[0-9]+([\.,][0-9]+)?[eE][\+\-]?[0-9]+$/', $v)) {
+            $expanded = $this->expandScientificNotation($v);
+            $expanded = str_replace(['.', '+', '-'], '', $expanded);
+            $v = $expanded;
+        }
+
+        return $v;
+    }
+
+    private function expandScientificNotation(string $value): string
+    {
+        $value = trim($value);
+        $value = str_replace(',', '.', $value);
+
+        if (!preg_match('/^([\+\-]?)(\d+)(?:\.(\d+))?[eE]([\+\-]?\d+)$/', $value, $m)) {
+            return $value;
+        }
+
+        $sign = $m[1] ?? '';
+        $int = $m[2] ?? '0';
+        $frac = $m[3] ?? '';
+        $exp = (int) ($m[4] ?? 0);
+
+        $digits = $int . $frac;
+        $decPlaces = strlen($frac);
+        $shift = $exp - $decPlaces;
+
+        if ($shift >= 0) {
+            $plain = $digits . str_repeat('0', $shift);
+        } else {
+            $pos = strlen($digits) + $shift;
+            if ($pos <= 0) {
+                $plain = '0.' . str_repeat('0', -$pos) . $digits;
+            } else {
+                $plain = substr($digits, 0, $pos) . '.' . substr($digits, $pos);
+            }
+        }
+
+        return $sign === '-' ? '-' . $plain : $plain;
     }
 }

@@ -676,6 +676,11 @@ class ShoppingListController extends Controller
     {
         $this->authorizeList($request, $list);
 
+        $format = strtolower((string) $request->query('format', 'csv'));
+        if ($format !== 'json') {
+            return $this->exportCsv($request, $list);
+        }
+
         $list->load([
             'items' => fn($q) => $q->orderBy('sort_order'),
             'items.product:id,name,barcode',
@@ -748,6 +753,7 @@ class ShoppingListController extends Controller
         $fileName = "shopping-list-{$list->id}-{$baseName}.csv";
 
         $headers = [
+            'list_id',
             'list_name',
             'list_type',
             'expected_purchase_on',
@@ -778,6 +784,7 @@ class ShoppingListController extends Controller
         $rows = [];
         if ($list->items->count() === 0) {
             $rows[] = [
+                (string) $list->id,
                 $list->name,
                 $list->list_type,
                 $list->expected_purchase_on?->toDateString(),
@@ -806,7 +813,11 @@ class ShoppingListController extends Controller
             ];
         } else {
             foreach ($list->items as $item) {
+                $itemBarcode = $this->formatSpreadsheetCode($item->barcode);
+                $productBarcode = $this->formatSpreadsheetCode($item->product?->barcode);
+
                 $rows[] = [
+                    (string) $list->id,
                     $list->name,
                     $list->list_type,
                     $list->expected_purchase_on?->toDateString(),
@@ -822,8 +833,8 @@ class ShoppingListController extends Controller
                     $item->qty_unit_label,
                     $item->unit_base,
                     $item->unit_size !== null ? (string) $item->unit_size : '',
-                    $item->barcode,
-                    $item->product?->barcode,
+                    $itemBarcode,
+                    $productBarcode,
                     $item->location?->name,
                     $item->category?->name,
                     $item->estimated_price !== null ? (string) $item->estimated_price : '',
@@ -1111,6 +1122,7 @@ class ShoppingListController extends Controller
 
         // Mapeo canónico de columnas (soporta headers ES / EN)
         $col = [
+            'list_id' => $findIndex(['list_id', 'id_lista', 'lista_id']),
             'list_name' => $findIndex(['list_name', 'lista', 'nombre_lista', 'list']),
             'list_type' => $findIndex(['list_type', 'tipo', 'type']),
             'expected_purchase_on' => $findIndex(['expected_purchase_on', 'fecha', 'fecha_estimada', 'expected_date']),
@@ -1172,6 +1184,20 @@ class ShoppingListController extends Controller
 
         $first = $rows[0];
 
+        $targetList = null;
+        $targetListId = (int) trim((string) ($get($first, 'list_id') ?? 0));
+        if ($targetListId > 0) {
+            $targetList = ShoppingList::find($targetListId);
+            if (!$targetList) {
+                return back()->withErrors(['file' => 'La lista indicada en el CSV (list_id) no existe o ya fue eliminada.']);
+            }
+            try {
+                $this->authorizeList($request, $targetList, 'manage');
+            } catch (\Throwable) {
+                return back()->withErrors(['file' => 'No tienes permiso para actualizar esa lista (list_id).']);
+            }
+        }
+
         $listType = trim((string) ($get($first, 'list_type') ?? 'general'));
         $listTypeAllowed = ShoppingListType::where('user_id', $userId)
             ->where('slug', $listType)
@@ -1215,28 +1241,57 @@ class ShoppingListController extends Controller
             return (int) $v;
         };
 
-        $newList = DB::transaction(function () use ($request, $userId, $rows, $get, $listName, $listType, $expectedPurchaseOn, $parseBool, $parseFloat, $parseInt, $isFullFormat) {
-            $list = ShoppingList::create([
-                'user_id' => $userId,
-                'family_group_id' => $request->user()->active_family_group_id,
-                'name' => $listName,
-                'list_type' => $listType,
-                'status' => 'active',
-                'generated_at' => now(),
-                'expected_purchase_on' => $expectedPurchaseOn,
-                // En CSV simplificado, estos campos suelen no venir
-                'people_count' => $parseInt($get($rows[0], 'people_count') ?? 3),
-                'purchase_frequency_days' => $parseInt($get($rows[0], 'purchase_frequency_days') ?? 7),
-                'safety_factor' => $parseFloat($get($rows[0], 'safety_factor') ?? 1.2),
-                'estimated_budget' => $parseFloat($get($rows[0], 'estimated_budget') ?? 0),
-                'meta' => [
-                    'import' => [
-                        'source' => 'csv',
-                        'format' => $isFullFormat ? 'full' : 'simple',
-                        'imported_at' => now()->toIso8601String(),
+        $newList = DB::transaction(function () use ($request, $userId, $rows, $get, $listName, $listType, $expectedPurchaseOn, $parseBool, $parseFloat, $parseInt, $isFullFormat, $targetList) {
+            if ($targetList) {
+                $list = $targetList->fresh();
+
+                $meta = is_array($list->meta ?? null) ? $list->meta : [];
+                $meta['import'] = [
+                    'source' => 'csv',
+                    'format' => $isFullFormat ? 'full' : 'simple',
+                    'mode' => 'update',
+                    'imported_at' => now()->toIso8601String(),
+                ];
+
+                $list->fill([
+                    'name' => $listName,
+                    'list_type' => $listType,
+                    'expected_purchase_on' => $expectedPurchaseOn,
+                    // En CSV simplificado, estos campos suelen no venir
+                    'people_count' => $parseInt($get($rows[0], 'people_count') ?? ($list->people_count ?? 3)),
+                    'purchase_frequency_days' => $parseInt($get($rows[0], 'purchase_frequency_days') ?? ($list->purchase_frequency_days ?? 7)),
+                    'safety_factor' => $parseFloat($get($rows[0], 'safety_factor') ?? ($list->safety_factor ?? 1.2)),
+                    'estimated_budget' => $parseFloat($get($rows[0], 'estimated_budget') ?? ($list->estimated_budget ?? 0)),
+                    'meta' => $meta,
+                ]);
+                $list->save();
+
+                // Evitar duplicados: reemplazar items por el contenido del CSV
+                $list->items()->delete();
+            } else {
+                $list = ShoppingList::create([
+                    'user_id' => $userId,
+                    'family_group_id' => $request->user()->active_family_group_id,
+                    'name' => $listName,
+                    'list_type' => $listType,
+                    'status' => 'active',
+                    'generated_at' => now(),
+                    'expected_purchase_on' => $expectedPurchaseOn,
+                    // En CSV simplificado, estos campos suelen no venir
+                    'people_count' => $parseInt($get($rows[0], 'people_count') ?? 3),
+                    'purchase_frequency_days' => $parseInt($get($rows[0], 'purchase_frequency_days') ?? 7),
+                    'safety_factor' => $parseFloat($get($rows[0], 'safety_factor') ?? 1.2),
+                    'estimated_budget' => $parseFloat($get($rows[0], 'estimated_budget') ?? 0),
+                    'meta' => [
+                        'import' => [
+                            'source' => 'csv',
+                            'format' => $isFullFormat ? 'full' : 'simple',
+                            'mode' => 'create',
+                            'imported_at' => now()->toIso8601String(),
+                        ],
                     ],
-                ],
-            ]);
+                ]);
+            }
 
             $importedCount = 0;
 
@@ -1247,10 +1302,10 @@ class ShoppingListController extends Controller
                 }
 
                 $productId = null;
-                $candidateBarcode = $get($row, 'product_barcode') ?? $get($row, 'barcode');
-                if (is_string($candidateBarcode) && trim($candidateBarcode) !== '') {
+                $candidateBarcode = $this->normalizeSpreadsheetCode($get($row, 'product_barcode') ?? $get($row, 'barcode'));
+                if ($candidateBarcode !== '') {
                     $productId = FoodProduct::where('user_id', $userId)
-                        ->where('barcode', trim($candidateBarcode))
+                    ->where('barcode', $candidateBarcode)
                         ->value('id');
                 }
 
@@ -1294,7 +1349,7 @@ class ShoppingListController extends Controller
                     'qty_unit_label' => $get($row, 'qty_unit_label') ?: null,
                     'unit_base' => $get($row, 'unit_base') ?: null,
                     'unit_size' => (($u = $get($row, 'unit_size')) !== null && trim((string)$u) !== '') ? (float) $u : null,
-                    'barcode' => $get($row, 'barcode') ?: null,
+                    'barcode' => ($b = $this->normalizeSpreadsheetCode($get($row, 'barcode') ?? '')) !== '' ? $b : null,
                     'estimated_price' => $parseFloat($get($row, 'estimated_price') ?? 0),
                     'actual_price' => (($a = $get($row, 'actual_price')) !== null && trim((string)$a) !== '') ? (float) $a : null,
                     'vendor_name' => $get($row, 'vendor_name') ?: null,
@@ -1309,6 +1364,7 @@ class ShoppingListController extends Controller
             $this->logListEvent($list, 'list_imported', [
                 'items_imported' => $importedCount,
                 'source' => 'csv',
+                'mode' => $targetList ? 'update' : 'create',
             ]);
 
             return $list;
@@ -1419,6 +1475,85 @@ class ShoppingListController extends Controller
             'products' => $products,
             'foodTypes' => $foodTypes,
         ]);
+    }
+
+    private function formatSpreadsheetCode(?string $value): string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        // Evita notación científica en Excel/Sheets para códigos largos (EAN/UPC)
+        if (preg_match('/^\d{10,}$/', $value)) {
+            return '="' . $value . '"';
+        }
+
+        return $value;
+    }
+
+    private function normalizeSpreadsheetCode(mixed $value): string
+    {
+        $v = trim((string) $value);
+        if ($v === '') {
+            return '';
+        }
+
+        // Limpiar separadores comunes
+        $v = preg_replace('/[\s\-]+/', '', $v);
+
+        // Sheets/Excel pueden exportar texto forzado como: ="7702..."
+        if (preg_match('/^\s*=\s*"(.*)"\s*$/', $v, $m)) {
+            $v = $m[1];
+        }
+
+        // También puede venir con apóstrofe de "texto": '7702...
+        if (str_starts_with($v, "'")) {
+            $v = substr($v, 1);
+        }
+
+        $v = trim($v);
+
+        // Notación científica (p.ej. 7,702E+12)
+        if (preg_match('/^[0-9]+([\.,][0-9]+)?[eE][\+\-]?[0-9]+$/', $v)) {
+            $expanded = $this->expandScientificNotation($v);
+            $expanded = str_replace(['.', '+', '-'], '', $expanded);
+            $v = $expanded;
+        }
+
+        return $v;
+    }
+
+    private function expandScientificNotation(string $value): string
+    {
+        $value = trim($value);
+        $value = str_replace(',', '.', $value);
+
+        if (!preg_match('/^([\+\-]?)(\d+)(?:\.(\d+))?[eE]([\+\-]?\d+)$/', $value, $m)) {
+            return $value;
+        }
+
+        $sign = $m[1] ?? '';
+        $int = $m[2] ?? '0';
+        $frac = $m[3] ?? '';
+        $exp = (int) ($m[4] ?? 0);
+
+        $digits = $int . $frac;
+        $decPlaces = strlen($frac);
+        $shift = $exp - $decPlaces;
+
+        if ($shift >= 0) {
+            $plain = $digits . str_repeat('0', $shift);
+        } else {
+            $pos = strlen($digits) + $shift;
+            if ($pos <= 0) {
+                $plain = '0.' . str_repeat('0', -$pos) . $digits;
+            } else {
+                $plain = substr($digits, 0, $pos) . '.' . substr($digits, $pos);
+            }
+        }
+
+        return $sign === '-' ? '-' . $plain : $plain;
     }
 
     private function logListEvent(ShoppingList $list, string $event, array $payload = []): void

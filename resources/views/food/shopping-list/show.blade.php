@@ -38,7 +38,7 @@
                            class="{{ $btnSecondary }}">
                             Ver todas las listas
                         </a>
-                        <a href="{{ route('food.shopping-list.exportCsv', $list) }}"
+                        <a href="{{ route('food.shopping-list.export', ['list' => $list, 'format' => 'csv']) }}"
                            class="{{ $btnSecondary }}">
                             Exportar (CSV)
                         </a>

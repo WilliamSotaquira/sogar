@@ -18,7 +18,14 @@
             >
                 <div class="flex h-full flex-col lg:sticky lg:top-0 lg:h-screen">
                     <div class="flex items-center justify-between gap-2 p-4 lg:hidden">
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Menú</span>
+                        <a href="{{ route('dashboard') }}" wire:navigate class="group flex items-center gap-2.5" aria-label="{{ config('app.name') }}">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-primary-soft shadow-sm ring-1 ring-light transition duration-150 motion-reduce:transition-none group-hover:ring-fg-brand">
+                                <x-app-logo-icon class="h-6 w-6" />
+                            </span>
+                            <span class="text-sm font-semibold text-heading transition duration-150 motion-reduce:transition-none group-hover:text-fg-brand">
+                                {{ config('app.name') }}
+                            </span>
+                        </a>
                         <div class="flex items-center gap-2">
                             <button
                                 data-theme-toggle
@@ -50,21 +57,36 @@
 
             <main id="main-content" tabindex="-1" class="flex-1 py-6 lg:py-10">
                 <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
-                    <div class="mb-4 flex items-start justify-between gap-3">
-                        <x-breadcrumbs />
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between gap-3 lg:hidden">
+                            <a
+                                href="{{ route('dashboard') }}"
+                                wire:navigate
+                                class="group flex flex-shrink-0 items-center"
+                                aria-label="{{ config('app.name') }}"
+                            >
+                                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-primary-soft shadow-sm ring-1 ring-light transition duration-150 motion-reduce:transition-none group-hover:ring-fg-brand">
+                                    <x-app-logo-icon class="h-6 w-6" />
+                                </span>
+                            </a>
 
-                        <button
-                            id="app-sidebar-open"
-                            type="button"
-                            class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200/70 text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 lg:hidden dark:border-neutral-700 dark:text-gray-200 dark:hover:bg-emerald-900/20"
-                            aria-label="Abrir menú"
-                            aria-controls="app-sidebar"
-                            aria-expanded="false"
-                        >
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
+                            <button
+                                id="app-sidebar-open"
+                                type="button"
+                                class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200/70 text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:border-neutral-700 dark:text-gray-200 dark:hover:bg-emerald-900/20"
+                                aria-label="Abrir menú"
+                                aria-controls="app-sidebar"
+                                aria-expanded="false"
+                            >
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="mt-3 lg:mt-0">
+                            <x-breadcrumbs />
+                        </div>
                     </div>
                     {{ $slot }}
                 </div>

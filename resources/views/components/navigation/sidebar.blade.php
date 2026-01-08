@@ -82,7 +82,7 @@
 
 <div class="flex h-full flex-col">
     <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] p-4 flex flex-col">
-        <div class="flex items-center justify-between gap-3">
+        <div class="hidden lg:flex items-center justify-between gap-3">
             <a href="{{ route('dashboard') }}" class="group flex items-center gap-2.5" aria-label="{{ config('app.name') }}">
                 <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-primary-soft shadow-sm ring-1 ring-light transition duration-150 motion-reduce:transition-none group-hover:ring-fg-brand">
                     <x-app-logo-icon class="h-7 w-7" />

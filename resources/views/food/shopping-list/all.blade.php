@@ -49,16 +49,26 @@
             <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Importar lista</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Carga un archivo .csv (ideal para Google Sheets) o .json exportado desde una lista.</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">CSV mínimo: columnas <span class="font-medium">producto</span> y <span class="font-medium">cantidad</span>. Opcional: <span class="font-medium">lista</span>, <span class="font-medium">tipo</span>, <span class="font-medium">codigo</span>. <a href="{{ route('food.shopping-list.templateCsv') }}" class="text-sm font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">Descargar plantilla CSV</a></p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Carga un archivo .csv (Google Sheets) o .json exportado desde una lista.
+                        <a href="{{ route('food.shopping-list.template-csv') }}" class="font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200">
+                            <span class="whitespace-nowrap">Descargar plantilla CSV.</span>
+                        </a>
+                    </p>
                 </div>
-                <form method="POST" action="{{ route('food.shopping-list.import') }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-2 sm:items-end">
+                <form method="POST" action="{{ route('food.shopping-list.import') }}" enctype="multipart/form-data" class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
                     @csrf
-                    <div class="sm:flex-1">
-                        <label for="import-file" class="{{ $label }}">Archivo</label>
-                        <input id="import-file" name="file" type="file" accept="text/csv,.csv,application/json,.json" class="{{ $input }} cursor-pointer overflow-hidden file:mr-3 file:h-11 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200 dark:file:bg-gray-700 dark:file:text-gray-100 dark:hover:file:bg-gray-600" required>
+                    <div class="w-full sm:w-auto">
+                        <p class="{{ $label }}">Archivo</p>
+                        <div class="mt-1 flex items-center gap-2">
+                            <input id="import-file" name="file" type="file" accept="text/csv,.csv,application/json,.json" class="sr-only" required>
+                            <label for="import-file" class="{{ $btnSecondary }} h-11 whitespace-nowrap">Elegir archivo</label>
+                            <div class="h-11 min-w-0 flex-1 sm:w-80 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm flex items-center dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                <span id="import-file-name" class="truncate">Ningún archivo seleccionado</span>
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="{{ $btnPrimary }} h-11 shrink-0">Importar</button>
+                    <button type="submit" class="{{ $btnPrimary }} h-11 whitespace-nowrap">Importar</button>
                 </form>
             </div>
         </div>
@@ -252,13 +262,9 @@
                             <div id="list-menu-{{ $list->id }}"
                                  class="hidden w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-xl z-50 dark:border-gray-800 dark:bg-gray-900"
                                  data-menu-panel>
-                                <a href="{{ route('food.shopping-list.exportCsv', $list) }}"
+                                <a href="{{ route('food.shopping-list.export', ['list' => $list, 'format' => 'csv']) }}"
                                    class="w-full block rounded-lg px-3 py-2 text-left font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800">
                                     ⬇️ Exportar (CSV)
-                                </a>
-                                <a href="{{ route('food.shopping-list.export', $list) }}"
-                                   class="w-full block rounded-lg px-3 py-2 text-left font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800">
-                                    ⬇️ Exportar (JSON)
                                 </a>
                                 <form action="{{ route('food.shopping-list.suggest', $list) }}" method="POST">
                                     @csrf
@@ -399,13 +405,9 @@
                                             <div id="list-menu-table-{{ $list->id }}"
                                                  class="hidden w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-xl z-50 dark:border-gray-800 dark:bg-gray-900"
                                                  data-menu-panel>
-                                                <a href="{{ route('food.shopping-list.exportCsv', $list) }}"
+                                                <a href="{{ route('food.shopping-list.export', ['list' => $list, 'format' => 'csv']) }}"
                                                    class="w-full block rounded-lg px-3 py-2 text-left font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800">
                                                     ⬇️ Exportar (CSV)
-                                                </a>
-                                                <a href="{{ route('food.shopping-list.export', $list) }}"
-                                                   class="w-full block rounded-lg px-3 py-2 text-left font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800">
-                                                    ⬇️ Exportar (JSON)
                                                 </a>
                                                 <form action="{{ route('food.shopping-list.suggest', $list) }}" method="POST">
                                                     @csrf
@@ -585,6 +587,18 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            const importFile = document.getElementById('import-file');
+            const importFileName = document.getElementById('import-file-name');
+            const syncImportFileName = () => {
+                if (!importFileName) return;
+                const file = importFile?.files?.[0];
+                const name = file?.name ? file.name : 'Ningún archivo seleccionado';
+                importFileName.textContent = name;
+                importFileName.title = file?.name ? file.name : '';
+            };
+            importFile?.addEventListener('change', syncImportFileName);
+            syncImportFileName();
+
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const fields = document.querySelectorAll('[data-list-type-field]');
 

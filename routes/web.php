@@ -92,8 +92,8 @@ Route::middleware(['auth'])->group(function () {
     // Food module
     Route::middleware(['can.manage.food'])->group(function () {
         Route::get('food/inventory', [InventoryController::class, 'index'])->name('food.inventory.index');
-        Route::get('food/inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('food.inventory.exportCsv');
-        Route::get('food/inventory/template-csv', [InventoryController::class, 'templateCsv'])->name('food.inventory.templateCsv');
+        Route::get('food/inventory/export.csv', [InventoryController::class, 'exportCsv'])->name('food.inventory.exportCsv');
+        Route::get('food/inventory/template.csv', [InventoryController::class, 'templateCsv'])->name('food.inventory.templateCsv');
         Route::post('food/inventory/import', [InventoryController::class, 'import'])->name('food.inventory.import');
         Route::get('food/products', [FoodProductController::class, 'index'])->name('food.products.index');
         Route::get('food/products/create', [FoodProductController::class, 'create'])->name('food.products.create');
@@ -142,8 +142,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Export / Import
         Route::get('food/shopping-list/{list}/export', [FoodShoppingListController::class, 'export'])->name('food.shopping-list.export');
-        Route::get('food/shopping-list/{list}/export-csv', [FoodShoppingListController::class, 'exportCsv'])->name('food.shopping-list.exportCsv');
-        Route::get('food/shopping-list/template-csv', [FoodShoppingListController::class, 'templateCsv'])->name('food.shopping-list.templateCsv');
+        Route::get('food/shopping-list/template.csv', [FoodShoppingListController::class, 'templateCsv'])->name('food.shopping-list.template-csv');
         Route::post('food/shopping-list/import', [FoodShoppingListController::class, 'import'])->name('food.shopping-list.import');
 
         Route::post('food/shopping-list/{list}/suggest', [FoodShoppingListController::class, 'generateSuggestions'])->name('food.shopping-list.suggest');
