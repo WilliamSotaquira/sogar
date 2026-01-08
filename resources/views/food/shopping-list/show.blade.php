@@ -38,6 +38,10 @@
                            class="{{ $btnSecondary }}">
                             Ver todas las listas
                         </a>
+                        <a href="{{ route('food.shopping-list.exportCsv', $list) }}"
+                           class="{{ $btnSecondary }}">
+                            Exportar (CSV)
+                        </a>
                         <button type="button"
                             onclick="openDeleteListModal()"
                             class="{{ $btnSecondary }} text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:text-rose-300 dark:hover:bg-rose-900/30">

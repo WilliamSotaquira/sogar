@@ -8,8 +8,11 @@ use App\Models\FoodProduct;
 use App\Models\FoodStockBatch;
 use App\Models\FoodType;
 use App\Models\ShoppingListItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class InventoryController extends Controller
 {
@@ -96,5 +99,217 @@ class InventoryController extends Controller
             'pendingInventoryFilterOptions' => $pendingInventoryFilterOptions,
             'activePendingListId' => $pendingListFilterId,
         ]);
+    }
+
+    public function templateCsv(Request $request)
+    {
+        $fileName = 'inventory-template.csv';
+
+        $callback = function () {
+            $out = fopen('php://output', 'w');
+            // BOM UTF-8 para Excel
+            fwrite($out, "\xEF\xBB\xBF");
+
+            // Formato mínimo
+            fputcsv($out, ['producto', 'cantidad', 'ubicacion', 'codigo', 'caduca'], ';');
+            fputcsv($out, ['Arroz', '2', '', '', ''], ';');
+
+            fclose($out);
+        };
+
+        return response()->streamDownload($callback, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'max:4096', 'mimetypes:text/plain,text/csv,application/csv,application/vnd.ms-excel,application/octet-stream'],
+        ]);
+
+        return $this->importFromCsv($request);
+    }
+
+    private function importFromCsv(Request $request): RedirectResponse
+    {
+        $userId = $request->user()->id;
+        $path = $request->file('file')->getRealPath();
+        $handle = fopen($path, 'r');
+
+        if (!$handle) {
+            return back()->withErrors(['file' => 'No se pudo leer el archivo.']);
+        }
+
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+            return back()->withErrors(['file' => 'El archivo está vacío.']);
+        }
+
+        $delimiters = [
+            ';' => substr_count($firstLine, ';'),
+            ',' => substr_count($firstLine, ','),
+            "\t" => substr_count($firstLine, "\t"),
+        ];
+        arsort($delimiters);
+        $delimiter = array_key_first($delimiters) ?: ';';
+
+        rewind($handle);
+        $firstRow = fgetcsv($handle, 0, $delimiter);
+        if (!$firstRow || count($firstRow) < 1) {
+            fclose($handle);
+            return back()->withErrors(['file' => 'CSV inválido: no se pudo leer la cabecera.']);
+        }
+
+        $headers = array_map(fn($h) => trim((string) $h), $firstRow);
+
+        $normalizeHeader = function (string $header): string {
+            $header = trim(mb_strtolower($header));
+            $header = str_replace([' ', '-', '.', ':'], '_', $header);
+            $header = preg_replace('/_+/', '_', $header);
+            $header = trim($header, '_');
+            $header = strtr($header, [
+                'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+                'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+                'ñ' => 'n',
+            ]);
+            return $header;
+        };
+
+        $normalized = [];
+        foreach ($headers as $idx => $header) {
+            $normalized[$normalizeHeader($header)] = $idx;
+        }
+
+        $findIndex = function (array $aliases) use ($normalized, $normalizeHeader): ?int {
+            foreach ($aliases as $alias) {
+                $key = $normalizeHeader((string) $alias);
+                if (array_key_exists($key, $normalized)) {
+                    return $normalized[$key];
+                }
+            }
+            return null;
+        };
+
+        $col = [
+            'product_name' => $findIndex(['producto', 'product', 'item_name', 'name']),
+            'product_barcode' => $findIndex(['codigo', 'codigo_barras', 'barcode', 'ean', 'upc', 'product_barcode']),
+            'qty' => $findIndex(['cantidad', 'qty', 'qty_base']),
+            'location_name' => $findIndex(['ubicacion', 'location', 'location_name']),
+            'expires_on' => $findIndex(['caduca', 'vence', 'expires_on', 'expiry_date']),
+        ];
+
+        if ($col['product_name'] === null && $col['product_barcode'] === null) {
+            fclose($handle);
+            return back()->withErrors(['file' => 'CSV mínimo inválido: agrega la columna "producto" o "codigo".']);
+        }
+
+        $get = function(array $row, string $key) use ($col) {
+            $i = $col[$key] ?? null;
+            if ($i === null) return null;
+            return array_key_exists($i, $row) ? $row[$i] : null;
+        };
+
+        $parseFloat = function($value): float {
+            $v = trim((string) $value);
+            if ($v === '') return 0.0;
+            $v = str_replace(['.', ','], ['.', '.'], $v);
+            return (float) $v;
+        };
+
+        $parseDate = function ($value): ?string {
+            $v = trim((string) $value);
+            if ($v === '') return null;
+            $formats = ['Y-m-d', 'd/m/Y', 'd-m-Y'];
+            foreach ($formats as $fmt) {
+                try {
+                    $dt = \Carbon\Carbon::createFromFormat($fmt, $v);
+                    return $dt->toDateString();
+                } catch (\Throwable $e) {
+                    // try next
+                }
+            }
+            try {
+                return \Carbon\Carbon::parse($v)->toDateString();
+            } catch (\Throwable $e) {
+                return null;
+            }
+        };
+
+        $rows = [];
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            if (count($row) === 1 && trim((string) $row[0]) === '') continue;
+            $rows[] = $row;
+        }
+        fclose($handle);
+
+        if (empty($rows)) {
+            return back()->withErrors(['file' => 'El CSV no tiene filas para importar.']);
+        }
+
+        $imported = 0;
+        $skipped = 0;
+
+        DB::transaction(function () use ($rows, $request, $userId, $get, $parseFloat, $parseDate, &$imported, &$skipped) {
+            foreach ($rows as $row) {
+                $barcode = trim((string) ($get($row, 'product_barcode') ?? ''));
+                $name = trim((string) ($get($row, 'product_name') ?? ''));
+
+                if ($barcode === '' && $name === '') {
+                    $skipped++;
+                    continue;
+                }
+
+                $product = null;
+                if ($barcode !== '') {
+                    $product = FoodProduct::where('user_id', $userId)->where('barcode', $barcode)->first();
+                }
+                if (!$product && $name !== '') {
+                    $product = FoodProduct::where('user_id', $userId)->where('name', $name)->first();
+                }
+
+                if (!$product) {
+                    $skipped++;
+                    continue;
+                }
+
+                $qty = $parseFloat($get($row, 'qty') ?? 1);
+                if ($qty <= 0) $qty = 1;
+
+                $locationName = trim((string) ($get($row, 'location_name') ?? ''));
+                $locationId = null;
+                if ($locationName !== '') {
+                    $locationId = FoodLocation::where('user_id', $userId)
+                        ->whereRaw('LOWER(name) = ?', [mb_strtolower($locationName)])
+                        ->value('id');
+                }
+                if (!$locationId) {
+                    $locationId = $product->default_location_id;
+                }
+
+                $expiresOn = $parseDate($get($row, 'expires_on'));
+
+                FoodStockBatch::create([
+                    'user_id' => $userId,
+                    'product_id' => $product->id,
+                    'location_id' => $locationId,
+                    'qty_base' => $qty,
+                    'qty_remaining_base' => $qty,
+                    'unit_base' => $product->unit_base ?? 'unit',
+                    'entered_on' => now()->toDateString(),
+                    'expires_on' => $expiresOn,
+                    'status' => 'ok',
+                ]);
+
+                $imported++;
+            }
+        });
+
+        if ($imported === 0) {
+            return back()->withErrors(['file' => 'No se importó ningún ítem (verifica nombres o códigos).']);
+        }
+
+        return redirect()->route('food.inventory.index')->with('status', "Inventario importado: {$imported} ítem(s). Omitidos: {$skipped}.");
     }
 }

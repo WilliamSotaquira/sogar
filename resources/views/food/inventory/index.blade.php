@@ -110,6 +110,40 @@
             </div>
         </div>
 
+        @if (session('status'))
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-100">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 dark:border-rose-900/50 dark:bg-rose-900/30 dark:text-rose-100">
+                <ul class="list-disc pl-5 space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <section class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:rounded-xl sm:p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 sm:text-base">Importar inventario</h2>
+                    <p class="text-[11px] text-gray-600 dark:text-gray-400 sm:text-sm">Carga un archivo .csv para agregar stock.</p>
+                    <p class="text-[11px] text-gray-600 dark:text-gray-400 sm:text-sm">CSV mínimo: <span class="font-medium">producto</span> y <span class="font-medium">cantidad</span>. Opcional: <span class="font-medium">ubicacion</span>, <span class="font-medium">codigo</span>, <span class="font-medium">caduca</span>. <a href="{{ route('food.inventory.templateCsv') }}" class="font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-2 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">Descargar plantilla CSV</a></p>
+                </div>
+                <form method="POST" action="{{ route('food.inventory.import') }}" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    @csrf
+                    <div class="sm:min-w-[360px] sm:flex-1">
+                        <label for="inventory-import-file" class="{{ $label }}">Archivo</label>
+                        <input id="inventory-import-file" name="file" type="file" accept="text/csv,.csv" class="{{ $input }} cursor-pointer overflow-hidden file:mr-3 file:h-11 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-200 dark:file:bg-gray-700 dark:file:text-gray-100 dark:hover:file:bg-gray-600" required>
+                    </div>
+                    <button type="submit" class="{{ $btnPrimary }} h-11 shrink-0">Importar</button>
+                </form>
+            </div>
+        </section>
+
         @if($pendingInventoryCount > 0)
             <section id="pending-inventory-panel" class="rounded-lg border border-amber-200 bg-amber-50/70 p-3 shadow-sm dark:border-amber-900/40 dark:bg-amber-900/20 sm:p-4">
                 <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">

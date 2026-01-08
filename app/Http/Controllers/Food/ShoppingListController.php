@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Food;
 use App\Http\Controllers\Controller;
 use App\Models\FoodProduct;
 use App\Models\FoodStockBatch;
+use App\Models\Category;
+use App\Models\FoodLocation;
 use App\Models\ShoppingList;
 use App\Models\ShoppingListItem;
 use App\Models\ShoppingListType;
 use App\Services\ShoppingListGenerator;
 use App\Services\ShoppingListSyncService;
 use App\Services\ShoppingListEventLogger;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -665,6 +670,652 @@ class ShoppingListController extends Controller
         }
 
         return back()->with('status', 'Lista eliminada.');
+    }
+
+    public function export(Request $request, ShoppingList $list)
+    {
+        $this->authorizeList($request, $list);
+
+        $list->load([
+            'items' => fn($q) => $q->orderBy('sort_order'),
+            'items.product:id,name,barcode',
+            'items.location:id,name',
+            'items.category:id,name',
+        ]);
+
+        $payload = [
+            'type' => 'sogar.shopping-list',
+            'version' => 1,
+            'exported_at' => now()->toIso8601String(),
+            'list' => [
+                'name' => $list->name,
+                'list_type' => $list->list_type,
+                'expected_purchase_on' => $list->expected_purchase_on?->toDateString(),
+                'people_count' => (int) ($list->people_count ?? 0),
+                'purchase_frequency_days' => (int) ($list->purchase_frequency_days ?? 0),
+                'safety_factor' => (float) ($list->safety_factor ?? 0),
+                'estimated_budget' => (float) ($list->estimated_budget ?? 0),
+                'meta' => $list->meta,
+            ],
+            'items' => $list->items->map(function (ShoppingListItem $item) {
+                return [
+                    'name' => $item->name,
+                    'priority' => $item->priority,
+                    'qty_to_buy_base' => (float) ($item->qty_to_buy_base ?? 0),
+                    'qty_suggested_base' => (float) ($item->qty_suggested_base ?? 0),
+                    'qty_current_base' => (float) ($item->qty_current_base ?? 0),
+                    'qty_unit_label' => $item->qty_unit_label,
+                    'unit_base' => $item->unit_base,
+                    'unit_size' => $item->unit_size !== null ? (float) $item->unit_size : null,
+                    'estimated_price' => $item->estimated_price !== null ? (float) $item->estimated_price : null,
+                    'actual_price' => $item->actual_price !== null ? (float) $item->actual_price : null,
+                    'vendor_name' => $item->vendor_name,
+                    'is_checked' => (bool) $item->is_checked,
+                    'checked_at' => $item->checked_at?->toIso8601String(),
+                    'barcode' => $item->barcode,
+                    'sort_order' => (int) ($item->sort_order ?? 0),
+                    'metadata' => $item->metadata,
+                    'product_name' => $item->product?->name,
+                    'product_barcode' => $item->product?->barcode,
+                    'location_name' => $item->location?->name,
+                    'category_name' => $item->category?->name,
+                ];
+            })->values()->all(),
+        ];
+
+        $baseName = $list->name ? Str::slug($list->name) : 'lista';
+        $fileName = "shopping-list-{$list->id}-{$baseName}.json";
+
+        return response()->streamDownload(function () use ($payload) {
+            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }, $fileName, [
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ]);
+    }
+
+    public function exportCsv(Request $request, ShoppingList $list)
+    {
+        $this->authorizeList($request, $list);
+
+        $list->load([
+            'items' => fn($q) => $q->orderBy('sort_order'),
+            'items.product:id,name,barcode',
+            'items.location:id,name',
+            'items.category:id,name',
+        ]);
+
+        $baseName = $list->name ? Str::slug($list->name) : 'lista';
+        $fileName = "shopping-list-{$list->id}-{$baseName}.csv";
+
+        $headers = [
+            'list_name',
+            'list_type',
+            'expected_purchase_on',
+            'people_count',
+            'purchase_frequency_days',
+            'safety_factor',
+            'estimated_budget',
+            'item_name',
+            'priority',
+            'qty_to_buy_base',
+            'qty_suggested_base',
+            'qty_current_base',
+            'qty_unit_label',
+            'unit_base',
+            'unit_size',
+            'barcode',
+            'product_barcode',
+            'location_name',
+            'category_name',
+            'estimated_price',
+            'actual_price',
+            'vendor_name',
+            'is_checked',
+            'checked_at',
+            'sort_order',
+        ];
+
+        $rows = [];
+        if ($list->items->count() === 0) {
+            $rows[] = [
+                $list->name,
+                $list->list_type,
+                $list->expected_purchase_on?->toDateString(),
+                (int) ($list->people_count ?? 0),
+                (int) ($list->purchase_frequency_days ?? 0),
+                (float) ($list->safety_factor ?? 0),
+                (float) ($list->estimated_budget ?? 0),
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+            ];
+        } else {
+            foreach ($list->items as $item) {
+                $rows[] = [
+                    $list->name,
+                    $list->list_type,
+                    $list->expected_purchase_on?->toDateString(),
+                    (int) ($list->people_count ?? 0),
+                    (int) ($list->purchase_frequency_days ?? 0),
+                    (float) ($list->safety_factor ?? 0),
+                    (float) ($list->estimated_budget ?? 0),
+                    $item->name,
+                    $item->priority,
+                    (string) ($item->qty_to_buy_base ?? ''),
+                    (string) ($item->qty_suggested_base ?? ''),
+                    (string) ($item->qty_current_base ?? ''),
+                    $item->qty_unit_label,
+                    $item->unit_base,
+                    $item->unit_size !== null ? (string) $item->unit_size : '',
+                    $item->barcode,
+                    $item->product?->barcode,
+                    $item->location?->name,
+                    $item->category?->name,
+                    $item->estimated_price !== null ? (string) $item->estimated_price : '',
+                    $item->actual_price !== null ? (string) $item->actual_price : '',
+                    $item->vendor_name,
+                    $item->is_checked ? '1' : '0',
+                    $item->checked_at?->toIso8601String(),
+                    (string) ($item->sort_order ?? 0),
+                ];
+            }
+        }
+
+        return response()->streamDownload(function () use ($headers, $rows) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM para que Excel/Sheets detecten correctamente.
+            fwrite($out, "\xEF\xBB\xBF");
+            // En muchas configuraciones regionales (ES/LatAm) Excel usa ';' como separador.
+            $delimiter = ';';
+            fputcsv($out, $headers, $delimiter);
+            foreach ($rows as $row) {
+                fputcsv($out, $row, $delimiter);
+            }
+            fclose($out);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function templateCsv(Request $request)
+    {
+        $fileName = 'shopping-list-template.csv';
+
+        $callback = function () {
+            $out = fopen('php://output', 'w');
+            // BOM UTF-8 para Excel
+            fwrite($out, "\xEF\xBB\xBF");
+
+            // Formato mínimo
+            fputcsv($out, ['producto', 'cantidad'], ';');
+            fputcsv($out, ['Arroz', '2'], ';');
+
+            fclose($out);
+        };
+
+        return response()->streamDownload($callback, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        ShoppingListType::ensureDefaultsForUser($request->user()->id);
+
+        $request->validate([
+            'file' => 'required|file|max:4096|mimetypes:application/json,text/plain,application/octet-stream,text/csv,application/csv,application/vnd.ms-excel',
+        ]);
+
+        $raw = file_get_contents($request->file('file')->getRealPath());
+        $trimmed = ltrim((string) $raw);
+        $looksJson = str_starts_with($trimmed, '{') || str_starts_with($trimmed, '[');
+
+        if (!$looksJson) {
+            return $this->importFromCsv($request);
+        }
+
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            // Si no es JSON válido, intentamos CSV como fallback
+            return $this->importFromCsv($request);
+        }
+
+        if (!is_array($decoded) || ($decoded['type'] ?? null) !== 'sogar.shopping-list') {
+            return back()->withErrors(['file' => 'Archivo inválido. Usa un .csv (Google Sheets) o un .json exportado por SOGAR.']);
+        }
+
+        $version = (int) ($decoded['version'] ?? 0);
+        if ($version !== 1) {
+            return back()->withErrors(['file' => 'Versión de archivo no soportada.']);
+        }
+
+        $listData = $decoded['list'] ?? null;
+        $itemsData = $decoded['items'] ?? [];
+
+        if (!is_array($listData) || !is_array($itemsData)) {
+            return back()->withErrors(['file' => 'Estructura de archivo inválida.']);
+        }
+
+        $userId = $request->user()->id;
+
+        $listType = (string) ($listData['list_type'] ?? 'general');
+        $listTypeAllowed = ShoppingListType::where('user_id', $userId)
+            ->where('slug', $listType)
+            ->where('is_active', true)
+            ->exists();
+        if (!$listTypeAllowed) {
+            $listType = 'general';
+        }
+
+        $listName = trim((string) ($listData['name'] ?? ''));
+        if ($listName === '') {
+            $listName = 'Lista importada - ' . now()->locale('es')->translatedFormat('j M');
+        }
+
+        $expectedPurchaseOn = null;
+        if (!empty($listData['expected_purchase_on'])) {
+            try {
+                $expectedPurchaseOn = Carbon::parse((string) $listData['expected_purchase_on'])->toDateString();
+            } catch (\Throwable) {
+                $expectedPurchaseOn = null;
+            }
+        }
+
+        $exportedAt = $decoded['exported_at'] ?? null;
+
+        $newList = DB::transaction(function () use ($request, $userId, $listName, $listType, $expectedPurchaseOn, $listData, $itemsData, $exportedAt) {
+            $list = ShoppingList::create([
+                'user_id' => $userId,
+                'family_group_id' => $request->user()->active_family_group_id,
+                'name' => $listName,
+                'list_type' => $listType,
+                'status' => 'active',
+                'generated_at' => now(),
+                'expected_purchase_on' => $expectedPurchaseOn,
+                'people_count' => (int) ($listData['people_count'] ?? 3),
+                'purchase_frequency_days' => (int) ($listData['purchase_frequency_days'] ?? 7),
+                'safety_factor' => (float) ($listData['safety_factor'] ?? 1.2),
+                'estimated_budget' => (float) ($listData['estimated_budget'] ?? 0),
+                'meta' => array_merge((array) ($listData['meta'] ?? []), [
+                    'import' => [
+                        'exported_at' => $exportedAt,
+                        'imported_at' => now()->toIso8601String(),
+                    ],
+                ]),
+            ]);
+
+            $importedCount = 0;
+
+            foreach ($itemsData as $idx => $itemData) {
+                if (!is_array($itemData)) {
+                    continue;
+                }
+
+                $name = trim((string) ($itemData['name'] ?? ''));
+                if ($name === '') {
+                    continue;
+                }
+
+                $productId = null;
+                $candidateBarcode = $itemData['product_barcode'] ?? $itemData['barcode'] ?? null;
+                if (is_string($candidateBarcode) && trim($candidateBarcode) !== '') {
+                    $productId = FoodProduct::where('user_id', $userId)
+                        ->where('barcode', trim($candidateBarcode))
+                        ->value('id');
+                }
+
+                $locationId = null;
+                if (!empty($itemData['location_name']) && is_string($itemData['location_name'])) {
+                    $locationId = FoodLocation::where('user_id', $userId)
+                        ->where('name', $itemData['location_name'])
+                        ->value('id');
+                }
+
+                $categoryId = null;
+                if (!empty($itemData['category_name']) && is_string($itemData['category_name'])) {
+                    $categoryId = Category::where('user_id', $userId)
+                        ->where('name', $itemData['category_name'])
+                        ->value('id');
+                }
+
+                $checkedAt = null;
+                if (!empty($itemData['checked_at']) && is_string($itemData['checked_at'])) {
+                    try {
+                        $checkedAt = Carbon::parse($itemData['checked_at']);
+                    } catch (\Throwable) {
+                        $checkedAt = null;
+                    }
+                }
+
+                ShoppingListItem::create([
+                    'shopping_list_id' => $list->id,
+                    'product_id' => $productId,
+                    'category_id' => $categoryId,
+                    'location_id' => $locationId,
+                    'name' => $name,
+                    'priority' => (string) ($itemData['priority'] ?? 'medium'),
+                    'qty_suggested_base' => (float) ($itemData['qty_suggested_base'] ?? 0),
+                    'qty_current_base' => (float) ($itemData['qty_current_base'] ?? 0),
+                    'qty_to_buy_base' => (float) ($itemData['qty_to_buy_base'] ?? 0),
+                    'qty_unit_label' => $itemData['qty_unit_label'] ?? null,
+                    'unit_base' => $itemData['unit_base'] ?? null,
+                    'unit_size' => isset($itemData['unit_size']) ? (float) $itemData['unit_size'] : null,
+                    'estimated_price' => isset($itemData['estimated_price']) ? (float) $itemData['estimated_price'] : 0,
+                    'actual_price' => isset($itemData['actual_price']) ? (float) $itemData['actual_price'] : null,
+                    'vendor_name' => $itemData['vendor_name'] ?? null,
+                    'is_checked' => (bool) ($itemData['is_checked'] ?? false),
+                    'checked_at' => $checkedAt,
+                    'barcode' => $itemData['barcode'] ?? null,
+                    'sort_order' => (int) ($itemData['sort_order'] ?? $idx),
+                    'metadata' => $itemData['metadata'] ?? null,
+                ]);
+
+                $importedCount++;
+            }
+
+            $this->logListEvent($list, 'list_imported', [
+                'items_imported' => $importedCount,
+                'source_exported_at' => $exportedAt,
+            ]);
+
+            return $list;
+        });
+
+        return redirect()->route('food.shopping-list.show', $newList)
+            ->with('status', 'Lista importada correctamente.');
+    }
+
+    private function importFromCsv(Request $request): RedirectResponse
+    {
+        $userId = $request->user()->id;
+        $path = $request->file('file')->getRealPath();
+        $handle = fopen($path, 'r');
+        if (!$handle) {
+            return back()->withErrors(['file' => 'No se pudo leer el archivo.']);
+        }
+
+        // Detectar delimitador (Excel ES suele usar ';')
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+            return back()->withErrors(['file' => 'CSV vacío o inválido.']);
+        }
+        $semicolonCount = substr_count($firstLine, ';');
+        $commaCount = substr_count($firstLine, ',');
+        $tabCount = substr_count($firstLine, "\t");
+        $delimiter = ',';
+        if ($tabCount > $semicolonCount && $tabCount > $commaCount) {
+            $delimiter = "\t";
+        } elseif ($semicolonCount > $commaCount) {
+            $delimiter = ';';
+        }
+
+        rewind($handle);
+        $firstRow = fgetcsv($handle, 0, $delimiter);
+        if (!$firstRow || !is_array($firstRow)) {
+            fclose($handle);
+            return back()->withErrors(['file' => 'CSV vacío o inválido.']);
+        }
+
+        // Quitar BOM si existe
+        if (isset($firstRow[0])) {
+            $firstRow[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $firstRow[0]);
+        }
+
+        $headers = array_map(fn($h) => trim((string) $h), $firstRow);
+
+        $normalizeHeader = function (string $header): string {
+            $header = trim(mb_strtolower($header));
+            $header = str_replace([' ', '-', '.', ':'], '_', $header);
+            $header = preg_replace('/_+/', '_', $header);
+            $header = trim($header, '_');
+            // quitar acentos básicos
+            $header = strtr($header, [
+                'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+                'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+                'ñ' => 'n',
+            ]);
+            return $header;
+        };
+
+        $normalized = [];
+        foreach ($headers as $idx => $header) {
+            $normalized[$normalizeHeader($header)] = $idx;
+        }
+
+        $findIndex = function (array $aliases) use ($normalized, $normalizeHeader): ?int {
+            foreach ($aliases as $alias) {
+                $key = $normalizeHeader((string) $alias);
+                if (array_key_exists($key, $normalized)) {
+                    return $normalized[$key];
+                }
+            }
+            return null;
+        };
+
+        // Mapeo canónico de columnas (soporta headers ES / EN)
+        $col = [
+            'list_name' => $findIndex(['list_name', 'lista', 'nombre_lista', 'list']),
+            'list_type' => $findIndex(['list_type', 'tipo', 'type']),
+            'expected_purchase_on' => $findIndex(['expected_purchase_on', 'fecha', 'fecha_estimada', 'expected_date']),
+            'people_count' => $findIndex(['people_count', 'personas', 'people']),
+            'purchase_frequency_days' => $findIndex(['purchase_frequency_days', 'frecuencia_dias', 'frecuencia', 'frequency_days']),
+            'safety_factor' => $findIndex(['safety_factor', 'factor', 'safety']),
+            'estimated_budget' => $findIndex(['estimated_budget', 'presupuesto', 'budget']),
+            'item_name' => $findIndex(['item_name', 'producto', 'product', 'nombre', 'name', 'item']),
+            'priority' => $findIndex(['priority', 'prioridad']),
+            'qty_to_buy_base' => $findIndex(['qty_to_buy_base', 'cantidad', 'qty', 'cantidad_a_comprar']),
+            'qty_suggested_base' => $findIndex(['qty_suggested_base', 'qty_suggested', 'cantidad_sugerida']),
+            'qty_current_base' => $findIndex(['qty_current_base', 'qty_current', 'cantidad_actual']),
+            'qty_unit_label' => $findIndex(['qty_unit_label', 'unidad', 'unit_label']),
+            'unit_base' => $findIndex(['unit_base', 'unidad_base', 'unit_base_label']),
+            'unit_size' => $findIndex(['unit_size', 'tamano', 'tamaño', 'size']),
+            'product_barcode' => $findIndex(['product_barcode', 'barcode', 'codigo', 'codigo_barras', 'ean', 'upc']),
+            'barcode' => $findIndex(['barcode', 'codigo', 'codigo_barras', 'ean', 'upc']),
+            'location_name' => $findIndex(['location_name', 'ubicacion', 'ubicacion_nombre', 'location']),
+            'category_name' => $findIndex(['category_name', 'categoria', 'category']),
+            'estimated_price' => $findIndex(['estimated_price', 'precio_estimado', 'estimated']),
+            'actual_price' => $findIndex(['actual_price', 'precio_real', 'actual']),
+            'vendor_name' => $findIndex(['vendor_name', 'proveedor', 'tienda', 'vendor']),
+            'is_checked' => $findIndex(['is_checked', 'comprado', 'checked']),
+            'checked_at' => $findIndex(['checked_at', 'fecha_compra', 'checked_date']),
+            'sort_order' => $findIndex(['sort_order', 'orden', 'sort']),
+        ];
+
+        $isFullFormat = $col['list_name'] !== null && $col['list_type'] !== null;
+
+        // En formato simplificado, lo único obligatorio es el producto.
+        if ($col['item_name'] === null) {
+            fclose($handle);
+            return back()->withErrors(['file' => 'CSV inválido: falta la columna del producto (usa "producto" o "item_name").']);
+        }
+
+        $rows = [];
+        while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+            if (!is_array($data)) continue;
+            // Ignorar filas completamente vacías
+            $nonEmpty = false;
+            foreach ($data as $v) {
+                if (trim((string) $v) !== '') { $nonEmpty = true; break; }
+            }
+            if (!$nonEmpty) continue;
+
+            $rows[] = $data;
+        }
+        fclose($handle);
+
+        if (count($rows) === 0) {
+            return back()->withErrors(['file' => 'CSV sin filas de datos.']);
+        }
+
+        $get = function(array $row, string $key) use ($col) {
+            $i = $col[$key] ?? null;
+            if ($i === null) return null;
+            return array_key_exists($i, $row) ? $row[$i] : null;
+        };
+
+        $first = $rows[0];
+
+        $listType = trim((string) ($get($first, 'list_type') ?? 'general'));
+        $listTypeAllowed = ShoppingListType::where('user_id', $userId)
+            ->where('slug', $listType)
+            ->where('is_active', true)
+            ->exists();
+        if (!$listTypeAllowed) {
+            $listType = 'general';
+        }
+
+        $listName = trim((string) ($get($first, 'list_name') ?? ''));
+        if ($listName === '') {
+            $listName = 'Lista importada - ' . now()->locale('es')->translatedFormat('j M');
+        }
+
+        $expectedPurchaseOn = null;
+        $expectedRaw = $get($first, 'expected_purchase_on');
+        if (is_string($expectedRaw) && trim($expectedRaw) !== '') {
+            try {
+                $expectedPurchaseOn = Carbon::parse($expectedRaw)->toDateString();
+            } catch (\Throwable) {
+                $expectedPurchaseOn = null;
+            }
+        }
+
+        $parseBool = function($value): bool {
+            $v = strtolower(trim((string) $value));
+            return in_array($v, ['1', 'true', 'yes', 'si', 'sí'], true);
+        };
+
+        $parseFloat = function($value): float {
+            $v = trim((string) $value);
+            if ($v === '') return 0.0;
+            // soporte coma decimal
+            $v = str_replace(['.', ','], ['.', '.'], $v);
+            return (float) $v;
+        };
+
+        $parseInt = function($value): int {
+            $v = trim((string) $value);
+            if ($v === '') return 0;
+            return (int) $v;
+        };
+
+        $newList = DB::transaction(function () use ($request, $userId, $rows, $get, $listName, $listType, $expectedPurchaseOn, $parseBool, $parseFloat, $parseInt, $isFullFormat) {
+            $list = ShoppingList::create([
+                'user_id' => $userId,
+                'family_group_id' => $request->user()->active_family_group_id,
+                'name' => $listName,
+                'list_type' => $listType,
+                'status' => 'active',
+                'generated_at' => now(),
+                'expected_purchase_on' => $expectedPurchaseOn,
+                // En CSV simplificado, estos campos suelen no venir
+                'people_count' => $parseInt($get($rows[0], 'people_count') ?? 3),
+                'purchase_frequency_days' => $parseInt($get($rows[0], 'purchase_frequency_days') ?? 7),
+                'safety_factor' => $parseFloat($get($rows[0], 'safety_factor') ?? 1.2),
+                'estimated_budget' => $parseFloat($get($rows[0], 'estimated_budget') ?? 0),
+                'meta' => [
+                    'import' => [
+                        'source' => 'csv',
+                        'format' => $isFullFormat ? 'full' : 'simple',
+                        'imported_at' => now()->toIso8601String(),
+                    ],
+                ],
+            ]);
+
+            $importedCount = 0;
+
+            foreach ($rows as $idx => $row) {
+                $itemName = trim((string) ($get($row, 'item_name') ?? ''));
+                if ($itemName === '') {
+                    continue;
+                }
+
+                $productId = null;
+                $candidateBarcode = $get($row, 'product_barcode') ?? $get($row, 'barcode');
+                if (is_string($candidateBarcode) && trim($candidateBarcode) !== '') {
+                    $productId = FoodProduct::where('user_id', $userId)
+                        ->where('barcode', trim($candidateBarcode))
+                        ->value('id');
+                }
+
+                $locationId = null;
+                $locName = $get($row, 'location_name');
+                if (is_string($locName) && trim($locName) !== '') {
+                    $locationId = FoodLocation::where('user_id', $userId)
+                        ->where('name', trim($locName))
+                        ->value('id');
+                }
+
+                $categoryId = null;
+                $catName = $get($row, 'category_name');
+                if (is_string($catName) && trim($catName) !== '') {
+                    $categoryId = Category::where('user_id', $userId)
+                        ->where('name', trim($catName))
+                        ->value('id');
+                }
+
+                $checkedAt = null;
+                $checkedAtRaw = $get($row, 'checked_at');
+                if (is_string($checkedAtRaw) && trim($checkedAtRaw) !== '') {
+                    try {
+                        $checkedAt = Carbon::parse($checkedAtRaw);
+                    } catch (\Throwable) {
+                        $checkedAt = null;
+                    }
+                }
+
+                ShoppingListItem::create([
+                    'shopping_list_id' => $list->id,
+                    'product_id' => $productId,
+                    'category_id' => $categoryId,
+                    'location_id' => $locationId,
+                    'name' => $itemName,
+                    'priority' => (string) ($get($row, 'priority') ?? 'medium'),
+                    // En CSV simplificado, la cantidad puede venir vacía: default 1
+                    'qty_to_buy_base' => ($q = $parseFloat($get($row, 'qty_to_buy_base') ?? 1)) > 0 ? $q : 1,
+                    'qty_suggested_base' => $parseFloat($get($row, 'qty_suggested_base') ?? 0),
+                    'qty_current_base' => $parseFloat($get($row, 'qty_current_base') ?? 0),
+                    'qty_unit_label' => $get($row, 'qty_unit_label') ?: null,
+                    'unit_base' => $get($row, 'unit_base') ?: null,
+                    'unit_size' => (($u = $get($row, 'unit_size')) !== null && trim((string)$u) !== '') ? (float) $u : null,
+                    'barcode' => $get($row, 'barcode') ?: null,
+                    'estimated_price' => $parseFloat($get($row, 'estimated_price') ?? 0),
+                    'actual_price' => (($a = $get($row, 'actual_price')) !== null && trim((string)$a) !== '') ? (float) $a : null,
+                    'vendor_name' => $get($row, 'vendor_name') ?: null,
+                    'is_checked' => $parseBool($get($row, 'is_checked') ?? false),
+                    'checked_at' => $checkedAt,
+                    'sort_order' => $parseInt($get($row, 'sort_order') ?? $idx),
+                ]);
+
+                $importedCount++;
+            }
+
+            $this->logListEvent($list, 'list_imported', [
+                'items_imported' => $importedCount,
+                'source' => 'csv',
+            ]);
+
+            return $list;
+        });
+
+        return redirect()->route('food.shopping-list.show', $newList)
+            ->with('status', 'Lista importada correctamente (CSV).');
     }
 
     public function searchProducts(Request $request)

@@ -92,6 +92,8 @@ Route::middleware(['auth'])->group(function () {
     // Food module
     Route::middleware(['can.manage.food'])->group(function () {
         Route::get('food/inventory', [InventoryController::class, 'index'])->name('food.inventory.index');
+        Route::get('food/inventory/template-csv', [InventoryController::class, 'templateCsv'])->name('food.inventory.templateCsv');
+        Route::post('food/inventory/import', [InventoryController::class, 'import'])->name('food.inventory.import');
         Route::get('food/products', [FoodProductController::class, 'index'])->name('food.products.index');
         Route::get('food/products/create', [FoodProductController::class, 'create'])->name('food.products.create');
         Route::post('food/products', [FoodProductController::class, 'store'])->name('food.products.store');
@@ -136,6 +138,13 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['can.manage.shopping'])->group(function () {
         // Vista de todas las listas
         Route::get('food/shopping-list/all', [FoodShoppingListController::class, 'all'])->name('food.shopping-list.all');
+
+        // Export / Import
+        Route::get('food/shopping-list/{list}/export', [FoodShoppingListController::class, 'export'])->name('food.shopping-list.export');
+        Route::get('food/shopping-list/{list}/export-csv', [FoodShoppingListController::class, 'exportCsv'])->name('food.shopping-list.exportCsv');
+        Route::get('food/shopping-list/template-csv', [FoodShoppingListController::class, 'templateCsv'])->name('food.shopping-list.templateCsv');
+        Route::post('food/shopping-list/import', [FoodShoppingListController::class, 'import'])->name('food.shopping-list.import');
+
         Route::post('food/shopping-list/{list}/suggest', [FoodShoppingListController::class, 'generateSuggestions'])->name('food.shopping-list.suggest');
         Route::post('food/shopping-list/types', [FoodShoppingListTypeController::class, 'store'])->name('food.shopping-list.types.store');
         Route::post('food/needs', [FoodNeedInboxController::class, 'store'])->name('food.needs.store');
