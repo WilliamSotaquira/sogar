@@ -109,11 +109,29 @@ it('downloads inventory as csv', function () {
         'is_default' => true,
     ]);
 
+    $defaultOnlyLocation = FoodLocation::create([
+        'user_id' => $user->id,
+        'name' => 'Nevera',
+        'slug' => Str::slug('Nevera'),
+        'sort_order' => 1,
+        'is_default' => false,
+    ]);
+
     $product = FoodProduct::create([
         'user_id' => $user->id,
         'name' => 'Pasta',
         'barcode' => '99887766',
         'default_location_id' => $location->id,
+        'unit_base' => 'unit',
+        'unit_size' => 1,
+        'is_active' => true,
+    ]);
+
+    $productWithDefaultOnly = FoodProduct::create([
+        'user_id' => $user->id,
+        'name' => 'Yogur',
+        'barcode' => '11223344',
+        'default_location_id' => $defaultOnlyLocation->id,
         'unit_base' => 'unit',
         'unit_size' => 1,
         'is_active' => true,
@@ -130,6 +148,18 @@ it('downloads inventory as csv', function () {
         'status' => 'ok',
     ]);
 
+    // Batch sin ubicación: debe exportar la ubicación por defecto del producto
+    FoodStockBatch::create([
+        'user_id' => $user->id,
+        'product_id' => $productWithDefaultOnly->id,
+        'location_id' => null,
+        'qty_base' => 1,
+        'qty_remaining_base' => 1,
+        'unit_base' => 'unit',
+        'entered_on' => now()->toDateString(),
+        'status' => 'ok',
+    ]);
+
     actingAs($user);
 
     $res = get(route('food.inventory.exportCsv'));
@@ -140,4 +170,6 @@ it('downloads inventory as csv', function () {
     expect($content)->toContain('producto');
     expect($content)->toContain('Pasta');
     expect($content)->toContain('Despensa');
+    expect($content)->toContain('Yogur');
+    expect($content)->toContain('Nevera');
 });

@@ -107,7 +107,7 @@ class InventoryController extends Controller
         $locationId = $request->input('location_id');
         $typeId = $request->input('type_id');
 
-        $batches = FoodStockBatch::with(['product.type', 'location'])
+        $batches = FoodStockBatch::with(['product.type', 'product.defaultLocation', 'location'])
             ->where('user_id', $userId)
             ->when($locationId, fn ($q) => $q->where('location_id', $locationId))
             ->when($typeId, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type_id', $typeId)))
@@ -133,10 +133,14 @@ class InventoryController extends Controller
             ], ';');
 
             foreach ($batches as $batch) {
+                $locationName = $batch->location?->name
+                    ?? $batch->product?->defaultLocation?->name
+                    ?? '';
+
                 fputcsv($out, [
                     $batch->product?->name ?? 'Producto eliminado',
                     $batch->product?->barcode ?? '',
-                    $batch->location?->name ?? '',
+                    $locationName,
                     (string) $batch->qty_remaining_base,
                     $batch->unit_base ?? '',
                     $batch->expires_on ? $batch->expires_on->toDateString() : '',
