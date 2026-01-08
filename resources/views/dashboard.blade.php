@@ -1,15 +1,19 @@
 @php
     $fmtMoney = fn ($value) => '$' . number_format($value, 0, ',', '.');
+    $user = auth()->user();
+    $canManageFinances = $user?->canManageFinances() ?? false;
+    $canManageFood = $user?->canManageFood() ?? false;
+    $canManageShopping = $user?->canManageShopping() ?? false;
 @endphp
 
 <x-layouts.app :title="__('Dashboard')">
-    <div id="dashboard-content" class="mx-auto w-full max-w-6xl space-y-6">
+    <div id="dashboard-content" class="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
         <a href="#dashboard-content" class="sr-only focus:not-sr-only focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:ring-2 focus:ring-emerald-400 dark:focus:bg-neutral-900 dark:focus:text-gray-50">
             Saltar al contenido principal
         </a>
 
         {{-- Encabezado / contexto --}}
-        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-50">
                     Dashboard
@@ -24,33 +28,49 @@
                 @endif
             </div>
 
-            <div class="flex flex-col items-start gap-2 md:items-end">
+            <div class="flex w-full flex-col items-start gap-2 md:w-auto md:items-end">
                 <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-800/60">
                     <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
                     Salud: {{ $healthScore }}/100
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="button"
-                            onclick="openNeedModal()"
-                            aria-haspopup="dialog"
-                            aria-controls="need-modal"
-                            class="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40">
-                        Agregar falta
-                    </button>
-                    <a href="{{ route('transactions.create') }}"
-                       class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
-                        Registrar transacción
-                    </a>
-                    <a href="{{ route('food.shopping-list.index') }}"
-                       class="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-gray-800 dark:bg-neutral-900 dark:text-gray-100 dark:hover:bg-neutral-800">
-                        Lista de compras
-                    </a>
-                    <a href="{{ route('food.inventory.index') }}"
-                       class="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-gray-800 dark:bg-neutral-900 dark:text-gray-100 dark:hover:bg-neutral-800">
-                        Inventario
-                    </a>
+
+                {{-- Acciones: en móvil en columna para evitar botones desparejos por salto de línea --}}
+                <div class="w-full space-y-2 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-2 md:space-y-0">
+                    @if($canManageFinances)
+                        <a href="{{ route('transactions.create') }}"
+                           class="inline-flex h-11 w-full items-center justify-center rounded-full bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition duration-150 hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto">
+                            Registrar transacción
+                        </a>
+                    @endif
+
+                    @if($canManageShopping)
+                        <button type="button"
+                                onclick="openNeedModal()"
+                                aria-haspopup="dialog"
+                                aria-controls="need-modal"
+                                class="inline-flex h-11 w-full items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 shadow-sm transition duration-150 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40">
+                            Agregar falta
+                        </button>
+                    @endif
+
+                    <div class="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap md:justify-end">
+                        @if($canManageShopping)
+                            <a href="{{ route('food.shopping-list.index') }}"
+                               class="inline-flex h-11 w-full items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-800 shadow-sm transition duration-150 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto dark:border-gray-800 dark:bg-neutral-900 dark:text-gray-100 dark:hover:bg-neutral-800">
+                                Lista de compras
+                            </a>
+                        @endif
+
+                        @if($canManageFood)
+                            <a href="{{ route('food.inventory.index') }}"
+                               class="inline-flex h-11 w-full items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-800 shadow-sm transition duration-150 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto dark:border-gray-800 dark:bg-neutral-900 dark:text-gray-100 dark:hover:bg-neutral-800">
+                                Inventario
+                            </a>
+                        @endif
+                    </div>
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+
+                <div class="w-full text-xs text-gray-500 md:w-auto md:text-right dark:text-gray-400">
                     @if($googleIntegration)
                         <form method="POST" action="{{ route('integrations.google.disconnect') }}" class="inline">
                             @csrf
@@ -69,39 +89,39 @@
         </div>
 
         <section aria-labelledby="summary-title" class="grid gap-4 lg:grid-cols-2">
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50">
                 <div class="flex items-center justify-between gap-3">
                     <h2 id="summary-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">
                         Resumen financiero
                     </h2>
                     <a href="{{ route('transactions.index') }}"
-                       class="text-sm font-semibold text-emerald-700 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">
+                       class="text-sm font-semibold text-emerald-700 transition-colors duration-150 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">
                         Ver detalle
                     </a>
                 </div>
-                <dl class="mt-4 grid grid-cols-2 gap-3">
-                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                <dl class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-2">
+                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 transition-colors duration-150 hover:bg-gray-100 dark:bg-neutral-900 dark:ring-gray-800 dark:hover:bg-neutral-800">
                         <dt class="text-xs font-medium text-gray-500">Ingresos (mes)</dt>
                         <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-50">{{ $fmtMoney($income) }}</dd>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 transition-colors duration-150 hover:bg-gray-100 dark:bg-neutral-900 dark:ring-gray-800 dark:hover:bg-neutral-800">
                         <dt class="text-xs font-medium text-gray-500">Gastos (mes)</dt>
                         <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-50">{{ $fmtMoney($expenses) }}</dd>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 transition-colors duration-150 hover:bg-gray-100 dark:bg-neutral-900 dark:ring-gray-800 dark:hover:bg-neutral-800">
                         <dt class="text-xs font-medium text-gray-500">Balance (mes)</dt>
                         <dd class="mt-1 text-lg font-semibold {{ $netThisMonth >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300' }}">
                             {{ $fmtMoney($netThisMonth) }}
                         </dd>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
+                    <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 transition-colors duration-150 hover:bg-gray-100 dark:bg-neutral-900 dark:ring-gray-800 dark:hover:bg-neutral-800">
                         <dt class="text-xs font-medium text-gray-500">Presupuestos en riesgo</dt>
                         <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-50">{{ $budgetsAtRiskCount }}</dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50">
                 <div class="flex items-center justify-between gap-3">
                     <h2 id="alerts-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">
                         Alertas
@@ -136,14 +156,14 @@
             </div>
         </section>
 
-        <section aria-labelledby="recent-needs-title" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section aria-labelledby="recent-needs-title" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50">
             <div class="flex items-center justify-between gap-3">
                 <div class="space-y-1">
                     <h2 id="recent-needs-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                        Ultimos agregados
+                        Últimos agregados
                     </h2>
                     @if($foodLatestActiveList)
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 sm:flex sm:flex-wrap sm:items-center dark:text-gray-400">
                             <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
                                 {{ $foodLatestActiveList->name }}
                             </span>
@@ -171,7 +191,7 @@
                 </div>
                 @if($foodLatestActiveList)
                     <a href="{{ route('food.shopping-list.show', $foodLatestActiveList) }}"
-                       class="text-sm font-semibold text-emerald-700 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">
+                       class="text-sm font-semibold text-emerald-700 transition-colors duration-150 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:text-emerald-300 dark:hover:text-emerald-200">
                         Ver lista activa
                     </a>
                 @endif
@@ -179,7 +199,7 @@
             <div id="recent-needs-list" class="mt-3 space-y-2">
                 @forelse ($recentNeedItems as $item)
                     <a href="{{ $foodLatestActiveList ? route('food.shopping-list.show', $foodLatestActiveList) : '#' }}"
-                       class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-100 transition hover:bg-gray-100 dark:bg-neutral-900 dark:text-gray-200 dark:ring-gray-800 dark:hover:bg-neutral-800"
+                       class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-100 transition duration-150 hover:bg-gray-100 active:scale-[0.99] motion-reduce:transition-none dark:bg-neutral-900 dark:text-gray-200 dark:ring-gray-800 dark:hover:bg-neutral-800"
                        data-need-item
                        data-item-id="{{ $item->id }}"
                        data-product-id="{{ $item->product_id }}">

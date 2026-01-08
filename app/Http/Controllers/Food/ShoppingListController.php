@@ -496,15 +496,15 @@ class ShoppingListController extends Controller
             $meta = $item->metadata ?? [];
             if (empty($meta['inventory_recorded_at'])) {
                 try {
+                    $qtyBase = (float) ($item->qty_to_buy_base ?? 0);
                     FoodStockBatch::create([
+                        'user_id' => $request->user()->id,
                         'product_id' => $item->product_id,
                         'location_id' => $item->location_id,
-                        'qty_base' => $item->qty_to_buy_base,
+                        'qty_base' => $qtyBase,
+                        'qty_remaining_base' => $qtyBase,
                         'unit_base' => $item->unit_base,
-                        'unit_size' => $item->unit_size ?? 1,
-                        'source' => 'purchase',
-                        'source_id' => $item->id,
-                        'acquired_on' => now()->toDateString(),
+                        'entered_on' => now()->toDateString(),
                     ]);
 
                     $meta['inventory_recorded_at'] = now()->toISOString();

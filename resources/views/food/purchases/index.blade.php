@@ -2,8 +2,8 @@
     @php
         $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300';
         $input = 'mt-1 block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 transition';
-        $btnPrimary = 'inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2';
-        $btnSecondary = 'inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
+        $btnPrimary = 'inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 motion-reduce:transition-none hover:bg-emerald-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.99]';
+        $btnSecondary = 'inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:bg-gray-50 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
         $totalListItems = $selectedList?->items->count() ?? 0;
         $pendingListItems = $selectedList?->items->filter(fn ($item) => empty($item->is_checked))->count() ?? 0;
         $budgetLabel = $selectedList?->budget?->category?->name
@@ -109,7 +109,7 @@
                 </a>
             </div>
         @else
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900" role="region" aria-labelledby="selected-list-title">
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/60" role="region" aria-labelledby="selected-list-title">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div class="min-w-0 flex-1">
                         <p id="selected-list-title" class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Lista seleccionada</p>
@@ -156,7 +156,7 @@
                 <span id="purchase-form-title" class="sr-only">Registrar compra a partir de la lista seleccionada</span>
 
                 <div class="grid gap-4 lg:grid-cols-2">
-                    <div class="overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4 shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-900 md:p-6" role="region" aria-labelledby="purchase-details-title">
+                    <div class="overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4 shadow-lg transition-colors duration-150 motion-reduce:transition-none hover:border-blue-200 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900 dark:hover:border-blue-900/50 md:p-6" role="region" aria-labelledby="purchase-details-title">
                         <div class="mb-4 flex items-center justify-between gap-2">
                             <h3 id="purchase-details-title" class="text-lg font-bold text-gray-900 dark:text-gray-100 md:text-xl">Detalles de la compra</h3>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-blue-500 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -180,7 +180,7 @@
                         </div>
                     </div>
 
-                    <div class="overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4 shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-900 md:p-6" role="region" aria-labelledby="payment-title">
+                    <div class="overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4 shadow-lg transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-700 dark:from-gray-800 dark:to-gray-900 dark:hover:border-emerald-800/60 md:p-6" role="region" aria-labelledby="payment-title">
                         <div class="mb-4 flex items-center justify-between gap-2">
                             <h3 id="payment-title" class="text-lg font-bold text-gray-900 dark:text-gray-100 md:text-xl">Pago y control</h3>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-emerald-500 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -228,7 +228,7 @@
                     </div>
                 </div>
 
-                <section class="overflow-hidden rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 md:p-6" role="region" aria-labelledby="confirm-items-title" aria-describedby="confirm-items-desc">
+                <section class="overflow-hidden rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-lg transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-800/60 md:p-6" role="region" aria-labelledby="confirm-items-title" aria-describedby="confirm-items-desc">
                     <div class="mb-6">
                         <div class="mb-4">
                                 <h3 id="confirm-items-title" class="text-lg font-bold text-gray-900 dark:text-gray-100 md:text-xl">Confirmar ítems</h3>
@@ -248,14 +248,14 @@
 
                                 <!-- Botones de acción -->
                                 <div class="flex flex-wrap gap-2">
-                                    <button type="button" id="items-select-all" aria-label="Seleccionar todos los items" class="inline-flex touch-target items-center gap-1.5 rounded-full border-2 border-emerald-200 bg-emerald-50 px-4 py-1.5 text-[11px] font-semibold normal-case text-emerald-700 transition-all hover:border-emerald-500 hover:bg-emerald-100 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                    <button type="button" id="items-select-all" aria-label="Seleccionar todos los items" class="inline-flex touch-target items-center gap-1.5 rounded-full border-2 border-emerald-200 bg-emerald-50 px-4 py-1.5 text-[11px] font-semibold normal-case text-emerald-700 transition-all duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:bg-emerald-100 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.99] dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                         </svg>
                                         <span class="hidden sm:inline">Seleccionar todo</span>
                                         <span class="sm:hidden">Todos</span>
                                     </button>
-                                    <button type="button" id="items-clear-all" aria-label="Limpiar selección de items" class="inline-flex touch-target items-center gap-1.5 rounded-full border-2 border-rose-200 bg-rose-50 px-4 py-1.5 text-[11px] font-semibold normal-case text-rose-700 transition-all hover:border-rose-500 hover:bg-rose-100 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+                                    <button type="button" id="items-clear-all" aria-label="Limpiar selección de items" class="inline-flex touch-target items-center gap-1.5 rounded-full border-2 border-rose-200 bg-rose-50 px-4 py-1.5 text-[11px] font-semibold normal-case text-rose-700 transition-all duration-150 motion-reduce:transition-none hover:border-rose-500 hover:bg-rose-100 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 active:scale-[0.99] dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -425,7 +425,7 @@
                             <span class="font-semibold">Se actualizará</span> la lista, el inventario y opcionalmente las finanzas.
                         </p>
                     </div>
-                    <button type="submit" class="{{ $btnPrimary }} w-full touch-target px-6 py-3 text-base shadow-md transition-all hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-md sm:w-auto md:px-8">
+                    <button type="submit" class="{{ $btnPrimary }} w-full touch-target px-6 py-3 text-base shadow-md transition-all duration-150 motion-reduce:transition-none hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-md sm:w-auto md:px-8">
                         <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 inline-block h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -449,11 +449,13 @@
                     title="Producto rápido">
                 ➕
             </button>
-            <a href="{{ route('food.shopping-list.index') }}"
-               class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
-               title="Lista de compras">
-                🗒️
-            </a>
+            @if(auth()->user()?->canManageShopping())
+                <a href="{{ route('food.shopping-list.index') }}"
+                   class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
+                   title="Lista de compras">
+                    🗒️
+                </a>
+            @endif
             <a href="{{ route('food.inventory.index') }}"
                class="flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all hover:bg-gray-50 hover:scale-105 dark:hover:bg-gray-800/50"
                title="Inventario">

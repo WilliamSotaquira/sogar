@@ -1,9 +1,9 @@
 <x-layouts.app :title="__('Inventario de Alimentos')">
     @php
         $label = 'block text-sm font-medium text-gray-700 dark:text-gray-300';
-        $input = 'mt-1 block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100';
-        $btnSecondary = 'inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
-        $btnPrimary = 'inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1';
+        $input = 'mt-1 block h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm transition duration-150 motion-reduce:transition-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100';
+        $btnSecondary = 'inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:bg-gray-50 active:scale-[0.99] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700';
+        $btnPrimary = 'inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-150 motion-reduce:transition-none hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 active:scale-[0.99]';
         $buildQuery = fn ($loc, $type) => array_filter([
             'location_id' => $loc,
             'type_id' => $type,
@@ -89,21 +89,21 @@
                 </div>
                 <div class="flex gap-1 flex-wrap sm:gap-2">
                     @if($activeLocation)
-                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
+                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition duration-150 motion-reduce:transition-none hover:bg-white/20 active:scale-[0.99] sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             📍 Ver {{ $activeLocation->name }}
                         </a>
-                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
+                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition duration-150 motion-reduce:transition-none hover:bg-white/20 active:scale-[0.99] sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             ✏️ Editar
                         </a>
                     @else
-                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
+                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition duration-150 motion-reduce:transition-none hover:bg-white/20 active:scale-[0.99] sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             📍 Ubicaciones
                         </a>
-                        <a href="{{ route('food.products.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
+                        <a href="{{ route('food.products.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition duration-150 motion-reduce:transition-none hover:bg-white/20 active:scale-[0.99] sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                             📦 Productos
                         </a>
                     @endif
-                    <a href="{{ route('food.purchases.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
+                    <a href="{{ route('food.purchases.index') }}" class="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm transition duration-150 motion-reduce:transition-none hover:bg-white/20 active:scale-[0.99] sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs">
                         🛒 Compras
                     </a>
                 </div>
@@ -135,7 +135,9 @@
                         @endif
                         <div class="flex flex-wrap gap-2 text-xs font-semibold text-amber-800 dark:text-amber-100">
                             <a href="{{ route('food.purchases.index') }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 hover:bg-amber-100 dark:border-amber-900/40 dark:hover:bg-amber-900/40">🛒 Registrar compra</a>
-                            <a href="{{ route('food.shopping-list.index') }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 hover:bg-amber-100 dark:border-amber-900/40 dark:hover:bg-amber-900/40">🗒️ Revisar listas</a>
+                            @if(auth()->user()?->canManageShopping())
+                                <a href="{{ route('food.shopping-list.index') }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 hover:bg-amber-100 dark:border-amber-900/40 dark:hover:bg-amber-900/40">🗒️ Revisar listas</a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -173,7 +175,9 @@
                             </dl>
                             <div class="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-amber-800 dark:text-amber-100">
                                 <a href="{{ route('food.purchases.index', ['list_id' => $pendingItem->shopping_list_id]) }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 hover:bg-amber-100 dark:border-amber-900/40 dark:hover:bg-amber-900/30">🧾 Reabrir compra</a>
-                                <a href="{{ route('food.shopping-list.index', ['list_id' => $pendingItem->shopping_list_id]) }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 hover:bg-amber-100 dark:border-amber-900/40 dark:hover:bg-amber-900/30">🗒️ Ver lista</a>
+                                @if(auth()->user()?->canManageShopping())
+                                    <a href="{{ route('food.shopping-list.index', ['list_id' => $pendingItem->shopping_list_id]) }}" class="inline-flex items-center gap-1 rounded-full border border-amber-200 px-3 py-1 hover:bg-amber-100 dark:border-amber-900/40 dark:hover:bg-amber-900/30">🗒️ Ver lista</a>
+                                @endif
                             </div>
                         </article>
                     @empty
@@ -219,39 +223,39 @@
 
         {{-- Acciones rápidas y búsqueda --}}
         <div class="grid gap-2 sm:gap-3 lg:grid-cols-[2fr_3fr]">
-            <div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-4">
+            <div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/60 sm:p-4">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-2 sm:mb-3 sm:text-base">⚡ Acciones rápidas</h3>
                 <div class="grid gap-2 sm:grid-cols-2">
                     @if($activeLocation)
-                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                        <a href="{{ route('food.locations.show', $activeLocation) }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
                             <span class="text-base sm:text-lg">📍</span>
                             <span>Ver {{ $activeLocation->name }}</span>
                         </a>
-                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                        <a href="{{ route('food.locations.edit', $activeLocation) }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
                             <span class="text-base sm:text-lg">✏️</span>
                             <span>Editar ubicación</span>
                         </a>
                     @else
-                        <a href="{{ route('food.locations.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                        <a href="{{ route('food.locations.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
                             <span class="text-base sm:text-lg">📍</span>
                             <span>Administrar ubicaciones</span>
                         </a>
-                        <a href="{{ route('food.locations.create') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                        <a href="{{ route('food.locations.create') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
                             <span class="text-base sm:text-lg">➕</span>
                             <span>Crear nueva ubicación</span>
                         </a>
                     @endif
-                    <a href="{{ route('food.purchases.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                    <a href="{{ route('food.purchases.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
                         <span class="text-base sm:text-lg">🛒</span>
                         <span>Registrar compra</span>
                     </a>
-                    <a href="{{ route('food.products.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
+                    <a href="{{ route('food.products.index') }}" class="flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100 sm:gap-3 sm:px-3 sm:text-sm">
                         <span class="text-base sm:text-lg">🏷️</span>
                         <span>Gestionar productos</span>
                     </a>
                 </div>
             </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/60">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50">🔍 Buscar producto en stock</h3>
                     <span id="inventory-status" role="status" aria-live="polite" aria-atomic="true" class="text-xs text-gray-500 dark:text-gray-400"></span>
@@ -269,7 +273,7 @@
         </div>
 
         {{-- Filtros --}}
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 space-y-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/60 space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-md font-semibold text-gray-900 dark:text-gray-50">⚙️ Filtros</h3>
                 @if(request()->has('location_id') || request()->has('type_id'))
@@ -303,7 +307,7 @@
                         @php
                             $query = $buildQuery($entry['location_id'] ?? null, $entry['type_id'] ?? null);
                         @endphp
-                        <a href="{{ route('food.inventory.index', $query) }}" class="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-100">
+                        <a href="{{ route('food.inventory.index', $query) }}" class="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-100">
                             {{ $entry['label'] }}
                         </a>
                     @endforeach
@@ -312,7 +316,7 @@
         </div>
 
         {{-- Inventario agrupado por ubicación --}}
-        <section class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section class="rounded-lg border border-gray-200 bg-white shadow-sm transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/60">
             <div class="flex flex-col gap-1.5 border-b border-gray-100 px-3 py-2.5 dark:border-gray-800/70 sm:px-4 sm:py-3 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100 sm:text-base">Inventario por ubicación</h2>
@@ -320,8 +324,8 @@
                 </div>
                 @if(!$activeLocation)
                     <div class="flex flex-wrap gap-1.5 text-xs sm:gap-2">
-                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-200 sm:px-2.5 sm:py-1 sm:text-xs">Ubicaciones</a>
-                        <a href="{{ route('food.locations.create') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700 hover:border-emerald-500 hover:text-emerald-600 dark:border-gray-700 dark:text-gray-200 sm:px-2.5 sm:py-1 sm:text-xs">+ Nueva</a>
+                        <a href="{{ route('food.locations.index') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-200 sm:px-2.5 sm:py-1 sm:text-xs">Ubicaciones</a>
+                        <a href="{{ route('food.locations.create') }}" class="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700 transition duration-150 motion-reduce:transition-none hover:border-emerald-500 hover:text-emerald-600 active:scale-[0.99] dark:border-gray-700 dark:text-gray-200 sm:px-2.5 sm:py-1 sm:text-xs">+ Nueva</a>
                     </div>
                 @endif
             </div>
@@ -401,7 +405,7 @@
         </section>
 
         {{-- Alertas de caducidad --}}
-        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm transition-colors duration-150 motion-reduce:transition-none hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/60">
             <div class="border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Alertas de caducidad</h2>
@@ -596,22 +600,28 @@
             if (!code) return;
             setStatus('Buscando producto...');
             try {
-                const res = await fetch('/food/scan', {
-                    method: 'POST',
+                // IMPORTANTE: usar lookup sin efectos para evitar auto-crear productos al escanear
+                const res = await fetch(`/food/barcode/${encodeURIComponent(code)}`, {
+                    method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf || '',
                         'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf || '',
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ code }),
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    highlightProduct(data.product.id);
-                } else {
-                    setStatus('No se encontró el producto. ¿Lo quieres crear primero?', 'text-amber-600');
+
+                if (!res.ok) {
+                    setStatus('No se encontró el producto en tu catálogo.', 'text-amber-600');
+                    return;
                 }
+
+                const data = await res.json();
+                if (data?.found && data?.source === 'local' && data?.data?.id) {
+                    highlightProduct(data.data.id);
+                    return;
+                }
+
+                setStatus('Código no existe en tu catálogo. Créalo primero para ver stock.', 'text-amber-600');
             } catch (err) {
                 console.warn(err);
                 setStatus('Error al buscar el código.', 'text-rose-500');

@@ -45,7 +45,7 @@ Usuario escribe código: "7501055363018"
         ↓
 Espera 800ms (debounce)
         ↓
-GET /api/food/barcode/7501055363018
+GET /food/barcode/7501055363018  (sesión web)
         ↓
 [1] ¿Existe en inventario local?
     ✅ SÍ → Retorna datos del producto
@@ -215,11 +215,11 @@ Por defecto → 30 días
 ### Backend
 
 1. **`BarcodeLookupController.php`** (NUEVO)
-   - `GET /api/food/barcode/{code}`
+   - `GET /food/barcode/{code}`
    - Busca en local + OpenFoodFacts
    - Infiere unidades y vida útil
 
-2. **`routes/api.php`**
+2. **`routes/web.php`**
    - Agregada ruta de barcode lookup
 
 ### Frontend
@@ -228,6 +228,10 @@ Por defecto → 30 días
    - Listener en campo `create-barcode`
    - Autocompletado de campos del modal
    - Feedback visual de búsqueda
+
+> Nota: el endpoint de lookup (`/food/barcode/{code}`) es el recomendado para autocompletar porque no crea productos. El endpoint `/food/scan` está pensado para flujos de escaneo que pueden autocrear.
+
+> Nota técnica: este proyecto no registra `routes/api.php` por defecto (ver `bootstrap/app.php`), así que las rutas `/api/*` no están activas salvo que se habiliten explícitamente.
 
 ---
 

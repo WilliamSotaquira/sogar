@@ -202,7 +202,9 @@
                                         @if($budgets->isEmpty())
                                             <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
                                                 No tienes presupuestos este mes (opcional). Puedes crearlos en
-                                                <a href="{{ route('budgets.index') }}" class="underline">Presupuestos</a>.
+                                                @if(auth()->user()?->canManageFinances())
+                                                    <a href="{{ route('budgets.index') }}" class="underline">Presupuestos</a>.
+                                                @endif
                                             </p>
                                         @endif
                                     </div>

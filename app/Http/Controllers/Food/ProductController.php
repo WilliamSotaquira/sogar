@@ -162,13 +162,14 @@ class ProductController extends Controller
                     \DB::beginTransaction();
                     try {
                         $batchData = [
+                            'user_id' => $userId,
                             'product_id' => $existingProduct->id,
                             'location_id' => $request->input('location_id'),
                             'qty_base' => $request->input('inventory_qty'),
                             'qty_remaining_base' => $request->input('inventory_qty'),
                             'unit_base' => $request->input('unit_base', 'unit'),
                             'status' => 'ok',
-                            'entered_on' => now(),
+                            'entered_on' => now()->toDateString(),
                         ];
 
                         if ($request->filled('expiry_date')) {
@@ -231,13 +232,14 @@ class ProductController extends Controller
             // Si se marcó agregar a inventario
             if ($request->boolean('add_to_inventory') && $request->filled('inventory_qty')) {
                 $batchData = [
+                    'user_id' => $userId,
                     'product_id' => $product->id,
                     'location_id' => $request->input('location_id'),
                     'qty_base' => $request->input('inventory_qty'),
                     'qty_remaining_base' => $request->input('inventory_qty'),
                     'unit_base' => $request->input('unit_base', 'unit'),
                     'status' => 'ok',
-                    'entered_on' => now(),
+                    'entered_on' => now()->toDateString(),
                 ];
 
                 if ($request->filled('expiry_date')) {

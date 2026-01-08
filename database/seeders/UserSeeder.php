@@ -14,12 +14,21 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear usuario William (tú)
+        $williamEmail = env('SOGAR_SEED_WILLIAM_EMAIL', 'william@example.com');
+        $williamPassword = env('SOGAR_SEED_WILLIAM_PASSWORD', 'password');
+
+        $jazminEmail = env('SOGAR_SEED_JAZMIN_EMAIL', 'jazmin@example.com');
+        $jazminPassword = env('SOGAR_SEED_JAZMIN_PASSWORD', 'password');
+
+        $santiagoEmail = env('SOGAR_SEED_SANTIAGO_EMAIL', 'santiago@example.com');
+        $santiagoPassword = env('SOGAR_SEED_SANTIAGO_PASSWORD', 'password');
+
+        // Crear usuario William
         User::updateOrCreate(
-            ['email' => 'william.sotaquira@gmail.com'],
+            ['email' => $williamEmail],
             [
                 'name' => 'William',
-                'password' => Hash::make('S0t4qu1r4.2025*'),
+                'password' => Hash::make($williamPassword),
                 'email_verified_at' => now(),
                 'is_system_admin' => true,
             ]
@@ -27,30 +36,28 @@ class UserSeeder extends Seeder
 
         // Crear usuario Esposa
         User::updateOrCreate(
-            ['email' => 'valeria920309@gmail.com'],
+            ['email' => $jazminEmail],
             [
                 'name' => 'Jazmin',
-                'password' => Hash::make('1012386506'),
+                'password' => Hash::make($jazminPassword),
                 'email_verified_at' => now(),
             ]
         );
 
         // Crear usuario Hijo
         User::updateOrCreate(
-            ['email' => 'santiago.sotaquira.suarez@gmail.com'],
+            ['email' => $santiagoEmail],
             [
                 'name' => 'Santiago',
-                'password' => Hash::make('1013127679'),
+                'password' => Hash::make($santiagoPassword),
                 'email_verified_at' => now(),
             ]
         );
 
-
-
-        $this->command->info('✅ Usuarios de Sogar creados exitosamente!');
-        $this->command->info('👤 William: william.sotaquira@gmail.com / S0t4qu1r4.2025*');
-        $this->command->info('👩 Jazmin: valeria920309@gmail.com / 1012386506');
-        $this->command->info('👦 Santiago: santiago.sotaquira.suarez@gmail.com / 1013127679');
+        $this->command->info('✅ Usuarios seed creados/actualizados.');
+        $this->command->info("👤 William: {$williamEmail} (password via SOGAR_SEED_WILLIAM_PASSWORD)");
+        $this->command->info("👩 Jazmin: {$jazminEmail} (password via SOGAR_SEED_JAZMIN_PASSWORD)");
+        $this->command->info("👦 Santiago: {$santiagoEmail} (password via SOGAR_SEED_SANTIAGO_PASSWORD)");
 
     }
 }

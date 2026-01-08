@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Budget;
 use App\Models\Category;
+use App\Models\FamilyMember;
 use App\Models\Integration;
 use App\Models\Recurrence;
 use App\Models\Transaction;
@@ -222,7 +223,7 @@ class User extends Authenticatable
         $membership = $this->familyGroups()
             ->where('family_groups.id', $familyGroupId)
             ->first();
-        
+
         return $membership ? $membership->pivot->role : null;
     }
 
@@ -232,5 +233,53 @@ class User extends Authenticatable
     public function isSystemAdmin(): bool
     {
         return $this->is_system_admin === true;
+    }
+
+    private bool $activeFamilyMembershipLoaded = false;
+    private ?FamilyMember $activeFamilyMembershipCached = null;
+
+    public function canManageModule(string $module): bool
+    {
+        if ($this->isSystemAdmin()) {
+            return true;
+        }
+
+        if (!$this->active_family_group_id) {
+            return true;
+        }
+
+        $membership = $this->getActiveFamilyMembership();
+        return $membership?->canManage($module) ?? false;
+    }
+
+    public function canManageFinances(): bool
+    {
+        return $this->canManageModule('finances');
+    }
+
+    public function canManageFood(): bool
+    {
+        return $this->canManageModule('food');
+    }
+
+    public function canManageShopping(): bool
+    {
+        return $this->canManageModule('shopping');
+    }
+
+    private function getActiveFamilyMembership(): ?FamilyMember
+    {
+        if ($this->activeFamilyMembershipLoaded) {
+            return $this->activeFamilyMembershipCached;
+        }
+
+        $this->activeFamilyMembershipCached = FamilyMember::query()
+            ->where('family_group_id', $this->active_family_group_id)
+            ->where('user_id', $this->id)
+            ->first();
+
+        $this->activeFamilyMembershipLoaded = true;
+
+        return $this->activeFamilyMembershipCached;
     }
 }

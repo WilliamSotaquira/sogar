@@ -14,6 +14,10 @@ class Kernel extends ConsoleKernel
             ->weeklyOn(1, '03:00')
             ->withoutOverlapping()
             ->onOneServer();
+
+        $schedule->command('recurrences:run')
+            ->dailyAt('03:10')
+            ->withoutOverlapping();
     }
 
     protected function commands(): void

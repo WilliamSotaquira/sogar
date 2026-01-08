@@ -593,10 +593,30 @@ export class BarcodeScanner {
                 const code = result.codeResult.code;
                 const format = result.codeResult.format;
 
-                // Validar que sea EAN-13 (13 dígitos)
-                if (code.length !== 13 || !/^\d{13}$/.test(code)) {
-                    console.log(`BarcodeScanner: ⚠️ Código inválido (debe ser 13 dígitos): ${code}`);
-                    return;
+                // Validación por formato (Quagga devuelve ean_13/ean_8/upc_a/upc_e/code_128/code_39)
+                const isDigitsOnly = /^\d+$/.test(code);
+                const formatRules = {
+                    ean_13: (v) => /^\d{13}$/.test(v),
+                    ean_8: (v) => /^\d{8}$/.test(v),
+                    upc_a: (v) => /^\d{12}$/.test(v),
+                    upc_e: (v) => /^\d{8}$/.test(v),
+                    // Code-128/39 pueden ser alfanuméricos, pero mantenemos un mínimo razonable
+                    code_128: (v) => typeof v === 'string' && v.trim().length >= 4,
+                    code_39: (v) => typeof v === 'string' && v.trim().length >= 4,
+                };
+
+                const rule = formatRules[format];
+                if (rule) {
+                    if (!rule(code)) {
+                        console.log(`BarcodeScanner: ⚠️ Código inválido para formato ${format}: ${code}`);
+                        return;
+                    }
+                } else {
+                    // Fallback: aceptar códigos numéricos típicos (8-13) o alfanuméricos razonables
+                    if ((isDigitsOnly && (code.length < 8 || code.length > 13)) || (!isDigitsOnly && code.trim().length < 4)) {
+                        console.log(`BarcodeScanner: ⚠️ Código inválido (formato ${format || 'desconocido'}): ${code}`);
+                        return;
+                    }
                 }
 
                 // Calcular confianza promedio

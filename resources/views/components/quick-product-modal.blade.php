@@ -409,6 +409,30 @@ function hideCameraScanner() {
 
 async function fetchProductDataFromBarcode(barcode) {
     try {
+        // Preferir backend: busca primero en catálogo local y luego en OpenFoodFacts (con cache)
+        const res = await fetch(`/food/barcode/${encodeURIComponent(barcode)}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data?.found && data?.data) {
+                const p = data.data;
+                if (p.name) {
+                    document.getElementById('quick-name').value = p.name;
+                }
+                if (p.brand) {
+                    document.getElementById('quick-brand').value = p.brand;
+                }
+                return;
+            }
+        }
+
+        // Fallback: OpenFoodFacts directo
         const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
         const data = await response.json();
 
