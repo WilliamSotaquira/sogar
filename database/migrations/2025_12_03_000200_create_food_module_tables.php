@@ -64,7 +64,7 @@ return new class extends Migration {
             $table->string('vendor')->nullable();
             $table->string('receipt_number')->nullable();
             $table->decimal('total', 14, 2)->default(0);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('COP');
             $table->text('note')->nullable();
             $table->timestamps();
         });
@@ -130,7 +130,7 @@ return new class extends Migration {
             $table->foreignId('purchase_item_id')->nullable()->constrained('sogar_food_purchase_items')->nullOnDelete();
             $table->string('source', 16)->default('manual'); // manual|ticket|scan
             $table->string('vendor')->nullable();
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('COP');
             $table->decimal('price_per_base', 14, 4);
             $table->date('captured_on')->nullable();
             $table->string('note')->nullable();

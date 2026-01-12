@@ -156,7 +156,7 @@ class FoodShoppingDemoSeeder extends Seeder
                     'expires_on' => null,
                     'status' => 'ok',
                     'cost_total' => 0,
-                    'currency' => 'USD',
+                    'currency' => config('app.currency', 'COP'),
                 ]);
             }
 

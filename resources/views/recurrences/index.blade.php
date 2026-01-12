@@ -227,10 +227,10 @@
                         @forelse ($recurrences as $recurrence)
                             <tr class="text-sm text-gray-800 dark:text-gray-100">
                                 <td class="px-4 py-2 font-medium" data-rec-name="{{ strtolower($recurrence->name) }}">{{ $recurrence->name }}</td>
-                                <td class="px-4 py-2">${{ number_format($recurrence->amount, 0, ',', '.') }}</td>
+                                <td class="px-4 py-2">@money($recurrence->amount)</td>
                                 <td class="px-4 py-2">{{ $recurrence->category?->name ?? 'Sin categoría' }}</td>
                                 <td class="px-4 py-2" data-rec-frequency="{{ $recurrence->frequency }}">{{ $freqLabels[$recurrence->frequency] ?? ucfirst($recurrence->frequency) }}</td>
-                                <td class="px-4 py-2">{{ optional($recurrence->next_run_on)->format('d/m/Y') }}</td>
+                                <td class="px-4 py-2">@dateCo($recurrence->next_run_on)</td>
                                 <td class="px-4 py-2" data-rec-active="{{ $recurrence->is_active ? 'active' : 'inactive' }}">
                                     @if($recurrence->is_active)
                                         <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">Sí</span>

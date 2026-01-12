@@ -267,6 +267,16 @@ class User extends Authenticatable
         return $this->canManageModule('shopping');
     }
 
+    public function canManageHabits(): bool
+    {
+        return $this->canManageModule('habits');
+    }
+
+    public function canManageRoutines(): bool
+    {
+        return $this->canManageModule('routines');
+    }
+
     private function getActiveFamilyMembership(): ?FamilyMember
     {
         if ($this->activeFamilyMembershipLoaded) {

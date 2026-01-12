@@ -7,6 +7,8 @@ use Database\Seeders\FoodDemoSeeder;
 use Database\Seeders\FoodTypeSeeder;
 use Database\Seeders\FoodLocationSeeder;
 use Database\Seeders\FamilyGroupSeeder;
+use Database\Seeders\HabitsSeeder;
+use Database\Seeders\RoutinesSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Database\Seeder;
 
@@ -23,6 +25,8 @@ class DatabaseSeeder extends Seeder
             FinanceSeeder::class,
             FoodTypeSeeder::class,
             FoodLocationSeeder::class,
+            HabitsSeeder::class,
+            RoutinesSeeder::class,
         ]);
     }
 }

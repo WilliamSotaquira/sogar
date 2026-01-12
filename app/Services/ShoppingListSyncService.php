@@ -12,6 +12,7 @@ class ShoppingListSyncService
     public function syncToInventory(ShoppingList $list, ?int $walletId = null): void
     {
         $userId = $list->user_id;
+        $currency = (string) config('app.currency', 'COP');
 
         DB::transaction(function () use ($list, $userId, $walletId) {
             $purchase = FoodPurchase::create([
@@ -20,7 +21,7 @@ class ShoppingListSyncService
                 'occurred_on' => now()->toDateString(),
                 'vendor' => 'Compra lista: ' . ($list->name ?? $list->id),
                 'total' => 0,
-                'currency' => 'USD',
+                'currency' => $currency,
             ]);
 
             $total = 0;
@@ -56,7 +57,7 @@ class ShoppingListSyncService
                         'unit_base' => $unit,
                         'entered_on' => $purchase->occurred_on,
                         'cost_total' => $subtotal,
-                        'currency' => 'USD',
+                        'currency' => $currency,
                         'status' => 'ok',
                     ]);
                 }

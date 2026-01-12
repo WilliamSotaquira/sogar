@@ -20,13 +20,13 @@ class FamilyGroupController extends Controller
         $this->authorize('viewAny', FamilyGroup::class);
 
         $user = Auth::user();
-        
+
         // Obtener todos los grupos familiares del usuario
         $familyGroups = $user->familyGroups()->with(['admin', 'members'])->get();
-        
+
         // Obtener el grupo familiar activo
         $activeFamilyGroup = $user->activeFamilyGroup;
-        
+
         return view('family.index', compact('familyGroups', 'activeFamilyGroup'));
     }
 
@@ -158,6 +158,8 @@ class FamilyGroupController extends Controller
             'can_manage_finances' => 'boolean',
             'can_manage_food' => 'boolean',
             'can_manage_shopping' => 'boolean',
+            'can_manage_habits' => 'boolean',
+            'can_manage_routines' => 'boolean',
         ]);
 
         // Verificar que el usuario no sea ya miembro
@@ -174,6 +176,8 @@ class FamilyGroupController extends Controller
             'can_manage_finances' => $validated['can_manage_finances'] ?? false,
             'can_manage_food' => $validated['can_manage_food'] ?? false,
             'can_manage_shopping' => $validated['can_manage_shopping'] ?? false,
+            'can_manage_habits' => $validated['can_manage_habits'] ?? false,
+            'can_manage_routines' => $validated['can_manage_routines'] ?? false,
             'joined_at' => now(),
         ]);
 
@@ -195,6 +199,8 @@ class FamilyGroupController extends Controller
             'can_manage_finances' => 'boolean',
             'can_manage_food' => 'boolean',
             'can_manage_shopping' => 'boolean',
+            'can_manage_habits' => 'boolean',
+            'can_manage_routines' => 'boolean',
         ]);
 
         $member->update($validated);
@@ -225,7 +231,7 @@ class FamilyGroupController extends Controller
 
         // Buscar el miembro dentro del family group
         $member = $familyGroup->familyMembers()->where('id', $memberId)->first();
-        
+
         if (!$member) {
             return redirect()->back()
                 ->with('error', 'Miembro no encontrado');

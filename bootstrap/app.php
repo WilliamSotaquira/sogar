@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Middleware\EnsureCanManageFinances;
+use App\Http\Middleware\EnsureCanManageHabits;
 use App\Http\Middleware\EnsureCanManageFood;
+use App\Http\Middleware\EnsureCanManageRoutines;
 use App\Http\Middleware\EnsureCanManageShopping;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,7 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'can.manage.finances' => EnsureCanManageFinances::class,
+            'can.manage.habits' => EnsureCanManageHabits::class,
             'can.manage.food' => EnsureCanManageFood::class,
+            'can.manage.routines' => EnsureCanManageRoutines::class,
             'can.manage.shopping' => EnsureCanManageShopping::class,
         ]);
     })

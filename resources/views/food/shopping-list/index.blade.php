@@ -50,11 +50,11 @@
                         </div>
                         <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
                             <dt class="text-xs font-medium text-gray-600 dark:text-gray-300">Estimado</dt>
-                            <dd class="mt-1 text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-50">${{ number_format($list->estimated_budget, 0, ',', '.') }}</dd>
+                            <dd class="mt-1 text-lg font-semibold tabular-nums text-gray-900 dark:text-gray-50">@money($list->estimated_budget)</dd>
                         </div>
                         <div class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-100 dark:bg-neutral-900 dark:ring-gray-800">
                             <dt class="text-xs font-medium text-gray-600 dark:text-gray-300">Real</dt>
-                            <dd class="mt-1 text-lg font-semibold tabular-nums {{ $list->actual_total > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-gray-50' }}">${{ number_format($list->actual_total ?: 0, 0, ',', '.') }}</dd>
+                            <dd class="mt-1 text-lg font-semibold tabular-nums {{ $list->actual_total > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-gray-50' }}">@money($list->actual_total ?: 0)</dd>
                         </div>
                     </dl>
                 @endif
@@ -194,8 +194,8 @@
                                             <option value="">Sin presupuesto</option>
                                             @foreach($budgets as $budget)
                                                 <option value="{{ $budget->id }}">
-                                                    {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}
-                                                    ({{ now()->monthName }} {{ now()->year }})
+                                                    {{ $budget->category->name }} - @money($budget->amount)
+                                                    (@monthYearCo(now()))
                                                 </option>
                                             @endforeach
                                         </select>
@@ -255,7 +255,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">${{ number_format($list->actual_total ?: $list->estimated_budget, 0, ',', '.') }}</span>
+                                <span class="text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">@money($list->actual_total ?: $list->estimated_budget)</span>
                                 <button type="button" id="toggle-store-mode" aria-pressed="false" class="px-3 py-1 text-xs font-semibold rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:hover:bg-blue-900/20 dark:text-blue-300">
                                     Modo tienda
                                 </button>
@@ -372,12 +372,12 @@
                                             <p class="text-xs text-gray-600 dark:text-gray-300">
                                                 Precio:
                                                 @if($item->actual_price)
-                                                    <span class="font-semibold text-emerald-700 dark:text-emerald-300">${{ number_format($item->actual_price, 0, ',', '.') }}</span>
+                                                    <span class="font-semibold text-emerald-700 dark:text-emerald-300">@money($item->actual_price)</span>
                                                     @if($item->vendor_name)
                                                         <span class="text-gray-500 dark:text-gray-400">({{ $item->vendor_name }})</span>
                                                     @endif
                                                 @elseif(!is_null($item->estimated_price))
-                                                    <span class="font-semibold text-gray-900 dark:text-gray-50">${{ number_format($item->estimated_price, 0, ',', '.') }}</span>
+                                                    <span class="font-semibold text-gray-900 dark:text-gray-50">@money($item->estimated_price)</span>
                                                     <span class="text-gray-500 dark:text-gray-400">(estimado)</span>
                                                 @else
                                                     <span class="text-gray-500 dark:text-gray-400">Sin precio</span>
@@ -423,24 +423,24 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-600 dark:text-gray-300">Estimado:</span>
-                                <span class="font-semibold">${{ number_format($list->estimated_budget, 0, ',', '.') }}</span>
+                                <span class="font-semibold">@money($list->estimated_budget)</span>
                             </div>
                             @if($list->actual_total > 0)
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-300">Real:</span>
-                                    <span class="font-semibold text-emerald-600">${{ number_format($list->actual_total, 0, ',', '.') }}</span>
+                                    <span class="font-semibold text-emerald-600">@money($list->actual_total)</span>
                                 </div>
                                 <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
                                     <span class="text-gray-600 dark:text-gray-300">Diferencia:</span>
                                     <span class="font-semibold {{ $list->actual_total > $list->estimated_budget ? 'text-rose-600' : 'text-emerald-600' }}">
-                                        {{ $list->actual_total > $list->estimated_budget ? '+' : '' }}${{ number_format($list->actual_total - $list->estimated_budget, 0, ',', '.') }}
+                                        {{ $list->actual_total > $list->estimated_budget ? '+' : '' }}@money($list->actual_total - $list->estimated_budget)
                                     </span>
                                 </div>
                             @endif
                             @if($list->budget)
                                 <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
                                     <span class="text-gray-600 dark:text-gray-300">Presupuesto disponible:</span>
-                                    <span class="font-semibold">${{ number_format($list->budget->amount - $list->actual_total, 0, ',', '.') }}</span>
+                                    <span class="font-semibold">@money($list->budget->amount - $list->actual_total)</span>
                                 </div>
                             @endif
                         </div>
@@ -457,7 +457,7 @@
                             <div class="flex justify-between items-center text-sm">
                                 <div class="flex-1">
                                     <p class="font-medium text-gray-900 dark:text-gray-100">{{ Str::limit($recent->name, 20) }}</p>
-                                    <p class="text-xs text-gray-500">{{ $recent->generated_at?->format('d/m/Y') }}</p>
+                                    <p class="text-xs text-gray-500">@dateCo($recent->generated_at)</p>
                                 </div>
                                 <a href="{{ route('food.shopping-list.show', $recent) }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
                                     Ver

@@ -9,6 +9,10 @@
         'recurrences.index' => 'finances',
         'transactions.index' => 'finances',
 
+        // Productividad
+        'habits.index' => 'habits',
+        'routines.index' => 'routines',
+
         // Alimentos
         'food.inventory.index' => 'food',
         'food.locations.index' => 'food',
@@ -24,6 +28,13 @@
     ];
 
     $menus = [
+        [
+            'group' => 'Productividad',
+            'links' => [
+                ['label' => 'Hábitos y tareas', 'route' => 'habits.index', 'icon' => '✅'],
+                ['label' => 'Rutinas', 'route' => 'routines.index', 'icon' => '🗓️'],
+            ],
+        ],
         [
             'group' => 'Finanzas',
             'links' => [

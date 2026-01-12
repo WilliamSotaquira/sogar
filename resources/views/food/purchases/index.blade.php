@@ -359,7 +359,7 @@
                                                     <input id="price-{{ $index }}" type="number" step="1" min="0" inputmode="numeric" name="items[{{ $index }}][unit_price]" value="{{ (int) round($priceDefault) }}" class="{{ $input }} item-input item-price h-10 w-full min-w-[4rem] bg-white/90 text-sm focus:z-10 dark:bg-gray-800/60 md:min-w-[5rem]" aria-label="Precio unitario de {{ $item->name }}">
                                                 </td>
                                                 <td class="py-3 pl-2 pr-4 text-right align-top md:py-4 md:pr-6">
-                                                    <span class="item-subtotal whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100 md:text-base" data-initial="{{ $initialSubtotal }}" aria-label="Subtotal de {{ $item->name }}">COP {{ number_format($initialSubtotal, 0, ',', '.') }}</span>
+                                                    <span class="item-subtotal whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100 md:text-base" data-initial="{{ $initialSubtotal }}" aria-label="Subtotal de {{ $item->name }}">@money($initialSubtotal)</span>
                                                 </td>
                                             </tr>
                                         @endforeach

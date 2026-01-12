@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <a href="{{ route('family.index') }}" 
+                <a href="{{ route('family.index') }}"
                    class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -18,7 +18,7 @@
                 @endif
             </div>
             @if(auth()->user()->isAdminOfFamilyGroup($familyGroup->id))
-                <a href="{{ route('family.edit', $familyGroup) }}" 
+                <a href="{{ route('family.edit', $familyGroup) }}"
                    class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
                     <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -111,7 +111,7 @@
                                     Miembros
                                 </h3>
                                 @if(auth()->user()->isSystemAdmin())
-                                    <button type="button" 
+                                    <button type="button"
                                             onclick="openAddModal()"
                                             class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
                                         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,6 +157,16 @@
                                                             🛒 Compras
                                                         </span>
                                                     @endif
+                                                    @if($member->can_manage_habits)
+                                                        <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                                            ✅ Hábitos
+                                                        </span>
+                                                    @endif
+                                                    @if($member->can_manage_routines)
+                                                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                                            🗓️ Rutinas
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -164,15 +174,15 @@
                                             <div class="flex gap-2">
                                                 <button
                                                         type="button"
-                                                        onclick="editMember({{ $member->id }}, '{{ $member->role }}', {{ $member->is_admin ? 'true' : 'false' }}, {{ $member->can_manage_finances ? 'true' : 'false' }}, {{ $member->can_manage_food ? 'true' : 'false' }}, {{ $member->can_manage_shopping ? 'true' : 'false' }})"
+                                                        onclick="editMember({{ $member->id }}, '{{ $member->role }}', {{ $member->is_admin ? 'true' : 'false' }}, {{ $member->can_manage_finances ? 'true' : 'false' }}, {{ $member->can_manage_food ? 'true' : 'false' }}, {{ $member->can_manage_shopping ? 'true' : 'false' }}, {{ $member->can_manage_habits ? 'true' : 'false' }}, {{ $member->can_manage_routines ? 'true' : 'false' }})"
                                                         aria-label="Editar permisos de {{ $member->user->name }}"
                                                         class="rounded p-1 text-indigo-600 hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus-visible:ring-offset-gray-900">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                     </svg>
                                                 </button>
-                                                <form action="{{ route('family.members.remove', [$familyGroup->id, $member->id]) }}" 
-                                                      method="POST" 
+                                                <form action="{{ route('family.members.remove', [$familyGroup->id, $member->id]) }}"
+                                                      method="POST"
                                                       class="inline-flex items-center gap-1"
                                                       data-inline-confirm>
                                                     @csrf
@@ -225,7 +235,7 @@
                                 </h3>
                                 <form action="{{ route('family.set-active', $familyGroup) }}" method="POST">
                                     @csrf
-                                    <button type="submit" 
+                                    <button type="submit"
                                             class="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
                                         Establecer como Activo
                                     </button>
@@ -250,15 +260,15 @@
     </div>
 
     <!-- Modal Agregar Miembro -->
-    <div id="addMemberModal" 
-         class="hidden fixed inset-0 z-50" 
+    <div id="addMemberModal"
+         class="hidden fixed inset-0 z-50"
          style="background-color: rgba(0,0,0,0.5);"
-         role="dialog" 
-         aria-modal="true" 
+         role="dialog"
+         aria-modal="true"
          aria-labelledby="addMemberModalTitle"
          aria-describedby="addMemberModalDescription">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full" 
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full"
                  onclick="event.stopPropagation();"
                  role="document">
                 <form action="{{ route('family.members.add', $familyGroup) }}" method="POST" id="addMemberForm">
@@ -270,15 +280,15 @@
                         <p id="addMemberModalDescription" class="sr-only">
                             Formulario para agregar un nuevo miembro al núcleo familiar. Los campos marcados con asterisco son obligatorios.
                         </p>
-                        
+
                         <div class="space-y-4 mt-4">
                             <!-- Usuario -->
                             <div>
                                 <label for="user_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Usuario <span class="text-red-600" aria-label="obligatorio">*</span>
                                 </label>
-                                <select name="user_id" 
-                                        id="user_id" 
+                                <select name="user_id"
+                                        id="user_id"
                                         required
                                         aria-required="true"
                                         aria-label="Seleccione el usuario que desea agregar al núcleo familiar"
@@ -295,8 +305,8 @@
                                 <label for="add_role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Rol <span class="text-red-600" aria-label="obligatorio">*</span>
                                 </label>
-                                <select name="role" 
-                                        id="add_role" 
+                                <select name="role"
+                                        id="add_role"
                                         required
                                         aria-required="true"
                                         aria-label="Seleccione el rol del miembro en la familia"
@@ -316,43 +326,63 @@
                                 </legend>
                                 <div class="space-y-3" role="group" aria-label="Permisos del miembro">
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="is_admin" 
+                                        <input type="checkbox"
+                                               name="is_admin"
                                                id="add_is_admin"
-                                               value="1" 
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="add_is_admin" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             Administrador del grupo
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="can_manage_finances" 
+                                        <input type="checkbox"
+                                               name="can_manage_finances"
                                                id="add_can_manage_finances"
-                                               value="1" 
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="add_can_manage_finances" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             <span aria-hidden="true">💰</span> Gestionar finanzas
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="can_manage_food" 
+                                        <input type="checkbox"
+                                               name="can_manage_food"
                                                id="add_can_manage_food"
-                                               value="1" 
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="add_can_manage_food" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             <span aria-hidden="true">🍽️</span> Gestionar alimentos
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="can_manage_shopping" 
+                                        <input type="checkbox"
+                                               name="can_manage_shopping"
                                                id="add_can_manage_shopping"
-                                               value="1" 
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="add_can_manage_shopping" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             <span aria-hidden="true">🛒</span> Gestionar compras
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox"
+                                               name="can_manage_habits"
+                                               id="add_can_manage_habits"
+                                               value="1"
+                                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
+                                        <label for="add_can_manage_habits" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                                            <span aria-hidden="true">✅</span> Gestionar hábitos
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox"
+                                               name="can_manage_routines"
+                                               id="add_can_manage_routines"
+                                               value="1"
+                                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
+                                        <label for="add_can_manage_routines" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                                            <span aria-hidden="true">🗓️</span> Gestionar rutinas
                                         </label>
                                     </div>
                                 </div>
@@ -361,7 +391,7 @@
                     </div>
 
                     <div class="bg-gray-50 dark:bg-gray-900 px-6 py-3 flex justify-end gap-3">
-                        <button type="button" 
+                        <button type="button"
                                 id="addMemberCancelBtn"
                                 onclick="closeAddModal()"
                                 aria-label="Cancelar y cerrar el modal"
@@ -381,15 +411,15 @@
     </div>
 
     <!-- Modal Editar Miembro -->
-    <div id="editMemberModal" 
-         class="hidden fixed inset-0 z-50" 
+    <div id="editMemberModal"
+         class="hidden fixed inset-0 z-50"
          style="background-color: rgba(0,0,0,0.5);"
-         role="dialog" 
-         aria-modal="true" 
+         role="dialog"
+         aria-modal="true"
          aria-labelledby="editMemberModalTitle"
          aria-describedby="editMemberModalDescription">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full" 
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full"
                  onclick="event.stopPropagation();"
                  role="document">
                 <form id="editMemberForm" method="POST">
@@ -402,15 +432,15 @@
                         <p id="editMemberModalDescription" class="sr-only">
                             Formulario para editar el rol y permisos de un miembro del núcleo familiar.
                         </p>
-                        
+
                         <div class="space-y-4 mt-4">
                             <!-- Rol -->
                             <div>
                                 <label for="edit_role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Rol <span class="text-red-600" aria-label="obligatorio">*</span>
                                 </label>
-                                <select name="role" 
-                                        id="edit_role" 
+                                <select name="role"
+                                        id="edit_role"
                                         required
                                         aria-required="true"
                                         aria-label="Seleccione el rol del miembro en la familia"
@@ -430,43 +460,63 @@
                                 </legend>
                                 <div class="space-y-3" role="group" aria-label="Permisos del miembro">
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="is_admin" 
-                                               id="edit_is_admin" 
-                                               value="1" 
+                                        <input type="checkbox"
+                                               name="is_admin"
+                                               id="edit_is_admin"
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="edit_is_admin" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             Administrador del grupo
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="can_manage_finances" 
-                                               id="edit_can_manage_finances" 
-                                               value="1" 
+                                        <input type="checkbox"
+                                               name="can_manage_finances"
+                                               id="edit_can_manage_finances"
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="edit_can_manage_finances" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             <span aria-hidden="true">💰</span> Gestionar finanzas
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="can_manage_food" 
-                                               id="edit_can_manage_food" 
-                                               value="1" 
+                                        <input type="checkbox"
+                                               name="can_manage_food"
+                                               id="edit_can_manage_food"
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="edit_can_manage_food" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             <span aria-hidden="true">🍽️</span> Gestionar alimentos
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="can_manage_shopping" 
-                                               id="edit_can_manage_shopping" 
-                                               value="1" 
+                                        <input type="checkbox"
+                                               name="can_manage_shopping"
+                                               id="edit_can_manage_shopping"
+                                               value="1"
                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
                                         <label for="edit_can_manage_shopping" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                                             <span aria-hidden="true">🛒</span> Gestionar compras
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox"
+                                               name="can_manage_habits"
+                                               id="edit_can_manage_habits"
+                                               value="1"
+                                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
+                                        <label for="edit_can_manage_habits" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                                            <span aria-hidden="true">✅</span> Gestionar hábitos
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox"
+                                               name="can_manage_routines"
+                                               id="edit_can_manage_routines"
+                                               value="1"
+                                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500">
+                                        <label for="edit_can_manage_routines" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                                            <span aria-hidden="true">🗓️</span> Gestionar rutinas
                                         </label>
                                     </div>
                                 </div>
@@ -475,7 +525,7 @@
                     </div>
 
                     <div class="bg-gray-50 dark:bg-gray-900 px-6 py-3 flex justify-end gap-3">
-                        <button type="button" 
+                        <button type="button"
                                 id="editMemberCancelBtn"
                                 onclick="closeEditModal()"
                                 aria-label="Cancelar y cerrar el modal"
@@ -505,7 +555,7 @@
             modal.classList.remove('hidden');
             setTimeout(() => {
                 const firstInput = document.getElementById('user_id');
-                if (firstInput) firstInput.focus();  
+                if (firstInput) firstInput.focus();
             }, 100);
         }
 
@@ -529,16 +579,18 @@
             if (previousActiveElement) previousActiveElement.focus();
         }
 
-        function editMember(memberId, role, isAdmin, canManageFinances, canManageFood, canManageShopping) {
+        function editMember(memberId, role, isAdmin, canManageFinances, canManageFood, canManageShopping, canManageHabits, canManageRoutines) {
             const form = document.getElementById('editMemberForm');
             form.action = '{{ route("family.members.update", [$familyGroup, ":memberId"]) }}'.replace(':memberId', memberId);
-            
+
             document.getElementById('edit_role').value = role;
             document.getElementById('edit_is_admin').checked = isAdmin;
             document.getElementById('edit_can_manage_finances').checked = canManageFinances;
             document.getElementById('edit_can_manage_food').checked = canManageFood;
             document.getElementById('edit_can_manage_shopping').checked = canManageShopping;
-            
+            document.getElementById('edit_can_manage_habits').checked = canManageHabits;
+            document.getElementById('edit_can_manage_routines').checked = canManageRoutines;
+
             openEditModal();
         }
 

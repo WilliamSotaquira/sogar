@@ -160,14 +160,14 @@
                         <dt class="{{ $infoLabel }}">Precio más reciente</dt>
                         <dd class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             @if($latestPrice)
-                                ${{ number_format($latestPrice->price_per_base, 2) }}
+                                @money($latestPrice->price_per_base, $latestPrice->currency, 2)
                             @else
                                 —
                             @endif
                         </dd>
                         <dd class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             @if($latestPrice)
-                                {{ $latestPrice->vendor ?: 'Sin vendor' }} • {{ optional($latestPrice->captured_on)->format('d M Y') }}
+                                {{ $latestPrice->vendor ?: 'Sin vendor' }} • @dateLongCo($latestPrice->captured_on)
                             @else
                                 Agrega el primer precio para comparar cambios.
                             @endif

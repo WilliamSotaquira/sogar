@@ -220,12 +220,12 @@
                         </div>
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
                             <p class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">Estimado</p>
-                            <p class="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</p>
+                            <p class="font-semibold text-gray-900 dark:text-gray-100 tabular-nums">@money($estimatedTotal ?: $list->estimated_budget)</p>
                         </div>
                         <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
                             <p class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-1">Gastado</p>
                             <p class="font-semibold tabular-nums {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
-                                ${{ number_format($actualTotal, 0, ',', '.') }}
+                                @money($actualTotal)
                             </p>
                         </div>
                     </div>
@@ -235,7 +235,7 @@
                         <div class="mb-5 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
                             <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-2 text-sm">
                                 <span class="min-w-0 font-semibold text-gray-800 dark:text-gray-100 break-words">Presupuesto: {{ $list->budget->category->name }}</span>
-                                <span class="text-xs text-gray-700 dark:text-gray-300 tabular-nums">Disponible: ${{ number_format(max(0, $budgetAmount - $actualTotal), 0, ',', '.') }}</span>
+                                <span class="text-xs text-gray-700 dark:text-gray-300 tabular-nums">Disponible: @money(max(0, $budgetAmount - $actualTotal))</span>
                             </div>
                             @if($budgetUsage !== null)
                                 <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -387,9 +387,9 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 tabular-nums text-gray-700 dark:text-gray-200">{{ $list->items->count() }}</td>
-                                <td class="px-4 py-3 tabular-nums text-gray-700 dark:text-gray-200">${{ number_format($estimatedTotal ?: $list->estimated_budget, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3 tabular-nums text-gray-700 dark:text-gray-200">@money($estimatedTotal ?: $list->estimated_budget)</td>
                                 <td class="px-4 py-3 tabular-nums {{ $budgetAmount && $actualTotal > $budgetAmount ? 'text-rose-600 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
-                                    ${{ number_format($actualTotal, 0, ',', '.') }}
+                                    @money($actualTotal)
                                 </td>
                                 <td class="px-4 py-3 relative overflow-visible">
                                     <div class="relative flex items-center justify-end">
@@ -520,7 +520,7 @@
                         <option value="">Sin presupuesto asignado</option>
                         @foreach($budgets ?? [] as $budget)
                             <option value="{{ $budget->id }}">
-                                {{ $budget->category->name }} - ${{ number_format($budget->amount, 0, ',', '.') }}
+                                {{ $budget->category->name }} - @money($budget->amount)
                             </option>
                         @endforeach
                     </select>

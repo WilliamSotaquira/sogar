@@ -3,10 +3,14 @@
 namespace App\Livewire\Wallets;
 
 use App\Models\Wallet;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Index extends Component
 {
+    #[Url(as: 'wallet_id')]
+    public ?int $walletId = null;
+
     public $showForm = false;
     public $editingWallet = null;
 
@@ -32,6 +36,10 @@ class Index extends Component
     public function mount()
     {
         $this->is_active = true;
+
+        if ($this->walletId) {
+            $this->openForm($this->walletId);
+        }
     }
 
     public function openForm($walletId = null)

@@ -48,6 +48,7 @@ class FamilyGroupSeeder extends Seeder
                 'can_manage_finances' => true,
                 'can_manage_food' => true,
                 'can_manage_shopping' => true,
+                'can_manage_habits' => true,
                 'joined_at' => now(),
             ]
         );
@@ -64,6 +65,7 @@ class FamilyGroupSeeder extends Seeder
                 'can_manage_finances' => true,
                 'can_manage_food' => true,
                 'can_manage_shopping' => true,
+                'can_manage_habits' => true,
                 'joined_at' => now(),
             ]
         );
@@ -80,6 +82,7 @@ class FamilyGroupSeeder extends Seeder
                 'can_manage_finances' => false,
                 'can_manage_food' => true,
                 'can_manage_shopping' => true,
+                'can_manage_habits' => true,
                 'joined_at' => now(),
             ]
         );

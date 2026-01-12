@@ -94,7 +94,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                                         @if($product->current_price?->price_per_base)
-                                            ${{ number_format($product->current_price->price_per_base, 2) }}
+                                            @money($product->current_price->price_per_base, $product->current_price->currency, 2)
                                             <p class="text-[11px] text-gray-500">
                                                 {{ $product->current_price->vendor ?: 'Sin vendor' }}
                                             </p>

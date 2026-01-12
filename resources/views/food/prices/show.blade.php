@@ -29,7 +29,7 @@
                     <div class="rounded-xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
                         <p class="text-xs text-white/80">Precio Actual</p>
                         @if($currentPrice)
-                            <p class="text-2xl font-bold">${{ number_format($currentPrice->price_per_base, 0, ',', '.') }}</p>
+                            <p class="text-2xl font-bold">@money($currentPrice->price_per_base, $currentPrice->currency, 0)</p>
                             @if($currentPrice->vendor)
                                 <p class="text-xs text-white/70">{{ $currentPrice->vendor }}</p>
                             @endif
@@ -41,7 +41,7 @@
                     @if($previousPrice)
                         <div class="rounded-xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
                             <p class="text-xs text-white/60">Anterior</p>
-                            <p class="text-xl font-bold text-white/80">${{ number_format($previousPrice->price_per_base, 0, ',', '.') }}</p>
+                            <p class="text-xl font-bold text-white/80">@money($previousPrice->price_per_base, $previousPrice->currency, 0)</p>
                             @php
                                 $change = (($currentPrice->price_per_base - $previousPrice->price_per_base) / $previousPrice->price_per_base) * 100;
                             @endphp
@@ -116,9 +116,9 @@
                                     @endphp
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                         <td class="px-3 py-3 text-gray-900 dark:text-gray-100">
-                                            {{ $price->captured_on->format('d/m/Y') }}
+                                            @dateCo($price->captured_on)
                                         </td>
-                                        <td class="px-3 py-3 font-semibold text-gray-900 dark:text-gray-100">${{ number_format($price->price_per_base, 0, ',', '.') }}</td>
+                                        <td class="px-3 py-3 font-semibold text-gray-900 dark:text-gray-100">@money($price->price_per_base, $price->currency, 0)</td>
                                         <td class="px-3 py-3 text-gray-600 dark:text-gray-300">{{ $price->vendor ?? '—' }}</td>
                                         <td class="px-3 py-3">
                                             @if($change !== null && abs($change) >= 1)
@@ -178,23 +178,23 @@
                     <div class="space-y-3">
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Promedio:</span>
-                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">${{ number_format($stats['avg'], 0, ',', '.') }}</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">@money($stats['avg'], ($currentPrice->currency ?? config('app.currency', 'COP')), 0)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Mínimo:</span>
-                            <span class="text-sm font-semibold text-emerald-600">${{ number_format($stats['min'], 0, ',', '.') }}</span>
+                            <span class="text-sm font-semibold text-emerald-600">@money($stats['min'], ($currentPrice->currency ?? config('app.currency', 'COP')), 0)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Máximo:</span>
-                            <span class="text-sm font-semibold text-rose-600">${{ number_format($stats['max'], 0, ',', '.') }}</span>
+                            <span class="text-sm font-semibold text-rose-600">@money($stats['max'], ($currentPrice->currency ?? config('app.currency', 'COP')), 0)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Mediana:</span>
-                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">${{ number_format($stats['median'], 0, ',', '.') }}</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">@money($stats['median'], ($currentPrice->currency ?? config('app.currency', 'COP')), 0)</span>
                         </div>
                         <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Volatilidad:</span>
-                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">±${{ number_format($stats['volatility'], 0, ',', '.') }}</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">±@money($stats['volatility'], ($currentPrice->currency ?? config('app.currency', 'COP')), 0)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Registros:</span>

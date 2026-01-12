@@ -17,6 +17,8 @@ class FamilyMember extends Model
         'can_manage_finances',
         'can_manage_food',
         'can_manage_shopping',
+        'can_manage_habits',
+        'can_manage_routines',
         'joined_at',
     ];
 
@@ -25,6 +27,8 @@ class FamilyMember extends Model
         'can_manage_finances' => 'boolean',
         'can_manage_food' => 'boolean',
         'can_manage_shopping' => 'boolean',
+        'can_manage_habits' => 'boolean',
+        'can_manage_routines' => 'boolean',
         'joined_at' => 'datetime',
     ];
 
@@ -53,6 +57,8 @@ class FamilyMember extends Model
             'finances' => $this->can_manage_finances || $this->is_admin,
             'food' => $this->can_manage_food || $this->is_admin,
             'shopping' => $this->can_manage_shopping || $this->is_admin,
+            'habits' => $this->can_manage_habits || $this->is_admin,
+            'routines' => $this->can_manage_routines || $this->is_admin,
             default => $this->is_admin,
         };
     }

@@ -18,6 +18,8 @@ use App\Http\Controllers\Food\NeedInboxController as FoodNeedInboxController;
 use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\Routines\RoutineTemplateController;
+use App\Http\Controllers\Routines\RoutineExportController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -70,6 +72,18 @@ Route::middleware(['auth'])->group(function () {
         Route::put('wallets/{wallet}', [WalletController::class, 'update'])->name('wallets.update');
         Route::delete('wallets/{wallet}', [WalletController::class, 'destroy'])->name('wallets.destroy');
         Route::post('wallets/{wallet}/movements', [WalletController::class, 'storeMovement'])->name('wallets.movements.store');
+    });
+
+    Route::middleware(['can.manage.habits'])->group(function () {
+        Route::get('habits', \App\Livewire\Habits\Index::class)->name('habits.index');
+    });
+
+    Route::middleware(['can.manage.routines'])->group(function () {
+        Route::get('routines', \App\Livewire\Routines\Index::class)->name('routines.index');
+        Route::get('routines/template.tsv', [RoutineTemplateController::class, 'tsv'])->name('routines.templateTsv');
+        Route::get('routines/template.csv', [RoutineTemplateController::class, 'csv'])->name('routines.templateCsv');
+        Route::get('routines/{routine}/export.tsv', [RoutineExportController::class, 'tsv'])->whereNumber('routine')->name('routines.exportTsv');
+        Route::get('routines/{routine}/export.csv', [RoutineExportController::class, 'csv'])->whereNumber('routine')->name('routines.exportCsv');
     });
     Route::get('integrations/google', [GoogleIntegrationController::class, 'redirect'])->name('integrations.google.redirect');
     Route::get('integrations/google/callback', [GoogleIntegrationController::class, 'callback'])->name('integrations.google.callback');

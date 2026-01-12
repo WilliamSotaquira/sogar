@@ -171,7 +171,7 @@ class FoodScanController extends Controller
                 'last_price' => $lastPrice?->price_per_base,
                 'vendor' => $lastPrice?->vendor,
                 'captured_on' => $lastPrice?->captured_on,
-                'currency' => $lastPrice?->currency ?? 'USD',
+                'currency' => $lastPrice?->currency ?? (string) config('app.currency', 'COP'),
             ],
             'performance' => [
                 'index' => $product->performance_index,

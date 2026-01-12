@@ -25,6 +25,7 @@ class PriceChangeService
         string $source = 'manual',
         ?string $note = null
     ): array {
+        $currency = (string) config('app.currency', 'COP');
         // Obtener el precio anterior más reciente
         $previousPrice = FoodPrice::where('product_id', $product->id)
             ->latest('captured_on')
@@ -52,7 +53,7 @@ class PriceChangeService
             'product_id' => $product->id,
             'source' => $source,
             'vendor' => $vendor,
-            'currency' => 'USD',
+            'currency' => $currency,
             'price_per_base' => $newPrice,
             'captured_on' => Carbon::today(),
             'note' => $note,

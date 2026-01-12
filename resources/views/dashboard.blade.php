@@ -1,5 +1,5 @@
 @php
-    $fmtMoney = fn ($value) => '$' . number_format($value, 0, ',', '.');
+    $fmtMoney = fn ($value) => \App\Support\Format::money($value);
     $user = auth()->user();
     $canManageFinances = $user?->canManageFinances() ?? false;
     $canManageFood = $user?->canManageFood() ?? false;
@@ -7,89 +7,85 @@
 @endphp
 
 <x-layouts.app :title="__('Dashboard')">
-    <div id="dashboard-content" class="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
+    <div id="dashboard-content" class="mx-auto w-full max-w-6xl space-y-4 px-3 pb-10 sm:space-y-6 sm:px-6 md:px-8">
         <a href="#dashboard-content" class="sr-only focus:not-sr-only focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:ring-2 focus:ring-emerald-400 dark:focus:bg-neutral-900 dark:focus:text-gray-50">
             Saltar al contenido principal
         </a>
 
         {{-- Encabezado / contexto --}}
-        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-                    Dashboard
-                </h1>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Un hub para Finanzas, Alimentos y Familia.
-                </p>
-                @if($activeFamilyGroup)
-                    <p class="mt-2 inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700">
-                        Núcleo activo: {{ $activeFamilyGroup->name }}
+        <header class="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 shadow-lg sm:p-8 dark:from-emerald-600 dark:to-teal-700">
+            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div class="text-white">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-white/90">Inicio</p>
+                    <h1 class="mt-1 text-3xl font-bold">Dashboard</h1>
+                    <p class="mt-1 text-sm text-white/85">
+                        Un hub para Finanzas, Alimentos y Familia.
                     </p>
-                @endif
-            </div>
-
-            <div class="flex w-full flex-col items-start gap-2 md:w-auto md:items-end">
-                <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-800/60">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                    Salud: {{ $healthScore }}/100
-                </div>
-
-                {{-- Acciones: en móvil en columna para evitar botones desparejos por salto de línea --}}
-                <div class="w-full space-y-2 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-2 md:space-y-0">
-                    @if($canManageFinances)
-                        <a href="{{ route('transactions.create') }}"
-                           class="inline-flex h-11 w-full items-center justify-center rounded-full bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition duration-150 hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto">
-                            Registrar transacción
-                        </a>
-                    @endif
-
-                    @if($canManageShopping)
-                        <button type="button"
-                                onclick="openNeedModal()"
-                                aria-haspopup="dialog"
-                                aria-controls="need-modal"
-                                class="inline-flex h-11 w-full items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 shadow-sm transition duration-150 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40">
-                            Agregar falta
-                        </button>
-                    @endif
-
-                    <div class="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap md:justify-end">
-                        @if($canManageShopping)
-                            <a href="{{ route('food.shopping-list.index') }}"
-                               class="inline-flex h-11 w-full items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-800 shadow-sm transition duration-150 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto dark:border-gray-800 dark:bg-neutral-900 dark:text-gray-100 dark:hover:bg-neutral-800">
-                                Lista de compras
-                            </a>
-                        @endif
-
-                        @if($canManageFood)
-                            <a href="{{ route('food.inventory.index') }}"
-                               class="inline-flex h-11 w-full items-center justify-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-800 shadow-sm transition duration-150 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 active:scale-[0.99] motion-reduce:transition-none md:w-auto dark:border-gray-800 dark:bg-neutral-900 dark:text-gray-100 dark:hover:bg-neutral-800">
-                                Inventario
-                            </a>
+                    <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/85">
+                        <span class="hero-chip">Salud {{ $healthScore }}/100</span>
+                        @if($activeFamilyGroup)
+                            <span class="hero-chip">Núcleo activo: {{ $activeFamilyGroup->name }}</span>
                         @endif
                     </div>
                 </div>
 
-                <div class="w-full text-xs text-gray-500 md:w-auto md:text-right dark:text-gray-400">
-                    @if($googleIntegration)
-                        <form method="POST" action="{{ route('integrations.google.disconnect') }}" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="underline hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:hover:text-gray-200">
-                                Google Calendar: conectado (desconectar)
+                <div class="flex w-full flex-col items-start gap-2 md:w-auto md:items-end">
+                    <div class="w-full space-y-2 md:flex md:w-auto md:flex-wrap md:justify-end md:gap-2 md:space-y-0">
+                        @if($canManageFinances)
+                            <a href="{{ route('transactions.create') }}"
+                               class="inline-flex h-11 w-full items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-emerald-700 shadow-md ring-1 ring-white/60 transition duration-150 hover:-translate-y-0.5 hover:bg-white/95 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 active:translate-y-0 motion-reduce:transition-none md:w-auto">
+                                Registrar transacción
+                            </a>
+                        @endif
+
+                        @if($canManageShopping)
+                            <button type="button"
+                                    onclick="openNeedModal()"
+                                    aria-haspopup="dialog"
+                                    aria-controls="need-modal"
+                                    class="inline-flex h-11 w-full items-center justify-center rounded-full bg-white/10 px-4 text-sm font-semibold text-white shadow-sm ring-1 ring-white/20 backdrop-blur transition duration-150 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 active:scale-[0.99] motion-reduce:transition-none md:w-auto">
+                                Agregar falta
                             </button>
-                        </form>
-                    @else
-                        <a href="{{ route('integrations.google.redirect') }}" class="underline hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:hover:text-gray-200">
-                            Google Calendar: conectar
-                        </a>
-                    @endif
+                        @endif
+
+                        <div class="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap md:justify-end">
+                            @if($canManageShopping)
+                                <a href="{{ route('food.shopping-list.index') }}"
+                                   class="inline-flex h-11 w-full items-center justify-center rounded-full bg-white/10 px-4 text-sm font-semibold text-white shadow-sm ring-1 ring-white/20 backdrop-blur transition duration-150 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 active:scale-[0.99] motion-reduce:transition-none md:w-auto">
+                                    Lista de compras
+                                </a>
+                            @endif
+
+                            @if($canManageFood)
+                                <a href="{{ route('food.inventory.index') }}"
+                                   class="inline-flex h-11 w-full items-center justify-center rounded-full bg-white/10 px-4 text-sm font-semibold text-white shadow-sm ring-1 ring-white/20 backdrop-blur transition duration-150 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 active:scale-[0.99] motion-reduce:transition-none md:w-auto">
+                                    Inventario
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="w-full text-xs text-white/80 md:w-auto md:text-right">
+                        @if($googleIntegration)
+                            <form method="POST" action="{{ route('integrations.google.disconnect') }}" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="underline decoration-white/40 underline-offset-2 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
+                                    Google Calendar: conectado (desconectar)
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('integrations.google.redirect') }}" class="underline decoration-white/40 underline-offset-2 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
+                                Google Calendar: conectar
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
-        </div>
+        </header>
 
         <section aria-labelledby="summary-title" class="grid gap-4 lg:grid-cols-2">
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50">
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50 sm:p-6">
                 <div class="flex items-center justify-between gap-3">
                     <h2 id="summary-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">
                         Resumen financiero
@@ -121,7 +117,7 @@
                 </dl>
             </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50">
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50 sm:p-6">
                 <div class="flex items-center justify-between gap-3">
                     <h2 id="alerts-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">
                         Alertas
@@ -156,7 +152,7 @@
             </div>
         </section>
 
-        <section aria-labelledby="recent-needs-title" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50">
+        <section aria-labelledby="recent-needs-title" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-colors duration-150 hover:border-emerald-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-emerald-800/50 sm:p-6">
             <div class="flex items-center justify-between gap-3">
                 <div class="space-y-1">
                     <h2 id="recent-needs-title" class="text-lg font-semibold text-gray-900 dark:text-gray-50">
@@ -164,27 +160,27 @@
                     </h2>
                     @if($foodLatestActiveList)
                         <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 sm:flex sm:flex-wrap sm:items-center dark:text-gray-400">
-                            <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                            <span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-200">
                                 {{ $foodLatestActiveList->name }}
                             </span>
                             @if($foodLatestActiveList->list_type)
-                                <span class="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                <span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-200">
                                     Tipo: {{ $foodLatestActiveList->list_type }}
                                 </span>
                             @endif
                             @if($foodLatestActiveList->expected_purchase_on)
-                                <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                <span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-200">
                                     Compra: {{ $foodLatestActiveList->expected_purchase_on->format('d/m') }}
                                 </span>
                             @endif
-                            <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                            <span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-200">
                                 Pendientes: {{ $foodLatestActiveList->pending_items_count ?? 0 }}
                             </span>
-                            <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                                Estimado: ${{ number_format($foodLatestActiveList->estimated_budget ?? 0, 0, ',', '.') }}
+                            <span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-200">
+                                Estimado: @money($foodLatestActiveList->estimated_budget ?? 0)
                             </span>
-                            <span class="rounded-full bg-gray-100 px-2 py-1 font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                                Real: ${{ number_format($foodLatestActiveList->actual_total ?? 0, 0, ',', '.') }}
+                            <span class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 shadow-sm dark:border-gray-700 dark:bg-neutral-900 dark:text-gray-200">
+                                Real: @money($foodLatestActiveList->actual_total ?? 0)
                             </span>
                         </div>
                     @endif

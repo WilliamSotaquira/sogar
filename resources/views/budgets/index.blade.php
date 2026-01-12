@@ -3,13 +3,14 @@
         @php
             $monthOptions = collect(range(1, 12))->map(fn ($m) => [
                 'value' => $m,
-                'label' => \Carbon\Carbon::createFromDate($currentYear, $m, 1)->locale('es')->translatedFormat('F'),
+                'label' => \App\Support\Format::monthName(\Carbon\Carbon::createFromDate($currentYear, $m, 1)),
             ]);
             $yearOptions = range($currentYear - 1, $currentYear + 2);
             $monthLabels = $monthOptions->pluck('label', 'value');
 
             $budgetsJs = $budgets->map(function ($b) {
                 return [
+                    'id' => (int) $b->id,
                     'category_id' => (int) $b->category_id,
                     'month' => (int) $b->month,
                     'year' => (int) $b->year,
@@ -27,7 +28,7 @@
                     <p class="text-sm text-white/80">Define montos por categoría y mes, activa alertas y sincroniza con calendario.</p>
                 </div>
                 <div class="hero-chip text-sm font-semibold">
-                    {{ now()->locale('es')->translatedFormat('F Y') }}
+                    @monthYearCo(now())
                 </div>
             </div>
             <div class="mt-4 flex flex-wrap gap-2">
@@ -206,7 +207,7 @@
                         @forelse ($budgets as $budget)
                             <tr class="text-sm text-gray-800 dark:text-gray-100">
                                 <td class="px-4 py-2 font-medium" data-budget-category="{{ strtolower($budget->category?->name ?? 'sin categoría') }}">{{ $budget->category?->name ?? 'Sin categoría' }}</td>
-                                <td class="px-4 py-2">${{ number_format($budget->amount, 0, ',', '.') }}</td>
+                                <td class="px-4 py-2">@money($budget->amount)</td>
                                 <td class="px-4 py-2" data-budget-month="{{ (int) $budget->month }}">{{ ucfirst($monthLabels[(int) $budget->month] ?? (string) $budget->month) }}</td>
                                 <td class="px-4 py-2" data-budget-year="{{ (int) $budget->year }}">{{ $budget->year }}</td>
                                 <td class="px-4 py-2">
@@ -318,6 +319,29 @@
                 clearEl?.addEventListener('click', clearForm);
 
                 updateFromSelection();
+
+                // Deep link: ?budget_id=123 abre el presupuesto en el formulario
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const budgetId = params.get('budget_id');
+
+                    if (budgetId) {
+                        const b = budgets.find(x => String(x.id) === String(budgetId));
+                        if (b) {
+                            if (categoryEl) categoryEl.value = String(b.category_id);
+                            if (monthEl) monthEl.value = String(b.month);
+                            if (yearEl) yearEl.value = String(b.year);
+                            categoryEl?.dispatchEvent(new Event('change', { bubbles: true }));
+                            monthEl?.dispatchEvent(new Event('change', { bubbles: true }));
+                            yearEl?.dispatchEvent(new Event('change', { bubbles: true }));
+
+                            document.getElementById('budget-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            amountEl?.focus?.();
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Deep link budget_id error', e);
+                }
 
                 // List filters (client-side)
                 const searchListEl = document.getElementById('budgets-search');

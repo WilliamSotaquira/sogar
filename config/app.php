@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'America/Bogota',
+    'timezone' => env('APP_TIMEZONE', 'America/Bogota'),
 
     /*
     |--------------------------------------------------------------------------
@@ -83,6 +83,12 @@ return [
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'es'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'es_CO'),
+
+    // Intl locale used for formatting dates/numbers (NumberFormatter/IntlDateFormatter).
+    'intl_locale' => env('APP_INTL_LOCALE', 'es_CO'),
+
+    // Default currency for the app UI.
+    'currency' => env('APP_CURRENCY', 'COP'),
 
     /*
     |--------------------------------------------------------------------------
